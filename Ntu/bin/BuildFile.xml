@@ -1,0 +1,12 @@
+<use   name="root"/>
+<use   name="rootgraphics"/>
+<use   name="NtuAnalysis/Common"/>
+<use   name="NtuTool/Common"/>
+<use   name="NtuTool/Read"/>
+<use   name="PDAnalysis/Ntu"/>
+<use   name="MGTools/PlottingTools"/>
+<environment>
+  <bin   file="treeAnalyze.cc" name="pdTreeAnalyze"></bin>
+  <bin   file="treeAnalyzeMod.cc" name="pdTreeAnalyzeMod"></bin>
+  <bin   file="analyzeElectronEfficiency.cc" name="analyzeElectronEfficiency"></bin>
+</environment>
