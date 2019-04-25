@@ -1,0 +1,223 @@
+VALUE RETURNED                   NAME OF METHOD                   INPUT ARGUMENTS               PROPERTIES      NOTES            ADDED TO NTUPLE
+
+From pat::Electron:
+
+double                           dB                               (IPTYPE type)                 const                            NO 
+const LorentzVector &            ecalDrivenMomentum               ()                            const                            
+float                            ecalIso                          ()                            const                            YES
+double                           ecalRegressionEnergy             ()                            const
+double                           ecalRegressionError              ()                            const 
+double                           ecalRegressionScale              ()                            const 
+double                           ecalRegressionSmear              ()                            const 
+double                           ecalScale                        ()                            const
+double                           ecalSmear                        ()                            const 
+double                           ecalTrackRegressionEnergy        ()                            const
+double                           ecalTrackRegressionError         ()                            const
+double                           ecalTrackRegressionScale         ()                            const
+double                           ecalTrackRegressionSmear         ()                            const
+double                           edB                              (IPTYPE type)                 const 
+double                           edB                              ()                            const 
+float                            hcalIso                          ()                            const                            YES
+double                           ip3d                             ()                            const 
+bool                             isPF                             ()                            const                            YES
+bool                             passConversionVeto               ()                            const                            YES
+float                            puppiChargedHadronIso            ()                            const
+float                            puppiNeutralHadronIso            ()                            const
+float                            puppiNoLeptonsChargedHadronIso   ()                            const
+float                            puppiNoLeptonsNeutralHadronIso   ()                            const
+float                            puppiNoLeptonsPhotonIso          ()                            const
+float                            puppiPhotonIso                   ()                            const
+float                            sigmaIetaIphi                    ()                            const 
+reco::SuperClusterRef 	         superCluster                     ()                            const override
+float                            trackIso                         ()                            const                            YES
+
+
+
+From pat::Lepton<reco::GsfElectron>:
+
+float                            chargedHadronIso                 ()                            const                            ALREADY PRESENT
+float                            neutralHadronIso                 ()                            const                            ALREADY PRESENT
+float                            particleIso                      ()                            const                            YES
+float                            photonIso                        ()                            const                            ALREADY PRESENT
+float                            puChargedHadronIso               ()                            const                            ALREADY PRESENT
+float                            userIso                          (uint8_t index=0)             const
+const pat::LookupTableRecord &   efficiency                       (const std::string &name)     const
+const std::vector<std::string> & efficiencyNames                  ()                            const
+double                           resolE                           (const std::string &label="") const
+double                           resolEt                          (const std::string &label="") const
+double                           resolEta                         (const std::string &label="") const
+double                           resolM                           (const std::string &label="") const
+double                           resolP                           (const std::string &label="") const
+double                           resolPhi                         (const std::string &label="") const
+double                           resolPInv                        (const std::string &label="") const
+double                           resolPt                          (const std::string &label="") const
+double                           resolPx                          (const std::string &label="") const
+double                           resolPy                          (const std::string &label="") const
+double                           resolPz                          (const std::string &label="") const
+double                           resolTheta                       (const std::string &label="") const
+
+
+
+From reco::GsfElectron:
+
+bool                             ambiguous                        ()                            const                            YES
+float                            caloEnergy                       ()                            const 
+const ChargeInfo &               chargeInfo                       ()                            const 
+Classification [int enum]        classification                   ()                            const           NEEDED BY MVA    YES
+float                            convDcot                         ()                            const                            YES
+float                            convDist                         ()                            const                            YES
+int                              convFlags                        ()                            const                            YES
+float                            convRadius                       ()                            const                            YES
+float                            correctedEcalEnergy              ()                            const        
+float                            correctedEcalEnergyError         ()                            const 
+float                            ctfGsfOverlap                    ()                            const                            YES
+float                            deltaEtaEleClusterTrackAtCalo    ()                            const                            YES
+float                            deltaEtaSeedClusterTrackAtCalo   ()                            const           NEEDED BY MVA    YES
+float                            deltaEtaSeedClusterTrackAtVtx    ()                            const                            YES
+float                            deltaEtaSuperClusterTrackAtVtx   ()                            const           NEEDED BY MVA    YES
+float                            deltaPhiEleClusterTrackAtCalo    ()                            const                            YES
+float                            deltaPhiSeedClusterTrackAtCalo   ()                            const                            YES
+float                            deltaPhiSuperClusterTrackAtVtx   ()                            const           NEEDED BY MVA    YES
+float                            dr03EcalRecHitSumEt              ()                            const
+float                            dr03HcalDepth1TowerSumEt         ()                            const
+float                            dr03HcalDepth1TowerSumEtBc       ()                            const
+float                            dr03HcalDepth2TowerSumEt         ()                            const
+float                            dr03HcalDepth2TowerSumEtBc       ()                            const
+float                            dr03HcalTowerSumEt               ()                            const
+float                            dr03HcalTowerSumEtBc             ()                            const 
+float                            dr03TkSumPt                      ()                            const
+float                            dr04EcalRecHitSumEt              ()                            const
+float                            dr04HcalDepth1TowerSumEt         ()                            const
+float                            dr04HcalDepth1TowerSumEtBc       ()                            const
+float                            dr04HcalDepth2TowerSumEt         ()                            const
+float                            dr04HcalDepth2TowerSumEtBc       ()                            const       
+float                            dr04HcalTowerSumEt               ()                            const
+float                            dr04HcalTowerSumEtBc             ()                            const 
+float                            dr04TkSumPt                      ()                            const
+float                            e1x5                             ()                            const
+float                            e2x5Max                          ()                            const
+float                            e5x5                             ()                            const
+float                            eBottom                          ()                            const
+bool                             ecalDriven                       ()                            const
+bool                             ecalDrivenSeed                   ()                            const
+float                            ecalEnergy                       ()                            const           NEEDED BY MVA    YES
+float                            ecalEnergyError                  ()                            const                            YES
+float                            ecalPFClusterIso                 ()                            const
+float                            eEleClusterOverPout              ()                            const           NEEDED BY MVA    YES
+float                            eLeft                            ()                            const
+float                            eRight                           ()                            const
+float                            eSeedClusterOverP                ()                            const                            YES
+float                            eSeedClusterOverPout             ()                            const                            YES
+float                            eSuperClusterOverP               ()                            const           NEEDED BY MVA    YES
+float                            eTop                             ()                            const
+float                            fbrem                            ()                            const           NEEDED BY MVA    YES
+float                            full5x5_e1x5                     ()                            const           NEEDED BY MVA    YES
+float                            full5x5_e2x5Bottom               ()                            const                            YES
+float                            full5x5_e2x5Left                 ()                            const                            YES
+float                            full5x5_e2x5Max                  ()                            const                            YES
+float                            full5x5_e2x5Right                ()                            const                            YES
+float                            full5x5_e2x5Top                  ()                            const                            YES
+float                            full5x5_e5x5                     ()                            const           NEEDED BY MVA    YES
+float                            full5x5_eBottom                  ()                            const                            YES
+float                            full5x5_eLeft                    ()                            const                            YES
+float                            full5x5_eRight                   ()                            const                            YES
+float                            full5x5_eTop                     ()                            const                            YES
+float                            full5x5_hcalDepth1OverEcal       ()                            const
+float                            full5x5_hcalDepth1OverEcalBc     ()                            const
+float                            full5x5_hcalDepth2OverEcal       ()                            const
+float                            full5x5_hcalDepth2OverEcalBc     ()                            const
+float                            full5x5_hcalOverEcal             ()                            const           NEEDED BY MVA    YES
+float                            full5x5_hcalOverEcalBc           ()                            const
+float                            full5x5_hcalOverEcalValid        ()                            const                            YES
+float                            full5x5_r9                       ()                            const           NEEDED BY MVA    YES
+float                            full5x5_sigmaEtaEta              ()                            const                            YES
+float                            full5x5_sigmaIetaIeta            ()                            const           NEEDED BY MVA    YES
+float                            full5x5_sigmaIphiIphi            ()                            const           NEEDED BY MVA    YES
+float                            hadronicOverEm                   ()                            const
+float                            hadronicOverEm1                  ()                            const
+float                            hadronicOverEm2                  ()                            const
+float                            hcalDepth1OverEcal               ()                            const
+float                            hcalDepth1OverEcalBc             ()                            const
+float                            hcalDepth2OverEcal               ()                            const
+float                            hcalDepth2OverEcalBc             ()                            const
+float                            hcalOverEcal                     ()                            const
+float                            hcalOverEcalBc                   ()                            const
+float                            hcalOverEcalValid                ()                            const
+float                            hcalPFClusterIso                 ()                            const
+bool                             isEB                             ()                            const           NEEDED BY MVA    YES in eleProps
+bool                             isEBEEGap                        ()                            const           NEEDED BY MVA    YES in eleProps
+bool                             isEBEtaGap                       ()                            const           NEEDED BY MVA    YES in eleProps
+bool                             isEBGap                          ()                            const                            YES in eleProps
+bool                             isEBPhiGap                       ()                            const           NEEDED BY MVA    YES in eleProps
+bool                             isEcalEnergyCorrected            ()                            const                            YES in eleProps
+bool                             isEE                             ()                            const           NEEDED BY MVA    YES in eleProps
+bool                             isEEDeeGap                       ()                            const           NEEDED BY MVA    YES in eleProps
+bool                             isEEGap                          ()                            const                            YES in eleProps
+bool                             isEERingGap                      ()                            const           NEEDED BY MVA    YES in eleProps
+bool                             isElectron                       ()                            const override                   YES in eleProps
+bool                             isEnergyScaleCorrected           ()                            const                            YES in eleProps
+bool                             isGap                            ()                            const                            YES in eleProps
+bool                             isGsfCtfChargeConsistent         ()                            const                            YES in eleProps
+bool                             isGsfCtfScPixChargeConsistent    ()                            const                            YES in eleProps
+bool                             isGsfScPixChargeConsistent       ()                            const                            YES in eleProps
+float                            isSeedSaturated                  ()                            const                            YES in eleProps
+float                            mva_e_pi                         ()                            const
+float                            mva_Isolated                     ()                            const 
+float                            nSaturatedXtals                  ()                            const
+int                              numberOfBrems                    ()                            const 
+float                            pixelMatchDPhi1                  ()                            const
+float                            pixelMatchDPhi2                  ()                            const
+float                            pixelMatchDRz1                   ()                            const
+float                            pixelMatchDRz2                   ()                            const
+int                              pixelMatchSubdetector1           ()                            const
+int                              pixelMatchSubdetector2           ()                            const
+float                            r9                               ()                            const
+float                            scE1x5                           ()                            const
+float                            scE2x5Max                        ()                            const
+float                            scE5x5                           ()                            const
+int                              scPixCharge                      ()                            const
+float                            scSigmaEtaEta                    ()                            const
+float                            scSigmaIEtaIEta                  ()                            const 
+float                            shFracInnerHits                  ()                            const 
+float                            sigmaEtaEta                      ()                            const
+float                            sigmaIetaIeta                    ()                            const
+float                            sigmaIphiIphi                    ()                            const
+float                            superClusterFbrem                ()                            const 
+bool                             trackerDrivenSeed                ()                            const 
+float                            trackFbrem                       ()                            const
+math::XYZVectorF                 trackMomentumAtCalo              ()                            const 
+math::XYZVectorF                 trackMomentumAtEleClus           ()                            const 
+math::XYZVectorF                 trackMomentumAtVtx               ()                            const           NEEDED BY MVA    YES OK
+math::XYZVectorF                 trackMomentumAtVtxWithConstraint ()                            const 
+float                            trackMomentumError               ()                            const
+math::XYZVectorF                 trackMomentumOut                 ()                            const
+math::XYZPointF                  trackPositionAtCalo              ()                            const
+math::XYZPointF                  TrackPositionAtCalo              ()                            const
+math::XYZPointF                  trackPositionAtVtx               ()                            const
+math::XYZPointF                  TrackPositionAtVtx               ()                            const 
+
+
+
+From reco::SuperCluster:
+
+double                           etaWidth                         ()                            const           NEEDED BY MVA    YES
+const int                        getPreshowerPlanesStatus         ()                            const
+double                           phiWidth                         ()                            const           NEEDED BY MVA    YES
+double                           preshowerEnergy                  ()                            const           NEEDED BY MVA    YES
+double                           preshowerEnergyPlane1            ()                            const
+double                           preshowerEnergyPlane2            ()                            const
+double                           rawEnergy                        ()                            const           NEEDED BY MVA    YES
+double                           correctedEnergy                  ()                            const
+float                            correctedEnergyUncertainty       ()                            const
+double                           energy                           ()                            const 
+double                           eta                              ()                            const           NEEDED BY MVA    YES 
+bool                             isInClean                        ()                            const
+bool                             isInUnclean                      ()                            const 
+const math::XYZPoint &           position                         ()                            const 
+
+
+
+From conversions:
+
+allMVAVars.convVtxFitProbability = vertexFitProbability; // See MVAHZZcode for details on how to get it.                         YES
+
