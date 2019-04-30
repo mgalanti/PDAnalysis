@@ -9,7 +9,7 @@ Other dependencies:
 
 Instructions to install on top of PDAnalysis 2017V12 on CMSSW_10_2_6:
 
-    Download PDAnalysis according to Paolo installer
+Download PDAnalysis according to Paolo installer
 
 In the shell:
 
