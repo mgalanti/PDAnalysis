@@ -4,7 +4,7 @@
 #include "TLorentzVector.h"
 
 #include "PDAnalysis/Ntu/interface/constants.h"
-#include "PDAnalysis/Ntu/bin/PDAnalyzerUtil.h"
+#include "PDAnalysis/Ntu/interface/PDAnalyzerUtil.h"
 
 
 

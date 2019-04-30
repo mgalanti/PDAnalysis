@@ -1,0 +1,5 @@
+#define UTIL_USE FULL
+#include "ANALYZERNAME.h"
+#include "NtuAnalysis/Read/interface/NtuFlexibleAnalyzer.h"
+#include "NtuTool/Read/bin/treeAnalyze.cc"
+static NtuFlexibleAnalyzer<ANALYZERNAME> nfa( "ANALYSISNAME", "ANALYZERLCNAME" );

@@ -3,7 +3,7 @@
 
 
 
-#include "PDAnalysis/Ntu/bin/PDAnalyzerUtil.h"
+#include "PDAnalysis/Ntu/interface/PDAnalyzerUtil.h"
 #include "PDAnalysis/Ntu/interface/MGSelector.h"
 
 

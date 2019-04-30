@@ -1,0 +1,11 @@
+<use   name="root"/>
+<use   name="rootgraphics"/>
+<use   name="NtuAnalysis/Common"/>
+<use   name="NtuTool/Common"/>
+<use   name="NtuTool/Read"/>
+<use   name="PDAnalysis/Ntu"/>
+<use   name="MGTools/PlottingTools"/>
+<use   name="PDAnalysis/ANALYZERNAME"/>
+<environment>
+  <bin   file="VERBNAME.cc" name="VERBNAME"></bin>
+</environment>

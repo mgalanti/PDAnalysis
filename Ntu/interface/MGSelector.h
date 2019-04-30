@@ -4,7 +4,7 @@
 #include "CommonTools/Statistics/interface/ChiSquaredProbability.h"
 
 #include "PDAnalysis/Ntu/interface/MGRecoTools.h"
-#include "PDAnalysis/Ntu/bin/PDAnalyzerUtil.h"
+#include "PDAnalysis/Ntu/interface/PDAnalyzerUtil.h"
 
 class MGSelector: public virtual PDAnalyzerUtil, public virtual MGRecoTools
 {  
