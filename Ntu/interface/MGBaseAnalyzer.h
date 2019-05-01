@@ -26,7 +26,7 @@ class MGBaseAnalyzer : public virtual PDAnalyzerUtil
     // Poor man's introspection... Enough for my purposes (dynamically set the output name based on tha analyzer name)
     std::string className;
 
-//     std::string sampleName;    
+    std::string sampleName;    
     std::string treeListName;    
     std::string histOutFileName;
 };

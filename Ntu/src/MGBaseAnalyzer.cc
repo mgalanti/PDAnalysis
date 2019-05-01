@@ -28,15 +28,23 @@ void MGBaseAnalyzer::beginJob()
   PDAnalyzerUtil::beginJob();
 
   int tries = 0;
-//   sampleName = getUserParameter("sampleName");
   treeListName = getUserParameter("treeListName");
   evtSelection = getUserParameter("evtSelection");
-//   histOutFileName = "his__" + className + "__" + sampleName + "__" + evtSelection + "__" + std::to_string(tries++) + ".root";
-  histOutFileName = "his__" + className + "__" + treeListName + "__" + evtSelection + "__" + std::to_string(tries++) + ".root";
+  sampleName = treeListName;
+
+  do
+  {
+    sampleName = sampleName.substr(sampleName.find("/") + 1);
+  } 
+  while(sampleName.find("/") != std::string::npos);
+  
+  sampleName = sampleName.substr(0, sampleName.find("."));
+  
+  histOutFileName = "his__" + className + "__" + sampleName + "__" + evtSelection + "__" + std::to_string(tries++) + ".root";
   std::cout << "MGBaseAnalyzer::beginJob(): setting variables:\n";
   std::cout << "                            className       = " << className << std::endl;
-//   std::cout << "                            sampleName      = " << sampleName << std::endl;
   std::cout << "                            treeListName    = " << treeListName << std::endl;
+  std::cout << "                            sampleName      = " << sampleName << std::endl;
   std::cout << "                            evtSelection    = " << evtSelection << std::endl;
   std::cout << "                            histOutFileName = " << histOutFileName << std::endl;
   bool origNameNotOk = false;
@@ -45,8 +53,7 @@ void MGBaseAnalyzer::beginJob()
     origNameNotOk = true;
     std::cout << "W A R N I N G! Output file \"" << histOutFileName << "\" already exists!\n";
     std::cout << "               Trying a different name...\n";
-//     histOutFileName = "his__" + className + "__" + sampleName + "__" + evtSelection + "__" + std::to_string(tries++) + ".root";
-    histOutFileName = "his__" + className + "__" + treeListName + "__" + evtSelection + "__" + std::to_string(tries++) + ".root";
+    histOutFileName = "his__" + className + "__" + sampleName + "__" + evtSelection + "__" + std::to_string(tries++) + ".root";
     if(tries > 9999)
       break;
   }
