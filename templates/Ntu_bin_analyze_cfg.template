@@ -1,2 +1,3 @@
 verbose False
-sampleName local
+sampleName DUMMY
+evtSelection DUMMY
