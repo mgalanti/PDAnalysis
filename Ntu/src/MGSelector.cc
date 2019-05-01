@@ -25,11 +25,11 @@ bool MGSelector::SelectEvent(const std::string selection, std::vector<std::pair<
 {
   if(selection.substr(0, 11).compare("BsToJPsiPhi") == 0)
   {
-    return SelectBsToJPsiPhiEvent(selection.substr(13, std::string::npos), selectedObjects);
+    return SelectBsToJPsiPhiEvent(selection.substr(12, std::string::npos), selectedObjects);
   }
   else if(selection.substr(0, 9).compare("BuToJPsiK") == 0)
   {
-    return SelectBuToJPsiKEvent(selection.substr(11, std::string::npos), selectedObjects);
+    return SelectBuToJPsiKEvent(selection.substr(10, std::string::npos), selectedObjects);
   }
   std::cout << "MGSelector::SelectEvent(): W A R N I N G ! Reached default return statement. Event will not be selected...\n";
   std::cout << "                           The selection string passed to this method is: \"" << selection << "\"\n";
