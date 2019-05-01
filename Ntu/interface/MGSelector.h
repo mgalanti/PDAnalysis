@@ -13,7 +13,9 @@ class MGSelector: public virtual PDAnalyzerUtil, public virtual MGRecoTools
     MGSelector();
     virtual ~MGSelector();
     
+    bool SelectEvent(const std::string selection, std::vector<std::pair<int, int> >& selectedObjects);
     bool SelectBsToJPsiPhiEvent(const std::string selection, std::vector<std::pair<int,int> >& selectedObjects);
+    bool SelectBuToJPsiKEvent(const std::string selection, std::vector<std::pair<int,int> >& selectedObjects);
     
     bool SelectHlt(const std::string selection);
     bool SelectElectron(const int iEle, const std::string selection);

@@ -21,6 +21,23 @@ MGSelector::~MGSelector()
 
 
 
+bool MGSelector::SelectEvent(const std::string selection, std::vector<std::pair<int,int> >& selectedObjects)
+{
+  if(selection.substr(0, 11).compare("BsToJPsiPhi") == 0)
+  {
+    return SelectBsToJPsiPhiEvent(selection.substr(13, std::string::npos), selectedObjects);
+  }
+  else if(selection.substr(0, 9).compare("BuToJPsiK") == 0)
+  {
+    return SelectBuToJPsiKEvent(selection.substr(11, std::string::npos), selectedObjects);
+  }
+  std::cout << "MGSelector::SelectEvent(): W A R N I N G ! Reached default return statement. Event will not be selected...\n";
+  std::cout << "                           The selection string passed to this method is: \"" << selection << "\"\n";
+  return false;
+}
+
+
+
 bool MGSelector::SelectBsToJPsiPhiEvent(const std::string selection, std::vector<std::pair<int,int> >& selectedObjects)
 {
   if(selection.compare("eleTagLooseV0") == 0)
@@ -53,6 +70,16 @@ bool MGSelector::SelectBsToJPsiPhiEvent(const std::string selection, std::vector
   }
   std::cout << "MGSelector::SelectBsToJPsiPhiEvent(): W A R N I N G ! Reached default return statement. Event will not be selected...\n";
   std::cout << "                                      The selection string passed to this method is: \"" << selection << "\"\n";
+  return false;
+}
+
+
+
+bool MGSelector::SelectBuToJPsiKEvent(const std::string selection, std::vector<std::pair<int, int> >& selectedObjects)
+{
+  // FIXME: To be written
+  std::cout << "MGSelector::SelectBuToJPsiKEvent(): W A R N I N G ! Reached default return statement. Event will not be selected...\n";
+  std::cout << "                                    The selection string passed to this method is: \"" << selection << "\"\n";
   return false;
 }
 
