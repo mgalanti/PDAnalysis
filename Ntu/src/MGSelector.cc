@@ -54,12 +54,12 @@ bool MGSelector::SelectBsToJPsiPhiEvent(const std::string selection, std::vector
      selectedObjects.push_back(selObject);
      return true;
   }
-  else if(selection.compare("eleTagTightV0") == 0)
+  else if(selection.compare("eleTagTightV1") == 0)
   {
     if(SelectHlt("eleTagHLTV0") == false)
       return false;
     int iPV = -1;
-    int bestBsToJPsiPhi = SelectBestBsToJPsiPhi("TightV0", iPV);
+    int bestBsToJPsiPhi = SelectBestBsToJPsiPhi("TightV1", iPV);
     if(bestBsToJPsiPhi < 0) return false;
     if(iPV < 0) return false;
     std::pair<int,int> selObject = std::make_pair(PDEnumString::recSvt, bestBsToJPsiPhi);
@@ -242,7 +242,7 @@ int MGSelector::SelectBestBsToJPsiPhi(const std::string selection, int& iBestPV)
     }
     return index;
   }
-  else if(selection.compare("TightV0") == 0) // This is the same as GetBestBstrangeTight() in Alberto code.
+  else if(selection.compare("TightV1") == 0) // This is the same as GetBestBstrangeTight() in Alberto code.
   {
     int index = -1;
     float best = 0.;
@@ -307,7 +307,7 @@ int MGSelector::SelectBestBsToJPsiPhi(const std::string selection, int& iBestPV)
         continue;
       }
       
-      if(GetCt2D(tB, iB) < 0.007)
+      if(GetCt2D(tB, iB) < 0.02)
       {
         continue;
       }
