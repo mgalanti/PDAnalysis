@@ -22,13 +22,15 @@ class MGBaseAnalyzer : public virtual PDAnalyzerUtil
     // Used in derived classes
     std::string evtSelection;
     
-  private:
     // Poor man's introspection... Enough for my purposes (dynamically set the output name based on tha analyzer name)
     std::string className;
 
     std::string sampleName;    
     std::string treeListName;    
     std::string histOutFileName;
+
+  private:
+    
 };
 
 
