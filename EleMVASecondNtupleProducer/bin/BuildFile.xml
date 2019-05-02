@@ -1,0 +1,11 @@
+<use   name="root"/>
+<use   name="rootgraphics"/>
+<use   name="NtuAnalysis/Common"/>
+<use   name="NtuTool/Common"/>
+<use   name="NtuTool/Read"/>
+<use   name="PDAnalysis/Ntu"/>
+<use   name="MGTools/PlottingTools"/>
+<use   name="PDAnalysis/EleMVASecondNtupleProducer"/>
+<environment>
+  <bin   file="produceEleMVASecondNtuple.cc" name="produceEleMVASecondNtuple"></bin>
+</environment>
