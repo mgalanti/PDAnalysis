@@ -28,6 +28,10 @@ class PDSecondNtupleWriter: public PDSecondNtupleData, public TreeWriter {
     TreeWriter::close();
     file->Close();
   }
+  
+  void Reset() {
+    reset();
+  }
 
  private:
 
