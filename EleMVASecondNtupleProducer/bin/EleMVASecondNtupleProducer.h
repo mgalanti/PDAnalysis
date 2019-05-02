@@ -8,6 +8,8 @@
 #include "PDAnalysis/Ntu/interface/MGGenTools.h"
 #include "MGTools/PlottingTools/interface/PlottingTools.h"
 
+class EleMVASecondNtupleWriter;
+
 class EleMVASecondNtupleProducer: 
     public MGBaseAnalyzer,
     public virtual MGSelector,
@@ -36,6 +38,10 @@ class EleMVASecondNtupleProducer:
   virtual void endJob();
 
   bool verbose;
+  
+  EleMVASecondNtupleWriter* tWriter;
+  
+  std::string secondNtupleFileName;
 
  private:
   

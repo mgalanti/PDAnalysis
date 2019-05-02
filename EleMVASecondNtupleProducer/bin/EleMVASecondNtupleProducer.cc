@@ -4,9 +4,11 @@
 #include <bitset>
 #include <math.h>
 
+#include "TSystem.h"
+
 #include "EleMVASecondNtupleProducer.h"
 
-#include "PDAnalysis/Ntu/interface/PDSecondNtupleWriter.h"
+#include "PDAnalysis/EleMVASecondNtupleProducer/interface/EleMVASecondNtupleWriter.h"
 
 #include "TDirectory.h"
 #include "TBranch.h"
@@ -38,6 +40,37 @@ void EleMVASecondNtupleProducer::beginJob() {
   // user parameters are set as names associated to a string, 
   // default values can be set in the analyzer class contructor
   
+  tWriter = new EleMVASecondNtupleWriter; // second ntuple
+  
+  std::string secondNtupleBaseName = getUserParameter("secondNtupleBaseName");
+  
+  // Set the second ntuple file name
+  int tries = 0;
+  secondNtupleFileName = secondNtupleBaseName + "__" + sampleName + "__" + evtSelection + "__" + std::to_string(tries++) + ".root";
+  std::cout << "EleMVASecondNtupleProducer::beginJob(): setting variables:\n";
+  std::cout << "                                        secondNtupleFileName = " << secondNtupleFileName << std::endl;
+  bool secondNtupleOrigNameNotOk = false;
+  while(!gSystem->AccessPathName(gSystem->ExpandPathName(secondNtupleFileName.c_str())))
+  {
+    secondNtupleOrigNameNotOk = true;
+    std::cout << "W A R N I N G! Second ntuple file \"" << secondNtupleFileName << "\" already exists!\n";
+    std::cout << "               Trying a different name...\n";
+    secondNtupleFileName = secondNtupleBaseName + "__" + sampleName + "__" + evtSelection + "__" + std::to_string(tries++) + ".root";
+    if(tries > 9999)
+      break;
+  }
+  if(!gSystem->AccessPathName(gSystem->ExpandPathName(secondNtupleFileName.c_str())))
+  {
+    std::cout << "E R R O R! Output file \"" << secondNtupleFileName << "\" already exists!\n";
+    std::cout << "           Exiting...\n";
+    exit(1);
+  }
+  if(secondNtupleOrigNameNotOk)
+    std::cout << "                                        New secondNtupleFileName = " << secondNtupleFileName << std::endl;
+  
+  // Actually open the second ntuple file for writing
+  tWriter->open(secondNtupleFileName, "RECREATE");
+
   return;
 }
 
@@ -77,6 +110,8 @@ bool EleMVASecondNtupleProducer::analyze( int entry, int event_file, int event_t
 
   // Main per-event analysis code goes here
   
+  tWriter->Reset();
+  
   // Event and object selection code
   // Method SelectEvent(...) is defined in class MGSelector
   //    evtSelection string is set in the configuration file
@@ -101,6 +136,7 @@ bool EleMVASecondNtupleProducer::analyze( int entry, int event_file, int event_t
 void EleMVASecondNtupleProducer::endJob() 
 {
   // This runs after the event loop
+  tWriter->close();
   
   return;
 }
