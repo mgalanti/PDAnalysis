@@ -21,24 +21,84 @@ MGSelector::~MGSelector()
 
 
 
-bool MGSelector::SelectEvent(const std::string selection, std::vector<std::pair<int,int> >& selectedObjects)
+void MGSelector::SetSelectionString(const std::string str)
 {
-  if(selection.substr(0, 11).compare("BsToJPsiPhi") == 0)
+  selectionString = str;
+  selectionSubStrings = TokenizeString(selectionString, "_");
+  std::cout << "MGSelector::SetSelectionString(): I N F O. Selection strings set to:\n";
+  std::cout << "                                  selectionString = " << selectionString << std::endl;
+  for(unsigned int i = 0; i < selectionSubStrings.size(); i++)
+    std::cout << "                                  selectionSubStrings[" << i << "] = " << selectionSubStrings[i] << std::endl;
+}
+
+
+
+bool MGSelector::SelectEvent()
+{
+  selectedObjects.clear();
+  return SelectEvent(selectionString, selectedObjects);
+}
+
+
+
+bool MGSelector::SelectEvent(const std::string selection, std::vector<std::pair<int,int> >& selectedObjectsRef)
+{
+  // The first part of the selection string defines the kind of signal process to look at
+  // The second part of the selection string defines the version of the selection
+  std::vector<std::string> selectionSubStrings = TokenizeString(selection, "_");
+  bool signalSelected = false;
+  
+  if(selectionSubStrings[0].compare("BsToJPsiPhi") == 0)
   {
-    return SelectBsToJPsiPhiEvent(selection.substr(12, std::string::npos), selectedObjects);
+    signalSelected = SelectBsToJPsiPhiEvent(selectionSubStrings[1], selectedObjectsRef);
   }
-  else if(selection.substr(0, 9).compare("BuToJPsiK") == 0)
+  else if(selectionSubStrings[0].compare("BuToJPsiK") == 0)
   {
-    return SelectBuToJPsiKEvent(selection.substr(10, std::string::npos), selectedObjects);
+    signalSelected = SelectBuToJPsiKEvent(selection.substr(10, std::string::npos), selectedObjectsRef);
   }
+  
+//   std::cout << "MGSelector::SelectEvent(): I N F O. Event " << (signalSelected?"passes":"does not pass") << " signal-side selection.\n";
+  
+  if(!signalSelected)
+    return false;
+
+  // If the second part of the selection string starts with "eleTag", then perform also the selection of the OS tag electron
+  bool tagSideSelected = false;
+  if(selectionSubStrings[1].substr(0,6).compare("eleTag") == 0)
+  {
+    int iPV = -1;
+    int iB = -1;
+    for(auto itSelObjects : selectedObjectsRef)
+    {
+      if(itSelObjects.first == PDEnumString::recPV)
+        iPV = itSelObjects.second;
+      if(itSelObjects.first == PDEnumString::recSvt)
+        iB = itSelObjects.second;
+    }
+    int iOSElectron = SelectOSElectron(selectionSubStrings[1], iPV, iB);
+    if(iOSElectron < 0)
+      return false;
+    std::pair<int,int> selObject = std::make_pair(PDEnumString::recElectron, iOSElectron);
+    selectedObjectsRef.push_back(selObject);
+
+    tagSideSelected = true;
+    
+//     std::cout << "MGSelector::SelectEvent(): I N F O. Event " << (tagSideSelected?"passes":"does not pass") << " opposite-side selection.\n";
+    
+    return signalSelected && tagSideSelected;
+  }
+  
+  return signalSelected;
+  
   std::cout << "MGSelector::SelectEvent(): W A R N I N G ! Reached default return statement. Event will not be selected...\n";
+  std::cout << "                           WE SHOULD NEVER BE HERE! PLEASE CHECK THE CODE FOR BUGS!\n";
   std::cout << "                           The selection string passed to this method is: \"" << selection << "\"\n";
   return false;
 }
 
 
 
-bool MGSelector::SelectBsToJPsiPhiEvent(const std::string selection, std::vector<std::pair<int,int> >& selectedObjects)
+bool MGSelector::SelectBsToJPsiPhiEvent(const std::string selection, std::vector<std::pair<int,int> >& selectedObjectsRef)
 {
   if(selection.compare("eleTagLooseV0") == 0)
   {
@@ -49,9 +109,9 @@ bool MGSelector::SelectBsToJPsiPhiEvent(const std::string selection, std::vector
     if(bestBsToJPsiPhi < 0) return false;
     if(iPV < 0) return false;
     std::pair<int,int> selObject = std::make_pair(PDEnumString::recSvt, bestBsToJPsiPhi);
-    selectedObjects.push_back(selObject);
+    selectedObjectsRef.push_back(selObject);
     selObject = std::make_pair(PDEnumString::recPV, iPV);
-     selectedObjects.push_back(selObject);
+     selectedObjectsRef.push_back(selObject);
      return true;
   }
   else if(selection.compare("eleTagTightV1") == 0)
@@ -63,9 +123,9 @@ bool MGSelector::SelectBsToJPsiPhiEvent(const std::string selection, std::vector
     if(bestBsToJPsiPhi < 0) return false;
     if(iPV < 0) return false;
     std::pair<int,int> selObject = std::make_pair(PDEnumString::recSvt, bestBsToJPsiPhi);
-    selectedObjects.push_back(selObject);
+    selectedObjectsRef.push_back(selObject);
     selObject = std::make_pair(PDEnumString::recPV, iPV);
-    selectedObjects.push_back(selObject);
+    selectedObjectsRef.push_back(selObject);
     return true;
   }
   std::cout << "MGSelector::SelectBsToJPsiPhiEvent(): W A R N I N G ! Reached default return statement. Event will not be selected...\n";
@@ -75,7 +135,7 @@ bool MGSelector::SelectBsToJPsiPhiEvent(const std::string selection, std::vector
 
 
 
-bool MGSelector::SelectBuToJPsiKEvent(const std::string selection, std::vector<std::pair<int, int> >& selectedObjects)
+bool MGSelector::SelectBuToJPsiKEvent(const std::string selection, std::vector<std::pair<int, int> >& selectedObjectsRef)
 {
   // FIXME: To be written
   std::cout << "MGSelector::SelectBuToJPsiKEvent(): W A R N I N G ! Reached default return statement. Event will not be selected...\n";
@@ -118,6 +178,43 @@ bool MGSelector::SelectElectron(const int iEle, const std::string selection)
 {
   std::cout << "MGSelector::SelectElectron(): W A R N I N G ! Reached default return statement. Electron will not be selected...\n";
   return false;
+}
+
+
+
+int MGSelector::SelectOSElectron(const std::string selection, const int iPV, const int iB)
+{
+  if (nElectrons == 0)
+    return -1;
+  
+  if(selection.compare("eleTagTightV1") == 0 || selection.compare("eleTagLooseV0") == 0)
+  {
+    std::vector <int> tkSsB = tracksFromSV(iB);
+    TLorentzVector tB = GetTLorentzVectorFromJPsiX(iB);
+    
+    int iOSElectron = -1;
+    float ptOSElectron = 2.;
+    float dZWrtPV;
+    float pt, eta;
+    for(int iElectron = 0; iElectron < nElectrons; iElectron++)
+    {
+      pt = elePt->at(iElectron);
+      if(pt < 2.)
+        continue;
+      eta = eleEta->at(iElectron);
+      if(eta > 2.4)
+        continue;
+      dZWrtPV = dZ(iElectron, iPV);
+      if(dZWrtPV < 1. && pt > ptOSElectron)
+      {
+        iOSElectron = iElectron;
+        ptOSElectron = pt;
+      }
+    }
+    return iOSElectron;
+  } 
+  std::cout << "MGSelector::SelectOSElectron(): W A R N I N G ! Reached default return statement. No electrons will not be selected...\n";
+  return -1;
 }
 
 
