@@ -24,6 +24,7 @@ ANALYZERNAME::~ANALYZERNAME() {
 void ANALYZERNAME::beginJob() {
 
   MGBaseAnalyzer::beginJob();
+  MGSelector::SetSelectionString(evtSelection);
 
 
   // user parameters are retrieved as strings by using their names;
