@@ -54,8 +54,11 @@ void EleMVASecondNtupleProducer::beginJob() {
   while(!gSystem->AccessPathName(gSystem->ExpandPathName(secondNtupleFileName.c_str())))
   {
     secondNtupleOrigNameNotOk = true;
-    std::cout << "W A R N I N G! Second ntuple file \"" << secondNtupleFileName << "\" already exists!\n";
-    std::cout << "               Trying a different name...\n";
+    if(tries == 1)
+    {
+      std::cout << "W A R N I N G! Second ntuple file \"" << secondNtupleFileName << "\" already exists!\n";
+      std::cout << "               Trying a different name...\n";
+    }
     secondNtupleFileName = secondNtupleBaseName + "__" + sampleName + "__" + evtSelection + "__" + std::to_string(tries++) + ".root";
     if(tries > 9999)
       break;
@@ -121,9 +124,11 @@ bool EleMVASecondNtupleProducer::analyze( int entry, int event_file, int event_t
   //       where the first integer is the object type 
   //       (as defined in the PDEnumString::recoObject enum)
   //       and the second one is the object index
-  std::vector<std::pair<int,int> > selectedObjects;
+//   std::vector<std::pair<int,int> > selectedObjects;
   
-  bool evtSelected = SelectEvent(evtSelection.c_str(), selectedObjects);
+//   bool evtSelected = SelectEvent(evtSelection.c_str(), selectedObjects);
+  
+  bool evtSelected = SelectEvent();
   
   if(!evtSelected)
     return false;
@@ -146,15 +151,19 @@ bool EleMVASecondNtupleProducer::analyze( int entry, int event_file, int event_t
     iSelObject++;
   }
   
-  std::cout << "iBestPV = " << iBestPV << ", iBestBs = " << iBestBs << ", iBestEle = " << iBestEle << std::endl;
 //   int iElectron = SelectOSElectron(iBestPV, iBestBs);
 
   // Depending on the selection string provided in the configuration, it is not granted 
   // that we have all the needed objects at this point, even if the event passed the selection.
-  // Thus, let's check explicitly.
-  
+  // Thus, let's check explicitly.  
   if(iBestPV == -1 || iBestBs == -1 || iBestEle == -1)
-    return false;
+  {
+    std::cout << "E R R O R ! Event passed the selection \"" << evtSelection << "\" but not all the needed objects are available!\n";
+    std::cout << "            iBestPV = " << iBestPV << ", iBestBs = " << iBestBs << ", iBestEle = " << iBestEle << std::endl;
+    std::cout << "            Please fix the configuration file or the MGSelector::SelectEvent() code to avoid this error.";
+    std::cout << "            Exiting...\n";
+    exit(1);
+  }
   
   (tWriter->elePt) = elePt->at(iBestEle);
   (tWriter->eleEta) = eleEta->at(iBestEle);
