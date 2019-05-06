@@ -38,6 +38,7 @@ void ElectronEfficiencyAnalyzer::beginJob() {
   HZZV1IDEleBit = PDEnumString::mvaEleID_Spring16_HZZ_V1_wpLoose;   
   HZZV2IDEleBit = PDEnumString::mvaEleID_Fall17_iso_V2_wpHZZ;   
   MVANILIDEleBit = PDEnumString::mvaEleID_Fall17_noIso_V2_wpLoose;
+  MVAILIDEleBit = PDEnumString::mvaEleID_Fall17_iso_V2_wpLoose;
 
   // user parameters are set as names associated to a string, 
   // default values can be set in the analyzer class contructor
@@ -117,8 +118,8 @@ void ElectronEfficiencyAnalyzer::beginJob() {
   
   elePair = std::make_pair(0, "");
   eleGenMap.insert(elePair);
-  elePair = std::make_pair(1, "True");
-  eleGenMap.insert(elePair);
+//   elePair = std::make_pair(1, "True");
+//   eleGenMap.insert(elePair);
 //   elePair = std::make_pair(2, "Fake");
 //   eleGenMap.insert(elePair);
   elePair = std::make_pair(3, "TrueFromB");
@@ -135,17 +136,21 @@ void ElectronEfficiencyAnalyzer::beginJob() {
   
   elePair = std::make_pair(0, "");
   eleSelMap.insert(elePair);
-  elePair = std::make_pair(100, "HZZV1Sel");
-  eleSelMap.insert(elePair);
+//   elePair = std::make_pair(100, "HZZV1Sel");
+//   eleSelMap.insert(elePair);
 //   elePair = std::make_pair(200, "NotHZZV1Sel");
 //   eleSelMap.insert(elePair);
-  elePair = std::make_pair(300, "HZZV2Sel");
-  eleSelMap.insert(elePair);
+//   elePair = std::make_pair(300, "HZZV2Sel");
+//   eleSelMap.insert(elePair);
 //   elePair = std::make_pair(400, "NotHZZV2Sel");
 //   eleSelMap.insert(elePair);
   elePair = std::make_pair(500, "MVANILSel");
   eleSelMap.insert(elePair);
 //   elePair = std::make_pair(600, "NotMVANILSel");
+//   eleSelMap.insert(elePair);
+  elePair = std::make_pair(700, "MVAILSel");
+  eleSelMap.insert(elePair);
+//   elePair = std::make_pair(800, "NotMVAILSel");
 //   eleSelMap.insert(elePair);
   
   elePair = std::make_pair(0, "");
@@ -580,6 +585,27 @@ void ElectronEfficiencyAnalyzer::book()
     autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(vhEleNIMVACatVsPt[iHist]);
     std::cout << "std::vector<" << hist->ClassName() << "*>* " << histFullName << " booked.\n";
     
+    histFullName = "h" + nameHist + "EleIMVAOutput";
+    histFullTitle = nameHist + " Electrons Fall17V2 iso MVA output";
+    vHist = CreateVectorOf1DHistograms<TH1D>(histFullName.c_str(), histFullTitle.c_str(), 100, -2.0, 2.0, MVAOutputAxisName, electronAxisName, "pT", vPtBinEdges);
+    vhEleIMVAOutputVsPt.insert(std::make_pair(iHist, vHist));
+    autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(vhEleIMVAOutputVsPt[iHist]);
+    std::cout << "std::vector<" << hist->ClassName() << "*>* " << histFullName << " booked.\n";
+
+    histFullName = "h" + nameHist + "EleIMVAOutput";
+    histFullTitle = nameHist + " Electrons Fall17V2 iso MVA output";
+    vHist = CreateVectorOf1DHistograms<TH1D>(histFullName.c_str(), histFullTitle.c_str(), 100, -2.0, 2.0, MVAOutputAxisName, electronAxisName, "Fall17V2 iso MVA category", vMVACatBinEdges);
+    vhEleIMVAOutputVsIMVACat.insert(std::make_pair(iHist, vHist));
+    autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(vhEleIMVAOutputVsIMVACat[iHist]);
+    std::cout << "std::vector<" << hist->ClassName() << "*>* " << histFullName << " booked.\n";
+
+    histFullName = "h" + nameHist + "EleIMVACat";
+    histFullTitle = nameHist + " Electrons Fall17V2 iso MVA category";
+    vHist = CreateVectorOf1DHistograms<TH1D>(histFullName.c_str(), histFullTitle.c_str(), 8, -0.5, 7.5, MVACatAxisName, electronAxisName, "pT", vPtBinEdges);
+    vhEleIMVACatVsPt.insert(std::make_pair(iHist, vHist));
+    autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(vhEleIMVACatVsPt[iHist]);
+    std::cout << "std::vector<" << hist->ClassName() << "*>* " << histFullName << " booked.\n";
+    
     // cd's back to the root directory of the output root file
     autoSavedObject = gDirectory->GetDirectory("..");
   }
@@ -686,13 +712,12 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
   }
   
   std::vector<std::pair<int,int> > selectedObjects;
-  std::vector<std::pair<int,int> > selectedObjectsLoose;
-  std::vector<std::pair<int,int> > selectedObjectsTight;
+//   std::vector<std::pair<int,int> > selectedObjectsLoose;
+//   std::vector<std::pair<int,int> > selectedObjectsTight;
   
-  bool evtSelected = SelectBsToJPsiPhiEvent(evtSelection.c_str(), selectedObjects);
-  
-  bool evtSelectedLoose = SelectBsToJPsiPhiEvent("eleTagLooseV0", selectedObjectsLoose);  
-  bool evtSelectedTight = SelectBsToJPsiPhiEvent("eleTagTightV0", selectedObjectsTight);
+  bool evtSelected = SelectBsToJPsiPhiEvent(evtSelection.c_str(), selectedObjects);  
+//   bool evtSelectedLoose = SelectBsToJPsiPhiEvent("eleTagLooseV0", selectedObjectsLoose);  
+//   bool evtSelectedTight = SelectBsToJPsiPhiEvent("eleTagTightV1", selectedObjectsTight);
   
 //   if(evtSelectedLoose)
 //     std::cout << "Event " << eventNumber << " is" << (evtSelectedLoose?" ":" NOT ") << "selected by the loose selection!\n";
@@ -721,21 +746,21 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
   
   std::cout << "iGenBs = " << iGenBs << ", idGenBs = " << idGenBs << std::endl;
 
-  int iSelObjectLoose = 0;
-  for (auto itSelObjects = selectedObjectsLoose.begin(); itSelObjects != selectedObjectsLoose.end(); itSelObjects++)
-  {
+//   int iSelObjectLoose = 0;
+//   for (auto itSelObjects = selectedObjectsLoose.begin(); itSelObjects != selectedObjectsLoose.end(); itSelObjects++)
+//   {
 //     std::cout << "Loose selection: selected object #" << iSelObjectLoose << ": type = " << itSelObjects->first << ", index = " << itSelObjects->second << std::endl;
-    iSelObjectLoose++;
-  }
+//     iSelObjectLoose++;
+//   }
 
-  int iSelObjectTight = 0;
+//   int iSelObjectTight = 0;
 //   if(evtSelectedTight)
 //     std::cout << "Event " << eventNumber << " is" << (evtSelectedTight?" ":" NOT ") << "selected by the tight selection!\n";
-  for (auto itSelObjects = selectedObjectsTight.begin(); itSelObjects != selectedObjectsTight.end(); itSelObjects++)
-  {
+//   for (auto itSelObjects = selectedObjectsTight.begin(); itSelObjects != selectedObjectsTight.end(); itSelObjects++)
+//   {
 //     std::cout << "Tight selection: selected object #" << iSelObjectTight << ": type = " << itSelObjects->first << ", index = " << itSelObjects->second << std::endl;
-    iSelObjectTight++;
-  }
+//     iSelObjectTight++;
+//   }
   
   std::vector<int> allGenElectrons = GetAllGenElectrons();
 //   unsigned int iGenEle = 0;
@@ -914,6 +939,7 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
   bool HZZV1IDEle;
   bool HZZV2IDEle;
   bool MVANILIDEle;
+  bool MVAILIDEle;
   int gsfPVtxEle;
   float HZZMVAOutputEle = -9999;
   int HZZMVACatEle = -9999;
@@ -1002,7 +1028,7 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
     genChargeCorrEle = 0;
     if(abs(idMatchedGenP) == 11)
     {
-      eleGenType.push_back(1);
+//       eleGenType.push_back(1);
       genChargeCorrEle = chargeEle * genCharge->at(iMatchedGenP);
       // Sub-case: true electron coming (or not) from a B hadron
       if(RecursiveLookForMotherIds(iMatchedGenP, listBMesonsAndBaryons, false) > -1)
@@ -1064,6 +1090,16 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
 //           std::cout << "Found NIMVACatEle value!\n";
           NIMVACatEle = useInfoValue->at(iUserInfo);
         }
+        if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Fall17IsoV2Values)
+        {
+//           std::cout << "Found IMVAOutputEle value!\n";
+          IMVAOutputEle = useInfoValue->at(iUserInfo);
+        }
+        if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Fall17IsoV2Categories)
+        {
+//           std::cout << "Found IMVACatEle value!\n";
+          IMVACatEle = useInfoValue->at(iUserInfo);
+        }
       }
     }
     
@@ -1071,29 +1107,14 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
 //     std::cout << "DEBUG: eleIDBit       = " << std::bitset<32>(eleIDBit) << std::endl;
 //     std::cout << "DEBUG: HZZIDEleBit    = " << std::bitset<32>(HZZIDEleBit) << std::endl;
 //     std::cout << "DEBUG: MVANILIDEleBit = " << std::bitset<32>(MVANILIDEleBit) << std::endl;
+//     std::cout << "DEBUG: MVAILIDEleBit = " << std::bitset<32>(MVAILIDEleBit) << std::endl;
     
     HZZV1IDEle = idsEle & HZZV1IDEleBit;
     HZZV2IDEle = idsEle & HZZV2IDEleBit;
     MVANILIDEle = idsEle & MVANILIDEleBit;
-//     bool elePassesID;
-//     if (eleID == "All")
-//       elePassesID = true;
-//     else
-//       elePassesID = idsEle & eleIDBit;
-//     if (eleSelection == "HZZ")
-//       eleID = HZZIDEle;
-//     else if (eleSelection == "MVANIL")
-//       eleID = MVANILIDEle;
-//     else if (eleSelection == "Open")
-//       eleID = true;
-//     else
-//       eleID = false;
+    MVAILIDEle = idsEle & MVAILIDEleBit;
 
-//     std::cout << "DEBUG: elePassesID = " << elePassesID << std::endl;
-//     std::cout << "DEBUG: HZZIDEle    = " << HZZIDEle << std::endl;
-//     std::cout << "DEBUG: MVANILIDEle = " << MVANILIDEle << std::endl;
-    
-//     if(elePassesID)
+//     if(HZZV1IDEle)
 //     {
 //       eleSelType.push_back(100);
 //     }
@@ -1101,19 +1122,10 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
 //     {
 //       eleSelType.push_back(200);
 //     }
-
-    if(HZZV1IDEle)
-    {
-      eleSelType.push_back(100);
-    }
-//     else
+//     if(HZZV2IDEle)
 //     {
-//       eleSelType.push_back(200);
+//       eleSelType.push_back(300);
 //     }
-    if(HZZV2IDEle)
-    {
-      eleSelType.push_back(300);
-    }
 //     else
 //     {
 //       eleSelType.push_back(400);
@@ -1125,6 +1137,14 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
 //     else
 //     {
 //       eleSelType.push_back(600);
+//     }
+    if(MVAILIDEle)
+    {
+      eleSelType.push_back(700);
+    }
+//     else
+//     {
+//       eleSelType.push_back(800);
 //     }
 
     // Finds the charge correlation between the gen particle matched to the electron and the Bs
@@ -1191,7 +1211,9 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
             Fill(vhEleNIMVAOutputVsPt[iHist], NIMVAOutputEle, ptEle, vPtBinEdges);
             Fill(vhEleNIMVAOutputVsNIMVACat[iHist], NIMVAOutputEle, NIMVACatEle, vMVACatBinEdges);
             Fill(vhEleNIMVACatVsPt[iHist], NIMVACatEle, ptEle, vPtBinEdges);    
-          }
+            Fill(vhEleIMVAOutputVsPt[iHist], IMVAOutputEle, ptEle, vPtBinEdges);
+            Fill(vhEleIMVAOutputVsIMVACat[iHist], IMVAOutputEle, IMVACatEle, vMVACatBinEdges);
+            Fill(vhEleIMVACatVsPt[iHist], IMVACatEle, ptEle, vPtBinEdges);              }
         }
       }
     }
@@ -1450,6 +1472,21 @@ void ElectronEfficiencyAnalyzer::endJob()
     vcTemp = CreateCanvases(0, 21, 1, false, false, *vhEleNIMVACatVsPt[iCanvas]);
     vcEleNIMVACatVsPt.insert(std::make_pair(iCanvas, vcTemp));
     autoSavedObject = reinterpret_cast<std::vector<TObject*>*>(vcEleNIMVACatVsPt[iCanvas]);
+    std::cout << "std::vector<TCanvas*>* " << cFullName << " produced.\n";
+    
+    vcTemp = CreateCanvases(0, 21, 1, false, false, *vhEleIMVAOutputVsPt[iCanvas]);
+    vcEleIMVAOutputVsPt.insert(std::make_pair(iCanvas, vcTemp));
+    autoSavedObject = reinterpret_cast<std::vector<TObject*>*>(vcEleIMVAOutputVsPt[iCanvas]);
+    std::cout << "std::vector<TCanvas*>* " << cFullName << " produced.\n";
+    
+    vcTemp = CreateCanvases(0, 21, 1, false, false, *vhEleIMVAOutputVsIMVACat[iCanvas]);
+    vcEleIMVAOutputVsIMVACat.insert(std::make_pair(iCanvas, vcTemp));
+    autoSavedObject = reinterpret_cast<std::vector<TObject*>*>(vcEleIMVAOutputVsIMVACat[iCanvas]);
+    std::cout << "std::vector<TCanvas*>* " << cFullName << " produced.\n";
+
+    vcTemp = CreateCanvases(0, 21, 1, false, false, *vhEleIMVACatVsPt[iCanvas]);
+    vcEleIMVACatVsPt.insert(std::make_pair(iCanvas, vcTemp));
+    autoSavedObject = reinterpret_cast<std::vector<TObject*>*>(vcEleIMVACatVsPt[iCanvas]);
     std::cout << "std::vector<TCanvas*>* " << cFullName << " produced.\n";
     
     autoSavedObject = gDirectory->GetDirectory("..");

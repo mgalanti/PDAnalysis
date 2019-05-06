@@ -109,6 +109,13 @@ class ElectronEfficiencyAnalyzer:
   std::map<int, std::vector<TH1D*>*> vhEleNIMVACatVsPt;
   std::map<int, std::vector<TCanvas*>*> vcEleNIMVACatVsPt;
   
+  std::map<int, std::vector<TH1D*>*> vhEleIMVAOutputVsPt;
+  std::map<int, std::vector<TCanvas*>*> vcEleIMVAOutputVsPt;
+  std::map<int, std::vector<TH1D*>*> vhEleIMVAOutputVsIMVACat;
+  std::map<int, std::vector<TCanvas*>*> vcEleIMVAOutputVsIMVACat;
+  std::map<int, std::vector<TH1D*>*> vhEleIMVACatVsPt;
+  std::map<int, std::vector<TCanvas*>*> vcEleIMVACatVsPt;
+
   std::map<int, TGraphAsymmErrors*> gGenEleRecoEffVsCharge;
   std::map<int, TGraphAsymmErrors*> gGenEleRecoEffVsPt;
   std::map<int, TGraphAsymmErrors*> gGenEleRecoEffVsPhi;
@@ -135,6 +142,7 @@ class ElectronEfficiencyAnalyzer:
   unsigned int HZZV1IDEleBit;
   unsigned int HZZV2IDEleBit;
   unsigned int MVANILIDEleBit;
+  unsigned int MVAILIDEleBit;
 
   // Used for histograms
   std::map<int, std::string> genEleHistMap;
