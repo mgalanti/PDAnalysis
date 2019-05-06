@@ -77,16 +77,18 @@ bool ANALYZERNAME::analyze( int entry, int event_file, int event_tot ) {
   // Main per-event analysis code goes here
   
   // Event and object selection code
-  // Method SelectEvent(...) is defined in class MGSelector
-  //    evtSelection string is set in the configuration file
-  //    selectedObjects is filled by SelectEvent to store pointers to all selected objects in the event
-  //       The format is a pair<int, int>, 
-  //       where the first integer is the object type 
-  //       (as defined in the PDEnumString::recoObject enum)
+  // Method SelectEvent() is defined in class MGSelector
+  // It depends on two variables:
+  //    evtSelection is a string set in the configuration file, which determines the selection algorithm and parameters
+  //    selectedObjects is declared in MGSelector.h. It is filled by SelectEvent to store pointers to all selected objects in the event
+  //       The format of selectedObjects is a vector<pair<int, int> >, 
+  //       where the first integer is the object type (as defined in the PDEnumString::recoObject enum)
   //       and the second one is the object index
-  std::vector<std::pair<int,int> > selectedObjects;
-  
-  bool evtSelected = SelectEvent(evtSelection.c_str(), selectedObjects);
+  bool evtSelected = SelectEvent();
+  // In alternative, one can use custom selection and vector of selected objects:
+  // std::string mySelection = "mySelectionString";  
+  // std::vector<std::pair<int,int> > mySelectedObjects;
+  // bool myEvtSelected = SelectEvent(mySelection.c_str(), mySelectedObjects);
   
   if(!evtSelected)
     return false;
