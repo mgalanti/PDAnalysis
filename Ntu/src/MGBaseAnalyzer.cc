@@ -20,11 +20,14 @@ MGBaseAnalyzer::MGBaseAnalyzer()
 MGBaseAnalyzer::MGBaseAnalyzer(const std::string name)
 {
   className = name;
+  baseInitialized = false;
 }
 
 
 void MGBaseAnalyzer::beginJob()
 {
+  if(baseInitialized)
+    return;
   PDAnalyzerUtil::beginJob();
 
   int tries = 0;
@@ -65,6 +68,7 @@ void MGBaseAnalyzer::beginJob()
   }
   if(origNameNotOk)
     std::cout << "                            New histOutFileName = " << histOutFileName << std::endl;
+  baseInitialized = true;
 }
 
 

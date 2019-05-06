@@ -4,10 +4,10 @@
 
 
 #include "PDAnalysis/Ntu/interface/PDAnalyzerUtil.h"
-#include "PDAnalysis/Ntu/interface/MGSelector.h"
 
 
-class MGBaseAnalyzer : public virtual PDAnalyzerUtil
+class MGBaseAnalyzer: 
+    public virtual PDAnalyzerUtil
 {
   public:
     MGBaseAnalyzer();
@@ -30,6 +30,7 @@ class MGBaseAnalyzer : public virtual PDAnalyzerUtil
     std::string histOutFileName;
 
   private:
+    bool baseInitialized;
     
 };
 
