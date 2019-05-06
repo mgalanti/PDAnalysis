@@ -54,8 +54,11 @@ void MGBaseAnalyzer::beginJob()
   while(!gSystem->AccessPathName(gSystem->ExpandPathName(histOutFileName.c_str())))
   {
     origNameNotOk = true;
-    std::cout << "W A R N I N G! Output file \"" << histOutFileName << "\" already exists!\n";
-    std::cout << "               Trying a different name...\n";
+    if(tries == 1)
+    {
+      std::cout << "W A R N I N G! Output file \"" << histOutFileName << "\" already exists!\n";
+      std::cout << "               Trying a different name...\n";
+    }
     histOutFileName = "his__" + className + "__" + sampleName + "__" + evtSelection + "__" + std::to_string(tries++) + ".root";
     if(tries > 9999)
       break;
