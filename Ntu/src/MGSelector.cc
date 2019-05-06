@@ -195,17 +195,46 @@ int MGSelector::SelectOSElectron(const std::string selection, const int iPV, con
     int iOSElectron = -1;
     float ptOSElectron = 2.;
     float dZWrtPV;
-    float pt, eta;
+    float pt, eta, phi;
     for(int iElectron = 0; iElectron < nElectrons; iElectron++)
     {
       pt = elePt->at(iElectron);
       if(pt < 2.)
         continue;
       eta = eleEta->at(iElectron);
-      if(eta > 2.4)
+      if(fabs(eta) > 2.4)
         continue;
+      phi = elePhi->at(iElectron);
+      if(deltaR(tB.Eta(), tB.Phi(), eta, phi) < 0.4) continue;
       dZWrtPV = dZ(iElectron, iPV);
-      if(dZWrtPV < 1. && pt > ptOSElectron)
+      if(fabs(dZWrtPV) > 1)
+        continue;
+      // Make sure that the electron is not any of the tracks used to build the B
+      // Since the electron track is not a standard track, must check by deltaR, deltaPt
+      bool closeTrk = false;
+      for(auto iTrk : tkSsB)
+      {
+        if(deltaR(trkEta->at(iTrk), trkPhi->at(iTrk), eleGsfEta->at(iElectron), eleGsfPhi->at(iElectron)) < 0.05)
+        {
+          std::cout << "MGSelector::SelectOSElectron(): I N F O. Gsf track of electron " << iElectron << " is close in dR to one of the B tracks.\n";
+          std::cout << "                                         trkEta->at(" << iTrk << ") = " << trkEta->at(iTrk) << ", eleGsfEta->at(" << iElectron << ") = " << eleGsfEta->at(iElectron) << std::endl;
+          std::cout << "                                         trkPhi->at(" << iTrk << ") = " << trkPhi->at(iTrk) << ", eleGsfPhi->at(" << iElectron << ") = " << eleGsfPhi->at(iElectron) << std::endl;
+          std::cout << "                                         Electron will not be considered for OS tagging.\n";
+          closeTrk = true;
+        }
+        if(2*fabs(trkPt->at(iTrk) - eleGsfPt->at(iElectron))/(trkPt->at(iTrk) + eleGsfPt->at(iElectron)) < 0.05)
+        {
+          std::cout << "MGSelector::SelectOSElectron(): I N F O. Gsf track of electron " << iElectron << " is close in dpT/pT to one of the B tracks.\n"; 
+          std::cout << "                                         trkPt->at(" << iTrk << ") = " << trkPt->at(iTrk) << ", eleGsfPt->at(" << iElectron << ") = " << eleGsfPt->at(iElectron) << std::endl;
+          std::cout << "                                         Electron will not be considered for OS tagging.\n";
+          closeTrk = true;
+        }
+        if(closeTrk)
+          break;
+      }
+      if(closeTrk)
+        continue;
+      if(pt > ptOSElectron)
       {
         iOSElectron = iElectron;
         ptOSElectron = pt;
