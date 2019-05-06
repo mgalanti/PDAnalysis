@@ -19,6 +19,8 @@ class MGRecoTools : public virtual PDAnalyzerUtil
     float GetCt2D(const TLorentzVector& t, const int iSV);
     const int GetClosestRecoElectron(const double pt, const double eta, const double phi, double dRMax = 0.12, double dPtMax = 0.3);
     
+    // Taken from https://github.com/abragagn/BPHPD-AlbertoUtilities/blob/master/PDAnalysis/Ntu/bin/AlbertoUtil.cc
+    const TLorentzVector GetTLorentzVectorFromJPsiX(const int iSvt);
     
     const double dZ(const int iEle, const int iVtx);
     // MG: none of the methods below works with the hitPattern implementation in PD ntuples.

@@ -69,6 +69,26 @@ const int MGRecoTools::GetClosestRecoElectron(const double pt, const double eta,
 
 
 
+const TLorentzVector MGRecoTools::GetTLorentzVectorFromJPsiX(const int iSvt)
+{
+    int iJPsi = (subVtxFromSV(iSvt)).at(0);
+    std::vector<int> tkJpsi = tracksFromSV(iJPsi) ;
+    std::vector<int> tkSsB = tracksFromSV(iSvt);
+    TLorentzVector t(0,0,0,0);
+
+    for( uint i=0; i<tkSsB.size(); ++i ){
+        int j = tkSsB.at(i);
+        float m = constants::kaonMass;
+        if( (j==tkJpsi.at(0)) || (j==tkJpsi.at(1)) ) m = constants::muonMass;
+        TLorentzVector a;
+        a.SetPtEtaPhiM( trkPt->at(j), trkEta->at(j), trkPhi->at(j), m );
+        t += a;
+    }
+
+    return t;
+}
+
+
 
 float MGRecoTools::GetCt2D(const TLorentzVector& t, const int iSV)
 {
