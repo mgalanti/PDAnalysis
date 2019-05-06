@@ -12,7 +12,10 @@
 
 
 
-class MGGenTools : public virtual PDAnalyzerUtil, public virtual PDGenHandler, public virtual MGContainerTools
+class MGGenTools: 
+    public virtual PDAnalyzerUtil, 
+    public virtual PDGenHandler, 
+    public virtual MGContainerTools
 {
   public:
     MGGenTools();
