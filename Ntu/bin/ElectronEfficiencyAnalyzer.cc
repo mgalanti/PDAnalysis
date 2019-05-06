@@ -24,6 +24,7 @@ ElectronEfficiencyAnalyzer::~ElectronEfficiencyAnalyzer() {
 void ElectronEfficiencyAnalyzer::beginJob() {
 
   MGBaseAnalyzer::beginJob();
+  MGSelector::SetSelectionString(evtSelection);
 
 
   // user parameters are retrieved as strings by using their names;
