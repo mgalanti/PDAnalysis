@@ -9,10 +9,11 @@
 #include "PDAnalysis/Ntu/interface/MGGenTools.h"
 #include "MGTools/PlottingTools/interface/PlottingTools.h"
 
-class ElectronEfficiencyAnalyzer: public MGBaseAnalyzer,
-                                  public virtual MGSelector,
-                                  public virtual MGGenTools, 
-                                  public virtual PlottingTools 
+class ElectronEfficiencyAnalyzer: 
+    public MGBaseAnalyzer,
+    public virtual MGSelector,
+    public virtual MGGenTools, 
+    public virtual PlottingTools 
 {
  public:
 
