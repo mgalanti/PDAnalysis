@@ -14,15 +14,17 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
 
   void initTree() {
     treeName = "EleMVAsecondTree";
-    setBranch( "nSum", &nSum , "nSum/I", &b_nSum );
-    setBranch( "nPro", &nPro , "nPro/I", &b_nPro );
+    
+    setBranch( "elePt", &elePt, "elePt/F", &b_elePt );
+    setBranch( "eleEta", &eleEta, "eleEta/F", &b_eleEta );
+    setBranch( "elePhi", &elePhi, "elePhi/F", &b_elePhi );
+    
   }
 
-  int nSum;
-  int nPro;
-  TBranch* b_nSum;
-  TBranch* b_nPro;
+  float elePt, eleEta, elePhi;
 
+  TBranch *b_elePt, *b_eleEta, *b_elePhi;
+  
  private:
 
   EleMVASecondNtupleData           ( const EleMVASecondNtupleData& a );

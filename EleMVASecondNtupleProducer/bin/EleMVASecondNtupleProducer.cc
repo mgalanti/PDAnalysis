@@ -28,6 +28,7 @@ EleMVASecondNtupleProducer::~EleMVASecondNtupleProducer() {
 void EleMVASecondNtupleProducer::beginJob() {
 
   MGBaseAnalyzer::beginJob();
+  MGSelector::SetSelectionString(evtSelection);
 
 
   // user parameters are retrieved as strings by using their names;
@@ -126,11 +127,44 @@ bool EleMVASecondNtupleProducer::analyze( int entry, int event_file, int event_t
   
   if(!evtSelected)
     return false;
+  
  
   // Do something with the event and the selected objects...
+  int iSelObject = 0;
+  int iBestPV = -1;
+  int iBestBs = -1;
+  int iBestEle = -1;
+  for (auto itSelObjects = selectedObjects.begin(); itSelObjects != selectedObjects.end(); itSelObjects++)
+  {
+//     std::cout << "Event selection: selected object #" << iSelObject << ": type = " << itSelObjects->first << ", index = " << itSelObjects->second << std::endl;
+    if(itSelObjects->first == PDEnumString::recPV)
+      iBestPV = itSelObjects->second;
+    if(itSelObjects->first == PDEnumString::recSvt)
+      iBestBs = itSelObjects->second;
+    if(itSelObjects->first == PDEnumString::recElectron)
+      iBestEle = itSelObjects->second;
+    iSelObject++;
+  }
+  
+  std::cout << "iBestPV = " << iBestPV << ", iBestBs = " << iBestBs << ", iBestEle = " << iBestEle << std::endl;
+//   int iElectron = SelectOSElectron(iBestPV, iBestBs);
+
+  // Depending on the selection string provided in the configuration, it is not granted 
+  // that we have all the needed objects at this point, even if the event passed the selection.
+  // Thus, let's check explicitly.
+  
+  if(iBestPV == -1 || iBestBs == -1 || iBestEle == -1)
+    return false;
+  
+  (tWriter->elePt) = elePt->at(iBestEle);
+  (tWriter->eleEta) = eleEta->at(iBestEle);
+  (tWriter->elePhi) = elePhi->at(iBestEle);
+  
+  tWriter->fill();
     
   return true;
 }
+
 
 
 void EleMVASecondNtupleProducer::endJob() 
