@@ -5,7 +5,8 @@
 <use   name="NtuTool/Read"/>
 <use   name="PDAnalysis/Ntu"/>
 <use   name="MGTools/PlottingTools"/>
+<use   name="PDAnalysis/ElectronEfficiencyAnalyzer"/>
 <environment>
-  <bin   file="treeAnalyze.cc" name="pdTreeAnalyze"></bin>
-  <bin   file="treeAnalyzeMod.cc" name="pdTreeAnalyzeMod"></bin>
+  <bin   file="analyzeElectronEfficiency.cc" name="analyzeElectronEfficiency"></bin>
 </environment>
+

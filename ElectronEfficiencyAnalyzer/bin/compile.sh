@@ -14,17 +14,18 @@ else
   export NTU_TOOL_LIB="-L "${NTU_TOOL_DIR}"/lib/"${SCRAM_ARCH}" -lNtupleTool_"${CMSSW_VERSION}
 fi
 
-export PD_EXE_FILE=${PD_PACK_DIR}/bin/pdTreeAnalyze
-rm -f ${PD_EXE_FILE}
+export ANA_EXE_FILE=${PD_PACK_DIR}/bin/analyzeElectronEfficiency
+rm -f ${ANA_EXE_FILE}
 
 c++ -Wall `root-config --cflags`              \
 -I ${PD_ROOT_DIR} -I ${NTU_TOOL_DIR}/include \
--o ${PD_EXE_FILE}                            \
+-o ${ANA_EXE_FILE}                            \
 `ls -1 $PD_PACK_DIR/src/*cc |\
        awk '{printf($0" ")}'`                 \
-${PD_PACK_DIR}/bin/treeAnalyze.cc            \
+${PD_PACK_DIR}/bin/analyzeElectronEfficiency.cc            \
 ${PD_ROOT_DIR}/NtuAnalysis/*/src/*cc         \
 ${NTU_TOOL_LIB}                               \
 `root-config --glibs`
 
-echo ${PD_EXE_FILE}
+echo ${ANA_EXE_FILE}
+

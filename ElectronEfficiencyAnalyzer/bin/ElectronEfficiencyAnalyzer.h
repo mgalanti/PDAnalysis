@@ -3,7 +3,6 @@
  
 #include "TH1.h"
 #include "TH2.h"
-// #include "PDAnalyzerUtil.h"
 #include "PDAnalysis/Ntu/interface/MGBaseAnalyzer.h"
 #include "PDAnalysis/Ntu/interface/MGSelector.h"
 #include "PDAnalysis/Ntu/interface/MGGenTools.h"
