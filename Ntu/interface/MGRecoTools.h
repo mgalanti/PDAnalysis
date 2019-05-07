@@ -2,6 +2,7 @@
 #define MGRecoTools_h
 
 #include "TLorentzVector.h"
+#include "TVectorF.h"
 
 #include "PDAnalysis/Ntu/interface/constants.h"
 #include "PDAnalysis/Ntu/interface/PDAnalyzerUtil.h"
@@ -16,13 +17,22 @@ class MGRecoTools : public virtual PDAnalyzerUtil
     virtual ~MGRecoTools() {};
     
     inline short FindJetNearToMuon(const unsigned short iMuon, const double deltaRThreshold);
-    float GetCt2D(const TLorentzVector& t, const int iSV);
+    
+    
+    // GetCt* methods adapted from https://github.com/abragagn/BPHPD-AlbertoUtilities/blob/master/PDAnalysis/Ntu/bin/AlbertoUtil.cc
+    float GetCt2D(const TLorentzVector& p, const int iSV, const float mass = constants::BsMass);
+    float GetCt2DPV(const TLorentzVector& p, const int iSV, const int iPV, const float mass = constants::BsMass);
+    float GetCt2DPVErr(const TLorentzVector& p, const int iSV, const int iPV, const float mass = constants::BsMass);
+    float GetCt3DPV(const TLorentzVector& p, const int iSV, const int iPV, const float mass = constants::BsMass);
+    float GetCt3DPVErr(const TLorentzVector& p, const int iSV, const int iPV, const float mass = constants::BsMass);
+    
     const int GetClosestRecoElectron(const double pt, const double eta, const double phi, double dRMax = 0.12, double dPtMax = 0.3);
     
     // Taken from https://github.com/abragagn/BPHPD-AlbertoUtilities/blob/master/PDAnalysis/Ntu/bin/AlbertoUtil.cc
     const TLorentzVector GetTLorentzVectorFromJPsiX(const int iSvt);
     
     const double dZ(const int iEle, const int iVtx);
+   
     // MG: none of the methods below works with the hitPattern implementation in PD ntuples.
 //     inline double GetTrackValidFraction(const unsigned short iTrack);
 //     inline int GetNumberOfValidTrackerHits(const unsigned short iTrack);

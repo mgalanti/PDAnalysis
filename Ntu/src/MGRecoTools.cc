@@ -90,17 +90,106 @@ const TLorentzVector MGRecoTools::GetTLorentzVectorFromJPsiX(const int iSvt)
 
 
 
-float MGRecoTools::GetCt2D(const TLorentzVector& t, const int iSV)
+float MGRecoTools::GetCt2D(const TLorentzVector& p, const int iSV, const float mass)
 {
-    TVector3 vSVT(svtX->at(iSV), svtY->at(iSV), 0.);
-    TVector3 vPV(bsX, bsY, 0.);
-
-    TVector3 vPointing = vSVT - vPV;
-    TVector3 vBs = t.Vect();
-
-    return constants::BsMass/t.Pt() * (vPointing * vBs.Unit());
+  TVector3 vSVT(svtX->at(iSV), svtY->at(iSV), 0.);
+  TVector3 vPV(bsX, bsY, 0.);
+  
+  TVector3 vPointing = vSVT - vPV;
+  TVector3 vB = p.Vect();
+  
+  return mass/p.Pt() * (vPointing * vB.Unit());
 }
 
+
+
+float MGRecoTools::GetCt2DPV(const TLorentzVector& p, const int iSV, const int iPV, const float mass)
+{
+  TVector3 vSVT(svtX->at(iSV), svtY->at(iSV), 0.);
+  TVector3 vPV(pvtX->at(iPV), pvtY->at(iPV), 0.);
+  
+  TVector3 vPointing = vSVT - vPV;
+  TVector3 vBs = p.Vect();
+  
+  return mass/p.Pt() * (vPointing * vBs.Unit());
+}
+
+
+
+float MGRecoTools::GetCt2DPVErr(const TLorentzVector& p, const int iSV, const int iPV, const float mass)
+{
+  TVector3 vSVT(svtX->at(iSV), svtY->at(iSV), 0.);
+  TVector3 vPV(pvtX->at(iPV), pvtY->at(iPV), 0.);
+  
+  TVector3 vPointing = vSVT - vPV;
+  TVector3 vB = p.Vect();
+  
+  TMatrixF covSV(3,3);
+  float covSVArray[]={svtSxx->at(iSV),svtSxy->at(iSV),svtSxz->at(iSV),
+                      svtSxy->at(iSV),svtSyy->at(iSV),svtSyz->at(iSV), 
+                      svtSxz->at(iSV),svtSyz->at(iSV),svtSzz->at(iSV)};
+  covSV.SetMatrixArray(covSVArray);
+  
+  TMatrixF covPV(3,3);
+  float covPVArray[]={pvtSxx->at(iPV),pvtSxy->at(iPV),pvtSxz->at(iPV),
+                      pvtSxy->at(iPV),pvtSyy->at(iPV),pvtSyz->at(iPV), 
+                      pvtSxz->at(iPV),pvtSyz->at(iPV),pvtSzz->at(iPV)};
+  covPV.SetMatrixArray(covPVArray);
+  
+  TMatrixF covTot= covSV+covPV;
+  
+  float distArray2D[]={float(vPointing.X()),float(vPointing.Y()),0.};
+  TVectorF diff2D(3,distArray2D);
+  
+  if (diff2D.Norm2Sqr()==0) return -1.; //if the secondary vertex is exactly the same as PV 
+  
+  return mass / p.Pt() * sqrt(covTot.Similarity(diff2D)) / sqrt(diff2D.Norm2Sqr()); 
+}
+
+
+
+float MGRecoTools::GetCt3DPV(const TLorentzVector& p, const int iSV, const int iPV, const float mass)
+{
+  TVector3 vSVT(svtX->at(iSV), svtY->at(iSV), svtZ->at(iSV));
+  TVector3 vPV(pvtX->at(iPV), pvtY->at(iPV), pvtZ->at(iPV));
+  
+  TVector3 vPointing = vSVT - vPV;
+  TVector3 vB = p.Vect();
+  
+  return mass/p.P() * vPointing.Dot(vB)/vB.Mag();
+}
+
+
+
+float MGRecoTools::GetCt3DPVErr(const TLorentzVector& p, const int iSV, const int iPV, const float mass)
+{
+  TVector3 vSVT(svtX->at(iSV), svtY->at(iSV), svtZ->at(iSV));
+  TVector3 vPV(pvtX->at(iPV), pvtY->at(iPV), pvtZ->at(iPV));
+  
+  TVector3 vPointing = vSVT - vPV;
+  TVector3 vB = p.Vect();
+  
+  TMatrixF covSV(3,3);
+  float covSVArray[]={svtSxx->at(iSV),svtSxy->at(iSV),svtSxz->at(iSV),
+                      svtSxy->at(iSV),svtSyy->at(iSV),svtSyz->at(iSV), 
+                      svtSxz->at(iSV),svtSyz->at(iSV),svtSzz->at(iSV)};
+  covSV.SetMatrixArray(covSVArray);
+  
+  TMatrixF covPV(3,3);
+  float covPVArray[]={pvtSxx->at(iPV),pvtSxy->at(iPV),pvtSxz->at(iPV),
+                      pvtSxy->at(iPV),pvtSyy->at(iPV),pvtSyz->at(iPV), 
+                      pvtSxz->at(iPV),pvtSyz->at(iPV),pvtSzz->at(iPV)};
+  covPV.SetMatrixArray(covPVArray);
+  
+  TMatrixF covTot= covSV+covPV;
+  
+  float distArray[]={float(vPointing.X()),float(vPointing.Y()),float(vPointing.Z())};
+  TVectorF diff(3,distArray);
+
+  if (diff.Norm2Sqr()==0) return -1.; //if the secondary vertex is exactly the same as PV 
+  
+  return mass/p.P() * sqrt(covTot.Similarity(diff)) / sqrt(diff.Norm2Sqr()); 
+}
 
 
 
