@@ -33,14 +33,16 @@ class MGSelector:
     bool SelectJPsi(const int iJPsi, const std::string selection);
     bool SelectPhi(const int iPhi, const std::string selection);
     
+    int SelectBestCandidate(const std::string candidateType, const std::string selection, int& iPV);
     int SelectBestBsToJPsiPhi(const std::string selection, int& iPV);
+    int SelectBestBuToJPsiK(const std::string selection, int& iPV);
     int SelectBestPV(const int iSvt, const TLorentzVector& pSvt, const std::string selection);
     
     std::vector<std::pair<int, int> > selectedObjects;
-
-  private:
     std::string selectionString;
     std::vector<std::string> selectionSubStrings;
+
+  private:
     
 };
 

@@ -214,17 +214,12 @@ int MGSelector::SelectOSElectron(const std::string selection, const int iPV, con
       bool closeTrk = false;
       for(auto iTrk : tkSsB)
       {
-        if(deltaR(trkEta->at(iTrk), trkPhi->at(iTrk), eleGsfEta->at(iElectron), eleGsfPhi->at(iElectron)) < 0.05)
+        if((deltaR(trkEta->at(iTrk), trkPhi->at(iTrk), eleGsfEta->at(iElectron), eleGsfPhi->at(iElectron)) < 0.1) &&
+           (2*fabs(trkPt->at(iTrk) - eleGsfPt->at(iElectron))/(trkPt->at(iTrk) + eleGsfPt->at(iElectron)) < 0.1))
         {
-          std::cout << "MGSelector::SelectOSElectron(): I N F O. Gsf track of electron " << iElectron << " is close in dR to one of the B tracks.\n";
+          std::cout << "MGSelector::SelectOSElectron(): I N F O. Gsf track of electron " << iElectron << " is close in dR and dpT/pT to one of the B tracks.\n";
           std::cout << "                                         trkEta->at(" << iTrk << ") = " << trkEta->at(iTrk) << ", eleGsfEta->at(" << iElectron << ") = " << eleGsfEta->at(iElectron) << std::endl;
           std::cout << "                                         trkPhi->at(" << iTrk << ") = " << trkPhi->at(iTrk) << ", eleGsfPhi->at(" << iElectron << ") = " << eleGsfPhi->at(iElectron) << std::endl;
-          std::cout << "                                         Electron will not be considered for OS tagging.\n";
-          closeTrk = true;
-        }
-        if(2*fabs(trkPt->at(iTrk) - eleGsfPt->at(iElectron))/(trkPt->at(iTrk) + eleGsfPt->at(iElectron)) < 0.05)
-        {
-          std::cout << "MGSelector::SelectOSElectron(): I N F O. Gsf track of electron " << iElectron << " is close in dpT/pT to one of the B tracks.\n"; 
           std::cout << "                                         trkPt->at(" << iTrk << ") = " << trkPt->at(iTrk) << ", eleGsfPt->at(" << iElectron << ") = " << eleGsfPt->at(iElectron) << std::endl;
           std::cout << "                                         Electron will not be considered for OS tagging.\n";
           closeTrk = true;
@@ -318,6 +313,25 @@ bool MGSelector::SelectPhi(const int iPhi, const std::string selection)
   }
   std::cout << "MGSelector::SelectPhi(): W A R N I N G ! Reached default return statement. Phi will not be selected...\n";
   return false;  
+}
+
+
+
+int MGSelector::SelectBestCandidate(const std::string candidateType, const std::string selection, int& iBestPV)
+{
+  if(candidateType.compare("BsToJPsiPhi") == 0)
+    return SelectBestBsToJPsiPhi(selection, iBestPV);
+  else if(candidateType.compare("BuToJPsiK") == 0)
+    return SelectBestBuToJPsiK(selection, iBestPV);
+  else
+  {
+    std::cout << "MGSelector::SelectBestCandidate: E R R O R ! The candidate type\"" << candidateType << "\" is not recognized!";
+    std::cout << "                                 Exiting...\n";
+    exit(1);
+  }
+  std::cout << "MGSelector::SelectBestCandidate(): W A R N I N G ! Reached default return statement. We should never be here!\n";
+  iBestPV = -1;
+  return -1;  
 }
 
 
@@ -450,6 +464,15 @@ int MGSelector::SelectBestBsToJPsiPhi(const std::string selection, int& iBestPV)
   }
   
   std::cout << "MGSelector::SelectBestBsToJPsiPhi(): W A R N I N G ! Reached default return statement. Best BsToJpsiPhi will not be selected...\n";
+  return -1;
+}
+
+
+
+int MGSelector::SelectBestBuToJPsiK(const std::string selection, int& iBestPV)
+{
+  std::cout << "MGSelector::SelectBestBuToJPsiK(): W A R N I N G ! Method is not implemented yet. Reached default return statement. Noo BuToJpsiK will be selected...\n";
+  iBestPV = -1;
   return -1;
 }
 
