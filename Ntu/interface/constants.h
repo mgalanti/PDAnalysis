@@ -17,6 +17,7 @@ namespace constants
   const double protonMass = 0.9382;
   const double lambdaMass = 1.116;
   const double BsMass = 5.3663;
+  const double BuMass = 5.2793;
 }
 
 
