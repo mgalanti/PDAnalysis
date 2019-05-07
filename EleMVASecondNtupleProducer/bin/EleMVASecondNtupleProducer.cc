@@ -37,6 +37,7 @@ void EleMVASecondNtupleProducer::beginJob() {
   // e.g. getUserParameter( "name", x )
 
   getUserParameter( "verbose", verbose );
+  getUserParameter("tightSelection", tightSelection);
 
   // user parameters are set as names associated to a string, 
   // default values can be set in the analyzer class contructor
@@ -85,6 +86,8 @@ void EleMVASecondNtupleProducer::book()
   // putting "autoSavedObject" in front of the histo creation 
   // it's automatically marked for saving on file; the option 
   // is uneffective when not using the full utility
+  
+  autoSavedObject = hEleBTrkDistance = Create2DHistogram<TH2D>("hEleBTrkDistance", "Distance in #Delta(R) and #Delta(p_{T})/p_{T} between electron and B tracks", 100, 0., 5., 100, 0., 2., "#Delta(R)", "2#times|p_{T,ele}-p_{T,Trk}|/(p_{T,ele}+p_{T,Trk})");
 
   return;
 }
@@ -137,34 +140,62 @@ bool EleMVASecondNtupleProducer::analyze( int entry, int event_file, int event_t
   // Do something with the event and the selected objects...
   int iSelObject = 0;
   int iBestPV = -1;
-  int iBestBs = -1;
+  int iBestB = -1;
   int iBestEle = -1;
+  bool tightB = false;
   for (auto itSelObjects = selectedObjects.begin(); itSelObjects != selectedObjects.end(); itSelObjects++)
   {
 //     std::cout << "Event selection: selected object #" << iSelObject << ": type = " << itSelObjects->first << ", index = " << itSelObjects->second << std::endl;
     if(itSelObjects->first == PDEnumString::recPV)
       iBestPV = itSelObjects->second;
     if(itSelObjects->first == PDEnumString::recSvt)
-      iBestBs = itSelObjects->second;
+      iBestB = itSelObjects->second;
     if(itSelObjects->first == PDEnumString::recElectron)
       iBestEle = itSelObjects->second;
     iSelObject++;
   }
   
-//   int iElectron = SelectOSElectron(iBestPV, iBestBs);
+  
+  
+//   int iElectron = SelectOSElectron(iBestPV, iBestB);
 
   // Depending on the selection string provided in the configuration, it is not granted 
   // that we have all the needed objects at this point, even if the event passed the selection.
   // Thus, let's check explicitly.  
-  if(iBestPV == -1 || iBestBs == -1 || iBestEle == -1)
+  if(iBestPV == -1 || iBestB == -1 || iBestEle == -1)
   {
     std::cout << "E R R O R ! Event passed the selection \"" << evtSelection << "\" but not all the needed objects are available!\n";
-    std::cout << "            iBestPV = " << iBestPV << ", iBestBs = " << iBestBs << ", iBestEle = " << iBestEle << std::endl;
+    std::cout << "            iBestPV = " << iBestPV << ", iBestB = " << iBestB << ", iBestEle = " << iBestEle << std::endl;
     std::cout << "            Please fix the configuration file or the MGSelector::SelectEvent() code to avoid this error.";
     std::cout << "            Exiting...\n";
     exit(1);
   }
   
+  // Check if we have a tight signal candidate in the event
+  int iBestPVTight = -1;
+  int iBestBTight = SelectBestCandidate(selectionSubStrings[0], tightSelection, iBestPVTight);
+  
+  // If we have a tight signal candidate, let's use that instead of the loose one
+  if (iBestBTight > -1)
+  {
+    tightB = true;
+    iBestB = iBestBTight;
+    iBestPV = iBestPVTight;
+  }
+
+  std::vector <int> tkSsB = tracksFromSV(iBestB);
+  
+  for(auto iTrk: tkSsB)
+  {
+    float dR = deltaR(trkEta->at(iTrk), trkPhi->at(iTrk), eleGsfEta->at(iBestEle), eleGsfPhi->at(iBestEle));
+    float dpTOverpT = 2*fabs(trkPt->at(iTrk) - eleGsfPt->at(iBestEle))/(trkPt->at(iTrk) + eleGsfPt->at(iBestEle));
+    hEleBTrkDistance->Fill(dR, dpTOverpT);
+  }
+  
+  // Signal-side variables
+  (tWriter->tightB) = tightB?1:0;
+  
+  // Opposite-side variables
   (tWriter->elePt) = elePt->at(iBestEle);
   (tWriter->eleEta) = eleEta->at(iBestEle);
   (tWriter->elePhi) = elePhi->at(iBestEle);
@@ -180,6 +211,8 @@ void EleMVASecondNtupleProducer::endJob()
 {
   // This runs after the event loop
   tWriter->close();
+  
+  autoSavedObject = cEleBTrkDistance = CreateCanvas("cEleBTrkDistance", "colz", false, false, false, hEleBTrkDistance);
   
   return;
 }

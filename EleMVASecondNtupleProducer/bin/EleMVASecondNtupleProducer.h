@@ -42,9 +42,13 @@ class EleMVASecondNtupleProducer:
   EleMVASecondNtupleWriter* tWriter;
   
   std::string secondNtupleFileName;
+  std::string tightSelection;
 
  private:
   
+  TH2D* hEleBTrkDistance;
+  TCanvas* cEleBTrkDistance;
+   
   // dummy copy constructor and assignment
   EleMVASecondNtupleProducer           ( const EleMVASecondNtupleProducer& );
   EleMVASecondNtupleProducer& operator=( const EleMVASecondNtupleProducer& );
