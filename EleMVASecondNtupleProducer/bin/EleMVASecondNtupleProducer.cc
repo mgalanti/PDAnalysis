@@ -138,11 +138,19 @@ bool EleMVASecondNtupleProducer::analyze( int entry, int event_file, int event_t
   
  
   // Do something with the event and the selected objects...
+
+  // Check if the event passes the tight selection
+  std::vector<std::pair<int, int> > selectedObjectsTight;
+  bool tightEvent = SelectEvent(tightSelection, selectedObjectsTight);
+
+  // If the event passes the tight selection, let's use those candidates instead of the loose ones
+  if(tightEvent)
+    selectedObjects = selectedObjectsTight;
+
   int iSelObject = 0;
   int iBestPV = -1;
   int iBestB = -1;
   int iBestEle = -1;
-  bool tightB = false;
   for (auto itSelObjects = selectedObjects.begin(); itSelObjects != selectedObjects.end(); itSelObjects++)
   {
 //     std::cout << "Event selection: selected object #" << iSelObject << ": type = " << itSelObjects->first << ", index = " << itSelObjects->second << std::endl;
@@ -171,18 +179,6 @@ bool EleMVASecondNtupleProducer::analyze( int entry, int event_file, int event_t
     exit(1);
   }
   
-  // Check if we have a tight signal candidate in the event
-  int iBestPVTight = -1;
-  int iBestBTight = SelectBestCandidate(selectionSubStrings[0], tightSelection, iBestPVTight);
-  
-  // If we have a tight signal candidate, let's use that instead of the loose one
-  if (iBestBTight > -1)
-  {
-    tightB = true;
-    iBestB = iBestBTight;
-    iBestPV = iBestPVTight;
-  }
-
   std::vector <int> tkSsB = tracksFromSV(iBestB);
   
   for(auto iTrk: tkSsB)
@@ -193,7 +189,7 @@ bool EleMVASecondNtupleProducer::analyze( int entry, int event_file, int event_t
   }
   
   // Signal-side variables
-  (tWriter->tightB) = tightB?1:0;
+  (tWriter->tightEvent) = tightEvent?1:0;
   
   // Opposite-side variables
   (tWriter->elePt) = elePt->at(iBestEle);

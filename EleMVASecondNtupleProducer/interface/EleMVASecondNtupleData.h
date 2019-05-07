@@ -16,7 +16,7 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
     treeName = "EleMVAsecondTree";
     
     // Signal-side variables
-    setBranch( "tightB", &tightB, "tightB/b", &b_tightB );
+    setBranch( "tightEvent", &tightEvent, "tightEvent/b", &b_tightEvent );
     
     // Signal-side variables
     setBranch( "elePt", &elePt, "elePt/F", &b_elePt );
@@ -25,11 +25,11 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
     
   }
 
-  unsigned short tightB;
+  unsigned short tightEvent;
   
   float elePt, eleEta, elePhi;
 
-  TBranch *b_tightB;
+  TBranch *b_tightEvent;
   TBranch *b_elePt, *b_eleEta, *b_elePhi;
   
  private:
