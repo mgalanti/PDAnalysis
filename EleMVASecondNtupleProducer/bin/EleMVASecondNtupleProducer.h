@@ -43,6 +43,8 @@ class EleMVASecondNtupleProducer:
   
   std::string secondNtupleFileName;
   std::string tightSelection;
+  
+  float trueBMass;
 
  private:
   

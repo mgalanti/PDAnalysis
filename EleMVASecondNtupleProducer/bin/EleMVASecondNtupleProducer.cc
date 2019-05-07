@@ -75,6 +75,22 @@ void EleMVASecondNtupleProducer::beginJob() {
   
   // Actually open the second ntuple file for writing
   tWriter->open(secondNtupleFileName, "RECREATE");
+  
+  // Set the generator-level B meson mass according to the particle looked for in the selection
+  trueBMass = 0;
+  if(evtSelection.substr(0,2).compare("Bs") == 0)
+    trueBMass = constants::BsMass;
+  else if(evtSelection.substr(0,2).compare("Bu") == 0)
+    trueBMass = constants::BuMass;
+  else
+  {
+    std::cout << "E R R O R ! Cannot determine the selected meson from the selection string!\n";
+    std::cout << "            The selection string is: \"" << evtSelection << "\"\n";
+    std::cout << "            Please fix the configuration file.\n";
+    std::cout << "            Exiting...\n";
+    exit(1);
+  }
+  std::cout << "EleMVASecondNtupleProducer::beginJob(): I N F O. trueBMass = " << trueBMass << std::endl;
 
   return;
 }
@@ -100,18 +116,21 @@ void EleMVASecondNtupleProducer::reset() {
 }
 
 
-bool EleMVASecondNtupleProducer::analyze( int entry, int event_file, int event_tot ) {
+bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_tot) 
+{
 
-  if ( verbose ) {
+  if (verbose) 
+  {
     cout << " +++++++++++++++++++++++++++ " << endl;
     cout << "entry: "
          << entry << " " << event_file << " " << event_tot << endl;
     cout << "run: " <<   runNumber << " , "
          << "evt: " << eventNumber << endl;
   }
-  else {
-//    if ( !( event_file % 10000 ) || !( event_tot % 10000 ) )
-    if ( !( event_tot % 10000 ) && event_tot )
+  else 
+  {
+//    if (!(event_file % 10000) || !(event_tot % 10000))
+    if (!( event_tot % 10000 ) && event_tot)
       cout << event_file << " " << event_tot << endl;
   }
 
@@ -119,26 +138,12 @@ bool EleMVASecondNtupleProducer::analyze( int entry, int event_file, int event_t
   
   tWriter->Reset();
   
-  // Event and object selection code
-  // Method SelectEvent(...) is defined in class MGSelector
-  //    evtSelection string is set in the configuration file
-  //    selectedObjects is filled by SelectEvent to store pointers to all selected objects in the event
-  //       The format is a pair<int, int>, 
-  //       where the first integer is the object type 
-  //       (as defined in the PDEnumString::recoObject enum)
-  //       and the second one is the object index
-//   std::vector<std::pair<int,int> > selectedObjects;
-  
-//   bool evtSelected = SelectEvent(evtSelection.c_str(), selectedObjects);
-  
+  // Check if the event passes the default selection defined in the cfg
   bool evtSelected = SelectEvent();
   
   if(!evtSelected)
     return false;
-  
  
-  // Do something with the event and the selected objects...
-
   // Check if the event passes the tight selection
   std::vector<std::pair<int, int> > selectedObjectsTight;
   bool tightEvent = SelectEvent(tightSelection, selectedObjectsTight);
@@ -163,10 +168,6 @@ bool EleMVASecondNtupleProducer::analyze( int entry, int event_file, int event_t
     iSelObject++;
   }
   
-  
-  
-//   int iElectron = SelectOSElectron(iBestPV, iBestB);
-
   // Depending on the selection string provided in the configuration, it is not granted 
   // that we have all the needed objects at this point, even if the event passed the selection.
   // Thus, let's check explicitly.  
@@ -179,9 +180,11 @@ bool EleMVASecondNtupleProducer::analyze( int entry, int event_file, int event_t
     exit(1);
   }
   
-  std::vector <int> tkSsB = tracksFromSV(iBestB);
+  std::vector <int> tracksFromB = tracksFromSV(iBestB);
+  TLorentzVector pB = GetTLorentzVectorFromJPsiX(iBestB);
   
-  for(auto iTrk: tkSsB)
+  // For monitoring purposes
+  for(auto iTrk: tracksFromB)
   {
     float dR = deltaR(trkEta->at(iTrk), trkPhi->at(iTrk), eleGsfEta->at(iBestEle), eleGsfPhi->at(iBestEle));
     float dpTOverpT = 2*fabs(trkPt->at(iTrk) - eleGsfPt->at(iBestEle))/(trkPt->at(iTrk) + eleGsfPt->at(iBestEle));
@@ -191,6 +194,22 @@ bool EleMVASecondNtupleProducer::analyze( int entry, int event_file, int event_t
   // Signal-side variables
   (tWriter->tightEvent) = tightEvent?1:0;
   
+  (tWriter->BPt) = pB.Pt();
+  (tWriter->BEta) = pB.Eta();
+  (tWriter->BPhi) = pB.Phi();
+  (tWriter->BMass) = svtMass->at(iBestB);
+  
+  (tWriter->BLxy) = GetCt2D(pB, iBestB) / (trueBMass / pB.Pt());
+  (tWriter->BCt2DBS) = GetCt2D(pB, iBestB, trueBMass);
+  
+  (tWriter->BCt2DPV) = GetCt2DPV(pB, iBestB, iBestPV, trueBMass);
+  (tWriter->BCt2DPVErr) = GetCt2DPVErr(pB, iBestB, iBestPV, trueBMass);
+  (tWriter->BCt2DPVSigmaUnit) = GetCt2DPV(pB, iBestB, iBestPV, trueBMass) / GetCt2DPVErr(pB, iBestB, iBestPV, trueBMass);
+
+  (tWriter->BCt3DPV) = GetCt3DPV(pB, iBestB, iBestPV, trueBMass);
+  (tWriter->BCt3DPVErr) = GetCt3DPVErr(pB, iBestB, iBestPV, trueBMass);
+  (tWriter->BCt3DPVSigmaUnit) = GetCt3DPV(pB, iBestB, iBestPV, trueBMass) / GetCt3DPVErr(pB, iBestB, iBestPV, trueBMass);
+
   // Opposite-side variables
   (tWriter->elePt) = elePt->at(iBestEle);
   (tWriter->eleEta) = eleEta->at(iBestEle);
