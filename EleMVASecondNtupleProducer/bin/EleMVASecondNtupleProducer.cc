@@ -181,8 +181,15 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     exit(1);
   }
   
-  std::vector <int> tracksFromB = tracksFromSV(iBestB);
+  // HLT bit values
+  bool jPsiMuHltBit = hlt(PDEnumString::HLT_Dimuon0_Jpsi3p5_Muon2_v) || hlt(PDEnumString::HLT_Dimuon0_Jpsi_Muon_v);
+  bool jPsiTrkTrkHltBit = hlt(PDEnumString::HLT_DoubleMu4_JpsiTrkTrk_Displaced_v);
+  bool jPsiTrkHltBit = hlt(PDEnumString::HLT_DoubleMu4_JpsiTrk_Displaced_v);
+  
+  std::vector<int> tracksFromB = tracksFromSV(iBestB);
   TLorentzVector pB = GetTLorentzVectorFromJPsiX(iBestB);
+  int iBestJPsi = (subVtxFromSV(iBestB)).at(0);
+  std::vector<int> tracksFromJPsi = tracksFromSV(iBestJPsi);
   
   // For monitoring purposes
   for(auto iTrk: tracksFromB)
@@ -192,9 +199,92 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     hEleBTrkDistance->Fill(dR, dpTOverpT);
   }
   
-  // Signal-side variables
-  (tWriter->tightEvent) = tightEvent?1:0;
+  int iGenB = -1;
+  int idGenB = 0;
+  int genBMixStatus = -1;
+  int evtWeight = 1;
+  // Use generator information if available
+  if(has_gen)
+  {
+    std::vector<int> longLivedBHadrons = GetAllLongLivedBHadrons();
+    iGenB = GetClosestGenInList(pB.Pt(), pB.Eta(), pB.Phi(), longLivedBHadrons, 0.4, 0.4);
+    // Do not consider events where the signal-side is not matched to a gen B
+    if(iGenB < 0)
+      return false;
+
+    idGenB = genId->at(iGenB);
+
+    // Do not consider events where the signal B is matched to a hadron different from the one looked for
+    if(selectionSubStrings[0].compare("BsToJPsiPhi") == 0 && abs(idGenB) != 531)
+    {
+      std::cout << "Event rejected 1\n";
+      return false;
+    }
+    if(selectionSubStrings[0].compare("BuToJPsiK") == 0 && abs(idGenB) != 521)
+    {
+      std::cout << "Event rejected 2\n";
+      return false;
+    }
+    // Check whether the matched B has mixed or will mix
+    genBMixStatus = GetMixStatus(iGenB);
+    
+    // FIXME: This is taken from Alberto's code, however I am not sure that it is the correct logic...
+    if(genBMixStatus == 2)
+    {
+      std::cout << "Event rejected 3\n";
+      return false;
+    }
+    
+    // If the matched B hadron comes from mixing, then go back to the pre-mixing one
+    if(genBMixStatus == 1)
+    {
+      iGenB = RecursiveLookForMotherIds(iGenB, {-idGenB});
+      idGenB = genId->at(iGenB);
+    }
+
+    // Change event weight according to how many "interesting" B hadrons are there
+    for(auto iGen: longLivedBHadrons)
+    {
+      if(iGen == iGenB)
+        continue;
+      if(abs(genId->at(iGen)) == abs(idGenB))
+        evtWeight++; // FIXME: was evtWeight = 2 in original code. Check which is correct.
+    }
+  }
+  else  // If no gen information is available, only the BuToJPsiK channel can be useful
+  {
+    // Set id randomly for Bs - this should not be used
+    if(selectionSubStrings[0].compare("BsToJPsiPhi") == 0)
+    {
+      idGenB = ((double)rand() / (RAND_MAX)) < 0.5 ? +531 : -531;
+      std::cout << "EleMVASecondNtupleProducer::analyze():  W A R N I N G ! Trying to save tagging information for BsToJPsiPhi but\n";
+      std::cout << "                                                        no generator information is available in the input files!\n";
+      std::cout << "                                                        idGenB is filled randomly to " << idGenB << "!\n";
+    }
+    // Bu is a self-tagging channel - OK!
+    if(selectionSubStrings[0].compare("BuToJPsiK") == 0)
+    {
+      for(auto iTrk: tracksFromB)
+      {
+        if(iTrk == tracksFromJPsi[0] || iTrk == tracksFromJPsi[1])
+          continue;
+        idGenB = trkCharge->at(iTrk) > 0 ? +521 : -521;
+      }
+    }
+  }
   
+  // General event variables
+  (tWriter->evtNumber) = event_tot;
+  (tWriter->evtWeight) = evtWeight;
+  (tWriter->tightEvent) = tightEvent;
+  
+  (tWriter->JPsiMuHltBit) = jPsiMuHltBit;
+  (tWriter->JPsiTrkTrkHltBit) = jPsiTrkTrkHltBit;
+  (tWriter->JPsiTrkHltBit) = jPsiTrkHltBit;  
+  
+  (tWriter->iPV) = iBestPV;
+    
+  // Signal-side variables
   (tWriter->BPt) = pB.Pt();
   (tWriter->BEta) = pB.Eta();
   (tWriter->BPhi) = pB.Phi();
@@ -211,6 +301,10 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->BCt3DPVErr) = GetCt3DPVErr(pB, iBestB, iBestPV, trueBMass);
   (tWriter->BCt3DPVSigmaUnit) = GetCt3DPV(pB, iBestB, iBestPV, trueBMass) / GetCt3DPVErr(pB, iBestB, iBestPV, trueBMass);
 
+  (tWriter->BiSV) = iBestB;
+  
+  (tWriter->BidGen) = idGenB;
+  
   // Opposite-side variables
   (tWriter->elePt) = elePt->at(iBestEle);
   (tWriter->eleEta) = eleEta->at(iBestEle);
