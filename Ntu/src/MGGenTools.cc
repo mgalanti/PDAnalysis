@@ -124,6 +124,38 @@ const int MGGenTools::GetClosestGenNoLL(const int iSvt, double dRMax, double dPt
 
 
 
+const int MGGenTools::GetClosestGenInList(const double pt, const double eta, const double phi, const std::vector<int>& listGenP, double dRMax, double dPtMax)
+{
+//   std::cout << "MGGenTools::GetClosestGenInList(...): pt = " << pt << ", eta = " << eta << ", phi = " << phi << std::endl;
+//   std::cout << "                 Matching parameters: dRMax = " << dRMax << ", dPtMax = " << dPtMax << std::endl;
+  int matched = -1;
+  double dRMatch = dRMax;
+  double dPtMatch = dPtMax;
+  
+  for(uint i = 0; i < listGenP.size(); i++)
+  {
+    uint iGen = listGenP[i];
+    float dR = deltaR(eta, phi, genEta->at(iGen), genPhi->at(iGen));
+    float dPt = fabs(genPt->at(iGen) - pt)/genPt->at(iGen);
+    
+//     std::cout << "       dR = " << dR << ", dPt = " << dPt << std::endl;
+    
+    if( dR > dRMatch ) continue;
+//     std::cout << "            dR  inside matching window!\n";
+    if( dPt > dPtMatch) continue;
+//     std::cout << "            dPt inside matching window!\n";
+    
+    matched = (int)iGen;
+//     std::cout << "       matched = " << matched << std::endl;
+    dRMatch = dR;
+//     std::cout << "       dRMatch = " << dRMatch << std::endl;
+  } 
+  
+  return matched;
+}
+
+
+
 const int MGGenTools::GetGenLepBsChargeCorrelation(const int iGenLep, int iGenBs)
 {
   if(iGenLep < 0 || iGenLep >= nGenP)
@@ -272,6 +304,21 @@ const int MGGenTools::GetBsChargeCorrelation(const int charge, int iGenBs)
 
 
 
+const int MGGenTools::GetMixStatus(const uint iGen)
+{
+  int pId = genId->at(iGen);
+  
+  if(RecursiveLookForDaughterIds(iGen, {-pId}) >= 0)
+    return 2;
+
+  if(RecursiveLookForMotherIds(iGen, {-pId}) >= 0)
+    return 1;
+    
+  return 0;  
+}
+
+
+
 const std::vector<int> MGGenTools::GetAllGenElectrons()
 {
   std::vector<int> viGenElectrons;
@@ -302,6 +349,26 @@ const std::vector<int> MGGenTools::GetAllGenElectronsFromB()
     }
   }
   return viGenElectrons;
+}
+
+
+
+const std::vector<int> MGGenTools::GetAllLongLivedBHadrons()
+{
+  std::vector<int> longLivedBHadrons;
+  for(uint iGen = 0; iGen < genId->size(); iGen++)
+  {
+    int pId = abs(genId->at(iGen));
+    for(auto longLivedId: listLongLivedBHadrons)
+    {
+      if(pId == longLivedId)
+      {
+        longLivedBHadrons.push_back(iGen);
+        break;
+      }
+    }
+  }
+  return longLivedBHadrons;
 }
 
 

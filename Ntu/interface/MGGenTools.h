@@ -27,6 +27,8 @@ class MGGenTools:
     const int GetClosestGenNoLL(const double pt, const double eta, const double phi, double dRMax = 0.12, double dPtMax = 0.3);
     // To be used for composite particles (belonging to the svt* collection)
     const int GetClosestGenNoLL(const int iSvt, double dRMax = 0.12, double dPtMax = 0.3);
+    // Matches to the closest gen particle among those in the vector provided
+    const int GetClosestGenInList(const double pt, const double eta, const double phi, const std::vector<int>& listGenP, double dRMax = 0.12, double dPtMax = 0.3);
     // Gets the charge correlation between generated lepton (e or mu) and generated Bs
     // Returns 1 ("right" correlation) or -1 ("wrong" correlation)
     // If some of the inputs are wrong, also returns 0 (and prints out error)
@@ -35,9 +37,11 @@ class MGGenTools:
     // Returns 1 ("right" correlation) or -1 ("wrong" correlation)
     // If some of the inputs are wrong, also returns 0 (and prints out error)
     const int GetBsChargeCorrelation(const int charge, int iGenBs);
+    const int GetMixStatus(const uint iGen);
     
     const std::vector<int> GetAllGenElectrons();
     const std::vector<int> GetAllGenElectronsFromB();
+    const std::vector<int> GetAllLongLivedBHadrons();
     
     const void PrintMotherChain(const int iGen); // From Alberto Bragagnolo
 //     const void PrintDaughterTree(const int iGen); // From Alberto Bragagnolo
@@ -46,11 +50,11 @@ class MGGenTools:
     const void RecursivePrintDaughters(const unsigned short iGen, int recursionOrder = 0, std::string prepend = "");
     const int RecursiveLookForMotherIds(const unsigned short iGen, const std::vector<int> vIdList, const bool withSign = true, const int recursionOrder = 0);
     const int RecursiveLookForDaughterIds(const unsigned short iGen, const std::vector<int> vIdList, const bool withSign = true, const int recursionOrder = 0);
-
   
     const bool IsLongLived(const uint iGen);
     
-    const std::vector<int> listLongLived = {11,13,211,321,2212}; //e, mu, pi, K, p   
+    const std::vector<int> listLongLived =         {11,13,211,321,2212}; //e, mu, pi, K, p  
+    const std::vector<int> listLongLivedBHadrons = {511, 521, 531, 541, 5122}; // The ground-state B hadrons
     
     const std::vector<int> listBMesons =      {511, 521, 10511, 10521, 513, 523, 10513, 10523, 20513, 
                                                20523, 515, 525, 531, 10531, 533, 10533, 20533, 535, 541, 
