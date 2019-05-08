@@ -37,8 +37,6 @@ class EleMVASecondNtupleProducer:
   // function called at the end of the analysis
   virtual void endJob();
 
-  bool verbose;
-  
   EleMVASecondNtupleWriter* tWriter;
   
   std::string secondNtupleFileName;

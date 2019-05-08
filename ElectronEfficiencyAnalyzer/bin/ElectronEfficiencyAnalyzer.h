@@ -35,8 +35,6 @@ class ElectronEfficiencyAnalyzer:
   // function called at the end of the analysis
   virtual void endJob();
 
-  bool verbose;
-
  private:
   std::map<int, TH1D*> hNGenEle;
   std::map<int, TCanvas*> cNGenEle;

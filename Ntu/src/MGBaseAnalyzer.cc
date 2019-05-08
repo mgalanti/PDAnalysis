@@ -30,6 +30,8 @@ void MGBaseAnalyzer::beginJob()
     return;
   PDAnalyzerUtil::beginJob();
 
+  getUserParameter( "verbose", verbose );
+  
   int tries = 0;
   treeListName = getUserParameter("treeListName");
   evtSelection = getUserParameter("evtSelection");
@@ -71,6 +73,7 @@ void MGBaseAnalyzer::beginJob()
   }
   if(origNameNotOk)
     std::cout << "                            New histOutFileName = " << histOutFileName << std::endl;
+  
   baseInitialized = true;
 }
 
@@ -81,3 +84,33 @@ void MGBaseAnalyzer::save(const std::string& oldHistName)
   // oldHistName is unused...
   TreeWrapper::save(histOutFileName);
 }
+
+
+
+void MGBaseAnalyzer::checkBranches()
+{
+  has_hltlist = checkBranch("nHLTPaths", "HLT path names", use_hltlist);
+  has_hlts = checkBranch("nHLTStatus", "HLT status", use_hlts);
+  has_hlto = checkBranch("nHLTObjects", "HLT objects", use_hlto);
+  has_hltm = checkBranch("nHLTMatches", "HLT matches", use_hltm);
+  has_bspot = checkBranch("bsX", "Beam spot", use_bspot);
+  has_met = checkBranch("mEt", "Missing Et", use_met);
+  has_muons = checkBranch("nMuons", "Muons", use_muons);
+  has_electrons = checkBranch("nElectrons", "Electrons", use_electrons);
+  has_taus = checkBranch("nTaus", "Taus", use_taus);
+  has_jets = checkBranch("nJets", "Jets", use_jets);
+  has_tags = checkBranch("nTags", "Jet tags", use_tags);
+  has_info = checkBranch("nUserInfo", "User info", use_info);
+  has_pflow = checkBranch("nPF", "Particle flow candidates", use_pflow);
+  has_tracks = checkBranch("nTracks", "Tracks", use_tracks);
+  has_pvts = checkBranch("nPVertices", "Primary vertices", use_pvts);
+  has_svts = checkBranch("nSVertices", "Secondary vertices", use_svts);
+  has_vsub = checkBranch("nCompVts", "Composite particle vertices", use_vsub);
+  has_tkips = checkBranch("nTkIPs", "Track impact parameters", use_tkips);
+  has_vtxps = checkBranch("nVtxPs", "Track momenta at vertices", use_vtxps);
+  has_puwgt = checkBranch("puWeight", "PU weight", use_puwgt);
+  has_gen = checkBranch("nGenP", "Gen particles", use_gen);
+  has_gpj = checkBranch("nGenJets", "Gen jets", use_gpj);  
+}
+
+

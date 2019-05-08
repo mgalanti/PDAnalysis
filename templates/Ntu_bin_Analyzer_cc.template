@@ -32,8 +32,6 @@ void ANALYZERNAME::beginJob() {
   // by passing the corresponding variable,
   // e.g. getUserParameter( "name", x )
 
-  getUserParameter( "verbose", verbose );
-
   // user parameters are set as names associated to a string, 
   // default values can be set in the analyzer class contructor
   
@@ -73,7 +71,9 @@ bool ANALYZERNAME::analyze( int entry, int event_file, int event_tot ) {
     if ( !( event_tot % 10000 ) && event_tot )
       cout << event_file << " " << event_tot << endl;
   }
-
+  if(entry == 0)
+    checkBranches();
+  
   // Main per-event analysis code goes here
   
   // Event and object selection code

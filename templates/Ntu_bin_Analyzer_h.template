@@ -35,8 +35,6 @@ class ANALYZERNAME:
   // function called at the end of the analysis
   virtual void endJob();
 
-  bool verbose;
-
  private:
   
   // dummy copy constructor and assignment

@@ -32,7 +32,8 @@ void ElectronEfficiencyAnalyzer::beginJob() {
   // by passing the corresponding variable,
   // e.g. getUserParameter( "name", x )
 
-  getUserParameter( "verbose", verbose );
+  // verbose parameter now read inside MGBaseAnalyzer
+  // getUserParameter( "verbose", verbose );
 
   // Get the ID flags for the electrons using the enums...
   HZZV1IDEleBit = PDEnumString::mvaEleID_Spring16_HZZ_V1_wpLoose;   
@@ -46,9 +47,6 @@ void ElectronEfficiencyAnalyzer::beginJob() {
 //   std::cout << "ElectronEfficiencyAnalyzer::beginJob(): sampleName   = " << sampleName << std::endl;
 //   std::cout << "                                        evtSelection = " << evtSelection << std::endl;
 
-  setUserParameter("verbose", "f");
-//   std::cout << "use_info is " << use_info << std::endl;
-  
   std::pair<int, std::string> elePair;
   
   elePair = std::make_pair(0, "");
@@ -710,6 +708,8 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
     if ( !( event_tot % 10000 ) && event_tot )
       cout << event_file << " " << event_tot << endl;
   }
+  if(entry == 0)
+    checkBranches();
   
   std::vector<std::pair<int,int> > selectedObjects;
 //   std::vector<std::pair<int,int> > selectedObjectsLoose;

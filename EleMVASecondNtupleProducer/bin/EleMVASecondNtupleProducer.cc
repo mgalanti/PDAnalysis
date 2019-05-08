@@ -36,7 +36,6 @@ void EleMVASecondNtupleProducer::beginJob() {
   // by passing the corresponding variable,
   // e.g. getUserParameter( "name", x )
 
-  getUserParameter( "verbose", verbose );
   getUserParameter("tightSelection", tightSelection);
 
   // user parameters are set as names associated to a string, 
@@ -92,6 +91,7 @@ void EleMVASecondNtupleProducer::beginJob() {
   }
   std::cout << "EleMVASecondNtupleProducer::beginJob(): I N F O. trueBMass = " << trueBMass << std::endl;
 
+
   return;
 }
 
@@ -118,7 +118,6 @@ void EleMVASecondNtupleProducer::reset() {
 
 bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_tot) 
 {
-
   if (verbose) 
   {
     cout << " +++++++++++++++++++++++++++ " << endl;
@@ -133,6 +132,8 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     if (!( event_tot % 10000 ) && event_tot)
       cout << event_file << " " << event_tot << endl;
   }
+  if(entry == 0)
+    checkBranches();
 
   // Main per-event analysis code goes here
   
