@@ -91,7 +91,6 @@ void EleMVASecondNtupleProducer::beginJob() {
   }
   std::cout << "EleMVASecondNtupleProducer::beginJob(): I N F O. trueBMass = " << trueBMass << std::endl;
 
-
   return;
 }
 
@@ -103,8 +102,14 @@ void EleMVASecondNtupleProducer::book()
   // it's automatically marked for saving on file; the option 
   // is uneffective when not using the full utility
   
+  float minMass = 5.0;
+  float maxMass = 5.5;
+  int nMassBins = 250;
+  
   autoSavedObject = hEleBTrkDistance = Create2DHistogram<TH2D>("hEleBTrkDistance", "Distance in #Delta(R) and #Delta(p_{T})/p_{T} between electron and B tracks", 100, 0., 5., 100, 0., 2., "#Delta(R)", "2#times|p_{T,ele}-p_{T,Trk}|/(p_{T,ele}+p_{T,Trk})");
-
+  
+  autoSavedObject = hWeightedBMass = Create1DHistogram<TH1D>("hWeightedBMass", "B mass (entries weighted by number of gen B in the event)", nMassBins, minMass, maxMass, "M(B) [GeV]", "Event weights");
+  
   return;
 }
 
@@ -200,6 +205,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   }
   
   int iGenB = -1;
+  int nGenB = -1;
   int idGenB = 0;
   int genBMixStatus = -1;
   int evtWeight = 1;
@@ -208,6 +214,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   {
     std::vector<int> longLivedBHadrons = GetAllLongLivedBHadrons();
     iGenB = GetClosestGenInList(pB.Pt(), pB.Eta(), pB.Phi(), longLivedBHadrons, 0.4, 0.4);
+    nGenB = longLivedBHadrons.size();
     // Do not consider events where the signal-side is not matched to a gen B
     if(iGenB < 0)
       return false;
@@ -277,6 +284,8 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->evtNumber) = event_tot;
   (tWriter->evtWeight) = evtWeight;
   (tWriter->tightEvent) = tightEvent;
+
+  (tWriter->nGenB) = nGenB;
   
   (tWriter->JPsiMuHltBit) = jPsiMuHltBit;
   (tWriter->JPsiTrkTrkHltBit) = jPsiTrkTrkHltBit;
@@ -289,6 +298,8 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->BEta) = pB.Eta();
   (tWriter->BPhi) = pB.Phi();
   (tWriter->BMass) = svtMass->at(iBestB);
+  
+  hWeightedBMass->Fill(svtMass->at(iBestB), evtWeight);
   
   (tWriter->BLxy) = GetCt2D(pB, iBestB) / (trueBMass / pB.Pt());
   (tWriter->BCt2DBS) = GetCt2D(pB, iBestB, trueBMass);
@@ -323,6 +334,8 @@ void EleMVASecondNtupleProducer::endJob()
   tWriter->close();
   
   autoSavedObject = cEleBTrkDistance = CreateCanvas("cEleBTrkDistance", "colz", false, false, false, hEleBTrkDistance);
+
+  autoSavedObject = cWeightedBMass = CreateCanvas("cWeightedBMass", 0, 21, 1, false, false, hWeightedBMass);
   
   return;
 }

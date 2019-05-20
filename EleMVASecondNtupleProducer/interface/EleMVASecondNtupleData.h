@@ -19,6 +19,8 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
     setBranch("evtNumber", &evtNumber, "evtNumber/I", &b_evtNumber);
     setBranch("evtWeight", &evtWeight, "evtWeight/I", &b_evtWeight);
     setBranch("tightEvent", &tightEvent, "tightEvent/O", &b_tightEvent);
+    
+    setBranch("nGenB", &nGenB, "nGenB/I", &b_nGenB);
 
     setBranch("JPsiMuHltBit", &JPsiMuHltBit, "JPsiMuHltBit/O", &b_JPsiMuHltBit);
     setBranch("JPsiTrkTrkHltBit", &JPsiTrkTrkHltBit, "JPsiTrkTrkHltBit/O", &b_JPsiTrkTrkHltBit);
@@ -56,6 +58,7 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   
   // Second ntuple data
   int evtNumber, evtWeight; bool tightEvent;
+  int nGenB;
   bool JPsiMuHltBit, JPsiTrkTrkHltBit, JPsiTrkHltBit;
   int iPV;
   
@@ -70,6 +73,7 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
 
   // Second ntuple branches
   TBranch *b_evtNumber, *b_evtWeight, *b_tightEvent;
+  TBranch *b_nGenB;
   TBranch *b_JPsiMuHltBit, *b_JPsiTrkTrkHltBit, *b_JPsiTrkHltBit;
   TBranch *b_iPV;
   

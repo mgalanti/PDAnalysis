@@ -48,6 +48,9 @@ class EleMVASecondNtupleProducer:
   
   TH2D* hEleBTrkDistance;
   TCanvas* cEleBTrkDistance;
+  
+  TH1D* hWeightedBMass;
+  TCanvas* cWeightedBMass;  
    
   // dummy copy constructor and assignment
   EleMVASecondNtupleProducer           ( const EleMVASecondNtupleProducer& );
