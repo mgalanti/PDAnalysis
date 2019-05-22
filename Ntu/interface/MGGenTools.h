@@ -29,14 +29,18 @@ class MGGenTools:
     const int GetClosestGenNoLL(const int iSvt, double dRMax = 0.12, double dPtMax = 0.3);
     // Matches to the closest gen particle among those in the vector provided
     const int GetClosestGenInList(const double pt, const double eta, const double phi, const std::vector<int>& listGenP, double dRMax = 0.12, double dPtMax = 0.3);
-    // Gets the charge correlation between generated lepton (e or mu) and generated Bs
+    // Gets the charge correlation between generated lepton (e or mu) and generated Bs/Bu
     // Returns 1 ("right" correlation) or -1 ("wrong" correlation)
     // If some of the inputs are wrong, also returns 0 (and prints out error)
     const int GetGenLepBsChargeCorrelation(const int iGenLep, int iGenBs);
-    // Gets the charge correlation between a charge value (can only be +/-1) and generated Bs
+    const int GetGenLepBuChargeCorrelation(const int iGenLep, int iGenBs);
+    
+    // Gets the charge correlation between a charge value (can only be +/-1) and generated Bs/Bu
     // Returns 1 ("right" correlation) or -1 ("wrong" correlation)
-    // If some of the inputs are wrong, also returns 0 (and prints out error)
+    // If some of the inputs are wrong, returns 0 (and prints out error)
     const int GetBsChargeCorrelation(const int charge, int iGenBs);
+    const int GetBuChargeCorrelation(const int charge, int iGenBu);
+    
     const int GetMixStatus(const uint iGen);
     
     const std::vector<int> GetAllGenElectrons();

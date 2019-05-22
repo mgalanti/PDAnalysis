@@ -179,9 +179,9 @@ const int MGGenTools::GetGenLepBsChargeCorrelation(const int iGenLep, int iGenBs
     return 0;
   }
   int idBs = genId->at(iGenBs);
-  if(abs(idBs) != 531 && abs(idBs) != 533)
+  if(abs(idBs) != 531 && abs(idBs) != 533 && abs(idBs) != 10533 && abs(idBs) != 20533)
   {
-    std::cout << "W A R N I N G ! MGGenTools::GetGenLepBsChargeCorrelation(...): Id of gen particle at index " << iGenBs << " is not 531 or 533!\n";
+    std::cout << "W A R N I N G ! MGGenTools::GetGenLepBsChargeCorrelation(...): Id of gen particle at index " << iGenBs << " is not one of: 531, 533, 10533, 20533!\n";
     std::cout << "                GenpId->at(" << iGenBs << ") = " << idBs << ".\n";
     std::cout << "                Returning 0...\n";
     return 0;
@@ -200,7 +200,7 @@ const int MGGenTools::GetGenLepBsChargeCorrelation(const int iGenLep, int iGenBs
     }
   }
   // If we have a Bs*, we find the first Bs among the daughters
-  if(abs(idBs) == 533)
+  if(abs(idBs) > 531)
   {
     int oldIGenBs = iGenBs;
     int oldIdBs = idBs;
@@ -234,6 +234,71 @@ const int MGGenTools::GetGenLepBsChargeCorrelation(const int iGenLep, int iGenBs
 
 
 
+const int MGGenTools::GetGenLepBuChargeCorrelation(const int iGenLep, int iGenBu)
+{
+  if(iGenLep < 0 || iGenLep >= nGenP)
+  {
+    std::cout << "W A R N I N G ! MGGenTools::GetGenLepBuChargeCorrelation(...): iGenLep outside bounds!\n";
+    std::cout << "                Returning 0...\n";
+    return 0;
+  }
+  int idLep = genId->at(iGenLep);
+  if(abs(idLep) != 11 && abs(idLep) != 13)
+  {
+    std::cout << "W A R N I N G ! MGGenTools::GetGenLepBuChargeCorrelation(...): Id of gen particle at index " << iGenLep << " is not 11 or 13!\n";
+    std::cout << "                GenpId->at(" << iGenLep << ") = " << idLep << ".\n";
+    std::cout << "                Returning 0...\n";
+    return 0;
+  }
+  if(iGenBu < 0 || iGenBu >= nGenP)
+  {
+    std::cout << "W A R N I N G ! MGGenTools::GetGenLepBuChargeCorrelation(...): iGenBu outside bounds!\n";
+    std::cout << "                Returning 0...\n";
+    return 0;
+  }
+  int idBu = genId->at(iGenBu);
+  if(abs(idBu) != 511 && abs(idBu) != 513 && abs(idBu) != 515 && abs(idBu) != 10513 && abs(idBu) != 20513)
+  {
+    std::cout << "W A R N I N G ! MGGenTools::GetGenLepBuChargeCorrelation(...): Id of gen particle at index " << iGenBu << " is not one of: 511, 513, 515, 10513, 20513!\n";
+    std::cout << "                GenpId->at(" << iGenBu << ") = " << idBu << ".\n";
+    std::cout << "                Returning 0...\n";
+    return 0;
+  }
+  // If we have a Bu*, we find the first Bu among the daughters
+  if(abs(idBu) > 511)
+  {
+    int oldIGenBu = iGenBu;
+    int oldIdBu = idBu;
+    iGenBu = RecursiveLookForDaughterIds(iGenBu, {511}, false);
+    if(iGenBu < 0)
+    {
+      std::cout << "E R R O R ! MGGenTools::GetGenLepBuChargeCorrelation(...): Found a Bu* which does not decay into a Bu!\n";
+      std::cout << "            Old iGenBu = " << oldIGenBu << ", old idBu = " << oldIdBu << "\n";
+      std::cout << "            New iGenBu = " << iGenBu;
+      RecursivePrintDaughters(oldIGenBu, 0, "            ");
+      std::cout << "            Exiting...\n";
+      exit(1);
+    }
+    idBu = genId->at(iGenBu);
+  }
+  std::cout << "iGenBu = " << iGenBu << ", idBu = " << idBu << std::endl;
+//   PrintMotherChain(iGenBu);
+//   RecursivePrintMothers(iGenBu);
+//   int iBQuark = RecursiveLookForMotherIds(iGenBu, {5}, false);
+//   std::cout << "iBQuark = " << iBQuark << std::endl;
+//   int idBQuark = genId->at(iBQuark);
+  if((idLep > 0 && idBu < 0) || (idLep < 0 && idBu > 0))
+  {
+    return -1;
+  }
+  else
+  {
+    return 1;
+  }
+}
+
+
+
 const int MGGenTools::GetBsChargeCorrelation(const int charge, int iGenBs)
 {
   if(abs(charge) != 1)
@@ -249,9 +314,9 @@ const int MGGenTools::GetBsChargeCorrelation(const int charge, int iGenBs)
     return 0;
   }
   int idBs = genId->at(iGenBs);
-  if(abs(idBs) != 531 && abs(idBs) != 533)
+  if(abs(idBs) != 531 && abs(idBs) != 533 && abs(idBs) != 10533 && abs(idBs) != 20533)
   {
-    std::cout << "W A R N I N G ! MGGenTools::GetBsChargeCorrelation(...): Id of gen particle at index " << iGenBs << " is not 531 or 533!\n";
+    std::cout << "W A R N I N G ! MGGenTools::GetBsChargeCorrelation(...): Id of gen particle at index " << iGenBs << " is not one of: 531, 533, 10533, 20533!\n";
     std::cout << "                GenpId->at(" << iGenBs << ") = " << idBs << ".\n";
     std::cout << "                Returning 0...\n";
     return 0;
@@ -293,6 +358,63 @@ const int MGGenTools::GetBsChargeCorrelation(const int charge, int iGenBs)
 //   std::cout << "iBQuark = " << iBQuark << std::endl;
 //   int idBQuark = genId->at(iBQuark);
   if((charge < 0 && idBs < 0) || (charge > 0 && idBs > 0))
+  {
+    return -1;
+  }
+  else
+  {
+    return 1;
+  }
+}
+
+
+
+const int MGGenTools::GetBuChargeCorrelation(const int charge, int iGenBu)
+{
+  if(abs(charge) != 1)
+  {
+    std::cout << "W A R N I N G ! MGGenTools::GetBuChargeCorrelation(...): charge is not +/-1!\n";
+    std::cout << "                Returning 0...\n";
+    return 0;
+  }
+  if(iGenBu < 0 || iGenBu >= nGenP)
+  {
+    std::cout << "W A R N I N G ! MGGenTools::GetBuChargeCorrelation(...): iGenBu outside bounds!\n";
+    std::cout << "                Returning 0...\n";
+    return 0;
+  }
+  int idBu = genId->at(iGenBu);
+  if(abs(idBu) != 511 && abs(idBu) != 513 && abs(idBu) != 515 && abs(idBu) != 10513 && abs(idBu) != 20513)
+  {
+    std::cout << "W A R N I N G ! MGGenTools::GetBuChargeCorrelation(...): Id of gen particle at index " << iGenBu << " is not one of: 511, 513, 515, 10513, 20513!\n";
+    std::cout << "                GenpId->at(" << iGenBu << ") = " << idBu << ".\n";
+    std::cout << "                Returning 0...\n";
+    return 0;
+  }
+  // If we have a Bu*, we find the first Bu among the daughters
+  if(abs(idBu) > 511)
+  {
+    int oldIGenBu = iGenBu;
+    int oldIdBu = idBu;
+    iGenBu = RecursiveLookForDaughterIds(iGenBu, {511}, false);
+    if(iGenBu < 0)
+    {
+      std::cout << "E R R O R ! MGGenTools::GetBuChargeCorrelation(...): Found a Bu* which does not decay into a Bu!\n";
+      std::cout << "            Old iGenBu = " << oldIGenBu << ", old idBu = " << oldIdBu << "\n";
+      std::cout << "            New iGenBu = " << iGenBu;
+      RecursivePrintDaughters(oldIGenBu, 0, "            ");
+      std::cout << "            Exiting...\n";
+      exit(1);
+    }
+    idBu = genId->at(iGenBu);
+  }
+  std::cout << "iGenBu = " << iGenBu << ", idBu = " << idBu << std::endl;
+//   PrintMotherChain(iGenBu);
+//   RecursivePrintMothers(iGenBu);
+//   int iBQuark = RecursiveLookForMotherIds(iGenBu, {5}, false);
+//   std::cout << "iBQuark = " << iBQuark << std::endl;
+//   int idBQuark = genId->at(iBQuark);
+  if((charge < 0 && idBu < 0) || (charge > 0 && idBu > 0))
   {
     return -1;
   }
