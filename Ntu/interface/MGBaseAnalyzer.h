@@ -79,6 +79,13 @@ class MGBaseAnalyzer:
     bool has_gen;
     bool has_gpj;
     
+    std::map<std::string, int*> mAllNObjects;
+
+    std::map<std::string, std::vector<float>**> mAllEleFloats;
+    std::map<std::string, std::vector<int>**> mAllEleInts;
+    std::map<std::string, std::vector<bool>**> mAllEleBools;
+
+    
 
   private:
     bool baseInitialized;
