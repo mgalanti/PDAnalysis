@@ -8,6 +8,8 @@
 #include "PDAnalysis/Ntu/interface/MGGenTools.h"
 #include "MGTools/PlottingTools/interface/PlottingTools.h"
 
+#include <list>
+
 class ElectronVariablesPlotter: 
     public MGBaseAnalyzer,
     public virtual MGSelector,
@@ -53,8 +55,17 @@ class ElectronVariablesPlotter:
    std::map<int,std::string> eleUserFloatMap;
    std::map<int,std::string> eleUserIntMap;
    
-  
+   std::map<std::string,TH1D*> mhEleVariables;
+   std::map<std::string,TCanvas*> mcEleVariables;
    
+   std::vector<std::pair<std::string,std::string> > vEleVariables;
+   std::list<std::pair<std::string,std::vector<float> > > lEleFloats;
+   std::list<std::pair<std::string,std::vector<int> > > lEleInts;
+   
+   float elePt2;
+   
+   
+   void bookEleVariableHisto(const std::string name);
    
   // dummy copy constructor and assignment
   ElectronVariablesPlotter           ( const ElectronVariablesPlotter& );
