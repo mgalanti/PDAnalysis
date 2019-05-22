@@ -39,9 +39,6 @@ class ElectronVariablesPlotter:
 
  private:
    
-   std::vector<TH1D*> vhEleIDTypeDecision;
-   std::vector<TCanvas*> vcEleIDTypeDecision;
-   
    std::vector<TH1D*> vhEleMVAType;
    std::vector<TCanvas*> vcEleMVAType;
 
@@ -51,19 +48,16 @@ class ElectronVariablesPlotter:
    std::vector<TH1D*> vhEleUserInt;
    std::vector<TCanvas*> vcEleUserInt;
    
+   std::map<std::string,TH1D*> mhEleVariables;
+   std::map<std::string,TCanvas*> mcEleVariables;
+
    std::map<int,std::string> eleMVATypeMap;
    std::map<int,std::string> eleUserFloatMap;
    std::map<int,std::string> eleUserIntMap;
-   
-   std::map<std::string,TH1D*> mhEleVariables;
-   std::map<std::string,TCanvas*> mcEleVariables;
-   
-   std::vector<std::pair<std::string,std::string> > vEleVariables;
-   std::list<std::pair<std::string,std::vector<float> > > lEleFloats;
-   std::list<std::pair<std::string,std::vector<int> > > lEleInts;
-   
-   float elePt2;
-   
+      
+   std::string processName;   
+   std::string chargeCorrCutName;
+   int chargeCorrCut;
    
    void bookEleVariableHisto(const std::string name);
    

@@ -31,7 +31,24 @@ void ElectronVariablesPlotter::beginJob() {
   eleMVATypeMap = PDEnumString::eleMVATypeMap();
   eleUserFloatMap = PDEnumString::eleUserFloatMap();
   eleUserIntMap = PDEnumString::eleUserIntMap();
-
+  
+  processName = selectionSubStrings[0];
+  
+  chargeCorrCutName = "";
+  chargeCorrCut = 0;
+  if(selectionSubStrings.size() > 2)
+  {
+    chargeCorrCutName = selectionSubStrings[2];
+    if(chargeCorrCutName.compare("pos2") == 0)
+      chargeCorrCut = 2;
+    if(chargeCorrCutName.compare("pos") == 0)
+      chargeCorrCut = 1;
+    if(chargeCorrCutName.compare("neg") == 0)
+      chargeCorrCut = -1;
+    if(chargeCorrCutName.compare("neg2") == 0)
+      chargeCorrCut = -2;
+  }
+  
   // user parameters are retrieved as strings by using their names;
   // numeric parameters ( int, float or whatever ) can be directly set
   // by passing the corresponding variable,
@@ -50,14 +67,6 @@ void ElectronVariablesPlotter::book()
   // putting "autoSavedObject" in front of the histo creation 
   // it's automatically marked for saving on file; the option 
   // is uneffective when not using the full utility
-  
-//   for(auto itEleID : eleIDTypeMapIS)
-//   {
-//     std::string histoName = itEleID.second;
-//     TH1D* histo = Create1DHistogram<TH1D>(histoName.c_str(), histoName.c_str(), 2, -0.5, 1.5, "ID decision", "N. electrons");
-//     vhEleIDTypeDecision.push_back(histo);
-//   }
-//   autoSavedObject = vhEleIDTypeDecision;
   
   int counter = 0;
   for(auto itEleMVAType : eleMVATypeMap)
@@ -289,6 +298,25 @@ bool ElectronVariablesPlotter::analyze( int entry, int event_file, int event_tot
   if(entry == 0)
     checkBranches();
   
+  if(entry == 0)
+  {
+    // For BsToJPsiPhi we require generator information to work
+    if(processName.compare("BsToJPsiPhi") == 0 && (!use_gen || !has_gen))
+    {
+      std::cout << "ElectronVariablesPlotter::analyze(): E R R O R ! processName is " << processName << " but generator information";
+      if(!has_gen)
+        std::cout << " is not present in the ntuple";
+      if(!use_gen && !has_gen)
+        std::cout << " and";
+      if(!use_gen)
+        std::cout << " is not used";
+      std::cout << "!\n";
+      std::cout << "                                     Please fix the configuration parameters.\n";
+      std::cout << "                                     Exiting...\n";
+      exit(1);
+    }
+  }
+  
   // Main per-event analysis code goes here
   
   // Event and object selection code
@@ -305,80 +333,165 @@ bool ElectronVariablesPlotter::analyze( int entry, int event_file, int event_tot
   // std::vector<std::pair<int,int> > mySelectedObjects;
   // bool myEvtSelected = SelectEvent(mySelection.c_str(), mySelectedObjects);
   
-//   if(!evtSelected)
-//     return false;
+  // Select the event
+  bool evtSelected = SelectEvent();
+  
+  if(!evtSelected)
+    return false;
  
   // Do something with the event and the selected objects...
+  
+  // Retrieve all the selected objects and check that everything is ok
+  int iSelObject = 0;
+  int iBestPV = -1;
+  int iBestB = -1;
+  int iBestEle = -1;
+  for (auto itSelObjects = selectedObjects.begin(); itSelObjects != selectedObjects.end(); itSelObjects++)
+  {
+    //std::cout << "Event selection: selected object #" << iSelObject << ": type = " << itSelObjects->first << ", index = " << itSelObjects->second << std::endl;
+    if(itSelObjects->first == PDEnumString::recPV)
+      iBestPV = itSelObjects->second;
+    if(itSelObjects->first == PDEnumString::recSvt)
+      iBestB = itSelObjects->second;
+    if(itSelObjects->first == PDEnumString::recElectron)
+      iBestEle = itSelObjects->second;
+    iSelObject++;
+  }
+    
+  // Depending on the selection string provided in the configuration, it is not granted 
+  // that we have all the needed objects at this point, even if the event passed the selection.
+  // Thus, let's check explicitly.  
+  if(iBestPV == -1 || iBestB == -1 || iBestEle == -1)
+  {
+    std::cout << "E R R O R ! Event passed the selection \"" << evtSelection << "\" but not all the needed objects are available!\n";
+    std::cout << "            iBestPV = " << iBestPV << ", iBestB = " << iBestB << ", iBestEle = " << iBestEle << std::endl;
+    std::cout << "            Please fix the configuration file or the MGSelector::SelectEvent() code to avoid this error.";
+    std::cout << "            Exiting...\n";
+    exit(1);
+  }
+  
+  // Check charge correlation (this depends on the processName and on whether the gen information is used or not)
+  std::vector<int> tracksFromB = tracksFromSV(iBestB);
+  int chargeB = 0;
+  for(auto iTrack : tracksFromB)
+  {
+    chargeB += trkCharge->at(iTrack);
+  }
+  int chargeEle = eleCharge->at(iBestEle);
+  
+  // If we don't use generator information, then that's it
+  int chargeCorr = chargeEle * chargeB;
+  
+  // Otherwise let's retrieve the charge correlation from gen
+  if(use_gen)
+  {
+    int iMatchedGenEle = GetClosestGen(elePt->at(iBestEle), eleEta->at(iBestEle), elePhi->at(iBestEle));
+//     int idMatchedGenEle = 0;
+//     if (iMatchedGenEle >= 0)
+//       idMatchedGenEle = genId->at(iMatchedGenEle);
+    int iGenB = GetClosestGenNoLL(iBestB);
+//     int idGenB = 0;
+//     if(iGenB > 0)
+//     {
+//       idGenB = genId->at(iGenB);
+//     }
+    if(processName.compare("BsToJPsiPhi") == 0)
+    {
+      if(iMatchedGenEle)
+        chargeCorr = GetGenLepBsChargeCorrelation(iMatchedGenEle, iGenB);
+      if(!chargeCorr)
+      {
+        chargeCorr = GetBsChargeCorrelation(chargeEle, iGenB);
+        // In this case, correlation value goes to the +/-2 bins
+        chargeCorr*=2;
+      }
+    }
+    else if(processName.compare("BuToJPsiK") == 0)
+    {
+      int recoChargeCorr = chargeCorr;
+      chargeCorr = GetGenLepBuChargeCorrelation(iMatchedGenEle, iGenB);
+      if(!chargeCorr)
+      {
+        chargeCorr = GetBuChargeCorrelation(chargeEle, iGenB);
+        // In this case, correlation value goes to the +/-2 bins
+        chargeCorr*=2;
+      }
+      if(recoChargeCorr * chargeCorr < 0)
+      {
+        std::cout << "W A R N I N G ! Bu-ele charge correlation gives different sign if retrieved from gen or from reco!\n";
+      }
+    }
+  }
+  
+  // Now select based on the charge correlation
+  if(chargeCorrCut && chargeCorr != chargeCorrCut)
+    return false;
+  
     
   mhEleVariables["nElectrons"]->Fill(*(mAllNObjects["nElectrons"]));
   
-//   std::cout << "This event has " << useObjType->size() << " userInfo entries\n";
-  for(int iElectron = 0; iElectron < nElectrons; iElectron++)
+  for (int iUserInfo = 0; iUserInfo < nUserInfo; iUserInfo++)
   {
-//     std::cout << "Electron " << iElectron << std::endl;
-    for (int iUserInfo = 0; iUserInfo < nUserInfo; iUserInfo++)
+    if(useObjType->at(iUserInfo) == PDEnumString::recElectron && useObjIndex->at(iUserInfo) == iBestEle)
     {
-      if(useObjType->at(iUserInfo) == PDEnumString::recElectron && useObjIndex->at(iUserInfo) == iElectron)
+      //         std::cout << "   Found corresponding user info!\n";
+      int infoType = useInfoType->at(iUserInfo);
+      double infoValue = useInfoValue->at(iUserInfo);
+      //         std::cout << "      type = " << infoType << ", value = " << infoValue << std::endl;
+      auto eleMVATypeMatch = eleMVATypeMap.find(infoType);
+      if(eleMVATypeMatch != eleMVATypeMap.end())
       {
-//         std::cout << "   Found corresponding user info!\n";
-        int infoType = useInfoType->at(iUserInfo);
-        double infoValue = useInfoValue->at(iUserInfo);
-//         std::cout << "      type = " << infoType << ", value = " << infoValue << std::endl;
-        auto eleMVATypeMatch = eleMVATypeMap.find(infoType);
-        if(eleMVATypeMatch != eleMVATypeMap.end())
+        std::string nameEleMVA = eleMVATypeMatch->second;
+        for(auto histo : vhEleMVAType)
         {
-          std::string nameEleMVA = eleMVATypeMatch->second;
-          for(auto histo : vhEleMVAType)
-          {
-            if(nameEleMVA.compare(histo->GetTitle()) == 0)
-              histo->Fill(infoValue);
-          }
+          if(nameEleMVA.compare(histo->GetTitle()) == 0)
+            histo->Fill(infoValue);
         }
-        auto eleUserFloatMatch = eleUserFloatMap.find(infoType);
-        if(eleUserFloatMatch != eleUserFloatMap.end())
+      }
+      auto eleUserFloatMatch = eleUserFloatMap.find(infoType);
+      if(eleUserFloatMatch != eleUserFloatMap.end())
+      {
+        std::string nameEleUserFloat = eleUserFloatMatch->second;
+        for(auto histo : vhEleUserFloat)
         {
-          std::string nameEleUserFloat = eleUserFloatMatch->second;
-          for(auto histo : vhEleUserFloat)
-          {
-            if(nameEleUserFloat.compare(histo->GetTitle()) == 0)
-              histo->Fill(infoValue);
-          }
+          if(nameEleUserFloat.compare(histo->GetTitle()) == 0)
+            histo->Fill(infoValue);
         }
-        auto eleUserIntMatch = eleUserIntMap.find(infoType);
-        if(eleUserIntMatch != eleUserIntMap.end())
+      }
+      auto eleUserIntMatch = eleUserIntMap.find(infoType);
+      if(eleUserIntMatch != eleUserIntMap.end())
+      {
+        std::string nameEleUserInt = eleUserIntMatch->second;
+        for(auto histo : vhEleUserInt)
         {
-          std::string nameEleUserInt = eleUserIntMatch->second;
-          for(auto histo : vhEleUserInt)
-          {
-            if(nameEleUserInt.compare(histo->GetTitle()) == 0)
-              histo->Fill(infoValue);
-          }
+          if(nameEleUserInt.compare(histo->GetTitle()) == 0)
+            histo->Fill(infoValue);
         }
       }
     }
+  }
 
-    // Now fill the electron variables
-    for(auto eleFloat : mAllEleFloats)
-    {
-      std::string name = eleFloat.first;
-      std::vector<float>** value = eleFloat.second;
-//       std::cout << "Electron # " << iElectron << ": variable with name " << name << " has value " << (*value)->at(iElectron) << std::endl;
-      mhEleVariables[name]->Fill((*value)->at(iElectron));
-    }
-    for(auto eleInt : mAllEleInts)
-    {
-      std::string name = eleInt.first;
-      std::vector<int>** value = eleInt.second;
-//       std::cout << "Electron # " << iElectron << ": variable with name " << name << " has value " << (*value)->at(iElectron) << std::endl;
-      mhEleVariables[name]->Fill((*value)->at(iElectron));
-    }
-    for(auto eleBool : mAllEleBools)
-    {
-      std::string name = eleBool.first;
-      std::vector<bool>** value = eleBool.second;
-//       std::cout << "Electron # " << iElectron << ": variable with name " << name << " has value " << (*value)->at(iElectron) << std::endl;
-      mhEleVariables[name]->Fill((*value)->at(iElectron));
-    }
+  // Now fill the electron variables
+  for(auto eleFloat : mAllEleFloats)
+  {
+    std::string name = eleFloat.first;
+    std::vector<float>** value = eleFloat.second;
+    //       std::cout << "Electron # " << iBestEle << ": variable with name " << name << " has value " << (*value)->at(iElectron) << std::endl;
+    mhEleVariables[name]->Fill((*value)->at(iBestEle));
+  }
+  for(auto eleInt : mAllEleInts)
+  {
+    std::string name = eleInt.first;
+    std::vector<int>** value = eleInt.second;
+    //       std::cout << "Electron # " << iBestEle << ": variable with name " << name << " has value " << (*value)->at(iElectron) << std::endl;
+    mhEleVariables[name]->Fill((*value)->at(iBestEle));
+  }
+  for(auto eleBool : mAllEleBools)
+  {
+    std::string name = eleBool.first;
+    std::vector<bool>** value = eleBool.second;
+    //       std::cout << "Electron # " << iBestEle << ": variable with name " << name << " has value " << (*value)->at(iElectron) << std::endl;
+    mhEleVariables[name]->Fill((*value)->at(iBestEle));
   }
   
   return true;
