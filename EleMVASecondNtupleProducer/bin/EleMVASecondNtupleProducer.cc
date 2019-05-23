@@ -37,6 +37,7 @@ void EleMVASecondNtupleProducer::beginJob() {
   // e.g. getUserParameter( "name", x )
 
   getUserParameter("tightSelection", tightSelection);
+  getUserParameter("nConeIterations", nConeIterations);
 
   // user parameters are set as names associated to a string, 
   // default values can be set in the analyzer class contructor
@@ -105,10 +106,16 @@ void EleMVASecondNtupleProducer::book()
   float minMass = 5.0;
   float maxMass = 5.5;
   int nMassBins = 250;
+
+  float minDr = 0;
+  float maxDr = 5.0;
+  int nDrBins = 100;
   
   autoSavedObject = hEleBTrkDistance = Create2DHistogram<TH2D>("hEleBTrkDistance", "Distance in #Delta(R) and #Delta(p_{T})/p_{T} between electron and B tracks", 100, 0., 5., 100, 0., 2., "#Delta(R)", "2#times|p_{T,ele}-p_{T,Trk}|/(p_{T,ele}+p_{T,Trk})");
   
   autoSavedObject = hWeightedBMass = Create1DHistogram<TH1D>("hWeightedBMass", "B mass (entries weighted by number of gen B in the event)", nMassBins, minMass, maxMass, "M(B) [GeV]", "Event weights");
+  
+  autoSavedObject = hEleConeDistance = Create1DHistogram<TH1D>("hEleConeDistance", "Distance between electron and cone axis", nDrBins, minDr, maxDr, "#Delta(R)", "N. Electrons");
   
   return;
 }
@@ -280,6 +287,162 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     }
   }
   
+  
+  
+  
+  
+  
+  //CONE variables
+  float eleConePtRel = -1;
+  float eleConeDr = -1;
+  float eleConeEnergyRatio = -1;
+  int   eleConeSize = 0;
+  float eleConeQ = -1;
+  float eleConePt = -1;
+  float eleConeNF = 0;
+  float eleConeCF = 0;
+  int   eleConeNCH = 0;
+  float kappa = 1;
+  float drCone = 0.4;
+  float tolerance = 0.05;
+  float axisEta = eleEta->at(iBestEle);
+  float axisPhi = elePhi->at(iBestEle);
+  TLorentzVector pEle;
+  pEle.SetPtEtaPhiM(elePt->at(iBestEle), eleEta->at(iBestEle), elePhi->at(iBestEle), constants::electronMass);
+  
+  std::cout << "Elec: eta = " << eleEta->at(iBestEle) << ", phi = " << elePhi->at(iBestEle) << ", pt = " << elePt->at(iBestEle) << std::endl;
+
+  float qCone = 0, ptCone = 0;
+  for(int i = 0; i < nConeIterations; i++)
+  {
+    std::cout << "   Iteration " << i << std::endl;
+    eleConePtRel = -1;
+    eleConeDr = -1;
+    eleConeEnergyRatio = -1;
+    eleConeSize = 0;
+    eleConeQ = -1;
+    eleConePt = -1;
+    eleConeNF = 0;
+    eleConeCF = 0;
+    eleConeNCH = 0;
+    TLorentzVector pCone(0.,0.,0.,0.);
+    for(int iPF=0; iPF < nPF; ++iPF)
+    {
+      float ptPF = pfcPt->at(iPF);
+      float etaPF = pfcEta->at(iPF);
+      if(deltaR(etaPF, pfcPhi->at(iPF), axisEta, axisPhi) > drCone)
+      {
+        continue;
+      }
+//       std::cout << "   Sono qui 2\n";
+      if(ptPF < 0.2)
+      {
+        continue;
+      }
+//       std::cout << "   Sono qui 3\n";
+      if(fabs(etaPF) > 3.0)
+      {
+        continue;  
+      }
+//       std::cout << "   Sono qui 4\n";
+      if(std::find(tracksFromB.begin(), tracksFromB.end(), pfcTrk->at(iPF)) != tracksFromB.end())
+      {
+        continue;
+      }
+//       std::cout << "   Sono qui 5\n";
+      if(pfcTrk->at(iPF) >= 0)
+      {
+//         std::cout << "iBestPV = " << iBestPV << ", nPVertices = " << nPVertices << std::endl;
+        if(fabs(dZTrk(pfcTrk->at(iPF), iBestPV)) >= 1.0)
+        {
+          continue;
+        }
+      }
+//       std::cout << "   Sono qui 6\n";
+//       std::cout << "iPF = " << iPF << ", nPF = " << nPF << std::endl;
+      TLorentzVector a;
+      a.SetPtEtaPhiE(pfcPt->at(iPF), pfcEta->at(iPF), pfcPhi->at(iPF), pfcE->at(iPF));
+      pCone += a;
+      ++eleConeSize;
+//       std::cout << "   Sono qui 7\n";
+      
+      qCone += pfcCharge->at(iPF) * pow(ptPF, kappa);
+      ptCone += pow(ptPF, kappa);
+//       std::cout << "   Sono qui 8\n";
+
+      if(pfcCharge->at(iPF)==0)
+      {
+        eleConeNF += pfcE->at(iPF);
+      }
+//       std::cout << "   Sono qui 9\n";
+      if(abs(pfcCharge->at(iPF))==1)
+      {
+        eleConeNCH++;
+        eleConeCF += pfcE->at(iPF);
+      }
+//       std::cout << "   Sono qui 10\n";
+    }
+    
+    if(ptCone != 0)
+    {
+      qCone /= ptCone;
+    }
+    else
+    {
+      qCone = 1;
+    }
+    qCone *= eleCharge->at(iBestEle); // FIXME: why multiply and not add?
+    if(pCone.E() != 0)
+    {
+      eleConeCF /= pCone.E();
+      eleConeNF /= pCone.E();
+    }
+    
+    eleConeQ = qCone;
+    
+    eleConePt = pCone.Pt();
+    eleConeDr = deltaR(pCone.Eta(), pCone.Phi(), eleEta->at(iBestEle), elePhi->at(iBestEle));
+    if(pCone.E() !=0)
+    {
+      eleConeEnergyRatio = eleE->at(iBestEle) / pCone.E();
+    }
+    else
+    {
+      eleConeEnergyRatio = 1;
+    }
+    pCone -= pEle;
+    eleConePtRel = elePt->at(iBestEle) * (pEle.Vect().Unit() * pCone.Vect().Unit());
+    
+    
+    std::cout << "      Cone: eta = " << pCone.Eta() << ", phi = " << pCone.Phi() << ", pt = " << pCone.Pt() <<  std::endl; 
+    std::cout << "            eleConePt = " << eleConePt << std::endl;
+    std::cout << "            ptRel = " << eleConePtRel << std::endl;
+    std::cout << "            eleConeDr = " << eleConeDr << std::endl;
+    std::cout << "            eleConeEnergyRatio = " << eleConeEnergyRatio << std::endl;
+    std::cout << "            eleConeQ = " << eleConeQ << std::endl;
+    
+    
+    float distance = deltaR(axisEta, axisPhi, pCone.Eta(), pCone.Phi());
+    std::cout << "      Distance = " << distance << std::endl;
+    if(distance > tolerance)
+    {
+      axisEta = pCone.Eta();
+      axisPhi = pCone.Phi();
+    }
+    else
+    {
+      break;
+    }
+  }
+  
+  hEleConeDistance->Fill(eleConeDr);
+  
+  
+  
+  
+  
+  
+  
   // General event variables
   (tWriter->evtNumber) = event_tot;
   (tWriter->evtWeight) = evtWeight;
@@ -336,6 +499,8 @@ void EleMVASecondNtupleProducer::endJob()
   autoSavedObject = cEleBTrkDistance = CreateCanvas("cEleBTrkDistance", "colz", false, false, false, hEleBTrkDistance);
 
   autoSavedObject = cWeightedBMass = CreateCanvas("cWeightedBMass", 0, 21, 1, false, false, hWeightedBMass);
+  
+  autoSavedObject = cEleConeDistance = CreateCanvas("cEleConeDistance", 0, 21, 1, false, true, hEleConeDistance);
   
   return;
 }

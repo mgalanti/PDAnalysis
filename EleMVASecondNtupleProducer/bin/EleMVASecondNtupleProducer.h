@@ -43,6 +43,8 @@ class EleMVASecondNtupleProducer:
   std::string tightSelection;
   
   float trueBMass;
+  
+  int nConeIterations;
 
  private:
   
@@ -52,6 +54,9 @@ class EleMVASecondNtupleProducer:
   TH1D* hWeightedBMass;
   TCanvas* cWeightedBMass;  
    
+  TH1D* hEleConeDistance;
+  TCanvas* cEleConeDistance;
+  
   // dummy copy constructor and assignment
   EleMVASecondNtupleProducer           ( const EleMVASecondNtupleProducer& );
   EleMVASecondNtupleProducer& operator=( const EleMVASecondNtupleProducer& );
