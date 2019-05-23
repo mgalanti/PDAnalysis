@@ -5,10 +5,8 @@
 
 #include "MGTools/AnalysisTools/interface/MGStringTools.h"
 #include "PDAnalysis/Ntu/interface/MGRecoTools.h"
-#include "PDAnalysis/Ntu/interface/PDAnalyzerUtil.h"
 
 class MGSelector: 
-    public virtual PDAnalyzerUtil, 
     public virtual MGRecoTools, 
     public virtual MGStringTools
 {  

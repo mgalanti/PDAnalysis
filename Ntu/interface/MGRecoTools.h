@@ -4,12 +4,11 @@
 #include "TLorentzVector.h"
 #include "TVectorF.h"
 
-#include "PDAnalysis/Ntu/interface/constants.h"
-#include "PDAnalysis/Ntu/interface/PDAnalyzerUtil.h"
+#include "PDAnalysis/Ntu/interface/MGBaseTools.h"
 
 
 
-class MGRecoTools : public virtual PDAnalyzerUtil
+class MGRecoTools : public virtual MGBaseTools
 {
   public:
 //     typedef bool hitFilterType(const unsigned int);

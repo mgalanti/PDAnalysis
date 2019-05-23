@@ -5,15 +5,14 @@
 
 #include "TLorentzVector.h"
 
-#include "PDAnalysis/Ntu/interface/PDAnalyzerUtil.h"
-#include "PDAnalysis/Ntu/interface/constants.h"
+#include "PDAnalysis/Ntu/interface/MGBaseTools.h"
 #include "PDAnalysis/Ntu/interface/PDGenHandler.h"
 #include "MGTools/AnalysisTools/interface/MGContainerTools.h"
 
 
 
 class MGGenTools: 
-    public virtual PDAnalyzerUtil, 
+    public virtual MGBaseTools,
     public virtual PDGenHandler, 
     public virtual MGContainerTools
 {

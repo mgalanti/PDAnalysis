@@ -3,11 +3,18 @@
 
 
 
-#include "PDAnalysis/Ntu/interface/PDAnalyzerUtil.h"
+// #include "PDAnalysis/Ntu/interface/PDAnalyzerUtil.h"
+#include "PDAnalysis/Ntu/interface/MGGenTools.h"
+#include "PDAnalysis/Ntu/interface/MGRecoTools.h"
+#include "PDAnalysis/Ntu/interface/MGSelector.h"
 
 
 class MGBaseAnalyzer: 
-    public virtual PDAnalyzerUtil
+    public virtual MGGenTools,
+    public virtual MGRecoTools,
+    public virtual MGSelector
+//     public virtual PDAnalyzerUtil
+    
 {
   public:
     MGBaseAnalyzer();
@@ -43,8 +50,6 @@ class MGBaseAnalyzer:
     
     void checkBranches();
     
-    bool verbose;
-
     // Used in derived classes
     std::string evtSelection;
     
