@@ -9,6 +9,7 @@ namespace constants
   const double PI = 3.141592653589793;
 
   // Particle properties
+  const double electronMass = 0.000511;
   const double muonMass = 0.1057;
   const double pionMass = 0.1396;
   const double kaonMass = 0.4937;
