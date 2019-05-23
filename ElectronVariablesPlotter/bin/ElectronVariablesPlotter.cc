@@ -39,14 +39,18 @@ void ElectronVariablesPlotter::beginJob() {
   if(selectionSubStrings.size() > 2)
   {
     chargeCorrCutName = selectionSubStrings[2];
+    if(chargeCorrCutName.compare("pos") == 0)
+      chargeCorrCut = 3;
     if(chargeCorrCutName.compare("pos2") == 0)
       chargeCorrCut = 2;
-    if(chargeCorrCutName.compare("pos") == 0)
+    if(chargeCorrCutName.compare("pos1") == 0)
       chargeCorrCut = 1;
-    if(chargeCorrCutName.compare("neg") == 0)
+    if(chargeCorrCutName.compare("neg1") == 0)
       chargeCorrCut = -1;
     if(chargeCorrCutName.compare("neg2") == 0)
       chargeCorrCut = -2;
+    if(chargeCorrCutName.compare("neg") == 0)
+      chargeCorrCut = -3;
   }
   
   // user parameters are retrieved as strings by using their names;
@@ -374,6 +378,7 @@ bool ElectronVariablesPlotter::analyze( int entry, int event_file, int event_tot
   
   // Check charge correlation (this depends on the processName and on whether the gen information is used or not)
   std::vector<int> tracksFromB = tracksFromSV(iBestB);
+  TLorentzVector pB = GetTLorentzVectorFromJPsiX(iBestB);
   int chargeB = 0;
   for(auto iTrack : tracksFromB)
   {
@@ -388,10 +393,11 @@ bool ElectronVariablesPlotter::analyze( int entry, int event_file, int event_tot
   if(use_gen)
   {
     int iMatchedGenEle = GetClosestGen(elePt->at(iBestEle), eleEta->at(iBestEle), elePhi->at(iBestEle));
-//     int idMatchedGenEle = 0;
-//     if (iMatchedGenEle >= 0)
-//       idMatchedGenEle = genId->at(iMatchedGenEle);
-    int iGenB = GetClosestGenNoLL(iBestB);
+    int idMatchedGenEle = 0;
+    if (iMatchedGenEle >= 0)
+      idMatchedGenEle = genId->at(iMatchedGenEle);
+    std::vector<int> longLivedBHadrons = GetAllLongLivedBHadrons();
+    int iGenB = GetClosestGenInList(pB.Pt(), pB.Eta(), pB.Phi(), longLivedBHadrons, 0.4, 0.4);
 //     int idGenB = 0;
 //     if(iGenB > 0)
 //     {
@@ -399,7 +405,7 @@ bool ElectronVariablesPlotter::analyze( int entry, int event_file, int event_tot
 //     }
     if(processName.compare("BsToJPsiPhi") == 0)
     {
-      if(iMatchedGenEle)
+      if(abs(idMatchedGenEle) == 11)
         chargeCorr = GetGenLepBsChargeCorrelation(iMatchedGenEle, iGenB);
       if(!chargeCorr)
       {
@@ -426,9 +432,13 @@ bool ElectronVariablesPlotter::analyze( int entry, int event_file, int event_tot
   }
   
   // Now select based on the charge correlation
-  if(chargeCorrCut && chargeCorr != chargeCorrCut)
-    return false;
-
+  if(chargeCorrCut)
+  {
+    if(chargeCorrCut*chargeCorr < 0)
+      return false;
+    if(abs(chargeCorrCut) < 3 && chargeCorr != chargeCorrCut)
+      return false;
+  }
   hEleBChargeCorr->Fill(chargeCorr);  
     
   mhEleVariables["nElectrons"]->Fill(*(mAllNObjects["nElectrons"]));
