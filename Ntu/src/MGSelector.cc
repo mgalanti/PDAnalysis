@@ -57,7 +57,10 @@ bool MGSelector::SelectEvent(const std::string selection, std::vector<std::pair<
     signalSelected = SelectBuToJPsiKEvent(selection.substr(10, std::string::npos), selectedObjectsRef);
   }
   
-//   std::cout << "MGSelector::SelectEvent(): I N F O. Event " << (signalSelected?"passes":"does not pass") << " signal-side selection.\n";
+  if(verbose)
+  {
+    std::cout << "MGSelector::SelectEvent(): I N F O. Event " << (signalSelected?"passes":"does not pass") << " signal-side selection.\n";
+  }
   
   if(!signalSelected)
     return false;
@@ -83,7 +86,10 @@ bool MGSelector::SelectEvent(const std::string selection, std::vector<std::pair<
 
     tagSideSelected = true;
     
-//     std::cout << "MGSelector::SelectEvent(): I N F O. Event " << (tagSideSelected?"passes":"does not pass") << " opposite-side selection.\n";
+    if(verbose)
+    {
+      std::cout << "MGSelector::SelectEvent(): I N F O. Event " << (tagSideSelected?"passes":"does not pass") << " opposite-side selection.\n";
+    }
     
     return signalSelected && tagSideSelected;
   }
@@ -217,11 +223,14 @@ int MGSelector::SelectOSElectron(const std::string selection, const int iPV, con
         if((deltaR(trkEta->at(iTrk), trkPhi->at(iTrk), eleGsfEta->at(iElectron), eleGsfPhi->at(iElectron)) < 0.1) &&
            (2*fabs(trkPt->at(iTrk) - eleGsfPt->at(iElectron))/(trkPt->at(iTrk) + eleGsfPt->at(iElectron)) < 0.1))
         {
-          std::cout << "MGSelector::SelectOSElectron(): I N F O. Gsf track of electron " << iElectron << " is close in dR and dpT/pT to one of the B tracks.\n";
-          std::cout << "                                         trkEta->at(" << iTrk << ") = " << trkEta->at(iTrk) << ", eleGsfEta->at(" << iElectron << ") = " << eleGsfEta->at(iElectron) << std::endl;
-          std::cout << "                                         trkPhi->at(" << iTrk << ") = " << trkPhi->at(iTrk) << ", eleGsfPhi->at(" << iElectron << ") = " << eleGsfPhi->at(iElectron) << std::endl;
-          std::cout << "                                         trkPt->at(" << iTrk << ") = " << trkPt->at(iTrk) << ", eleGsfPt->at(" << iElectron << ") = " << eleGsfPt->at(iElectron) << std::endl;
-          std::cout << "                                         Electron will not be considered for OS tagging.\n";
+          if(verbose)
+          {
+            std::cout << "MGSelector::SelectOSElectron(): I N F O. Gsf track of electron " << iElectron << " is close in dR and dpT/pT to one of the B tracks.\n";
+            std::cout << "                                         trkEta->at(" << iTrk << ") = " << trkEta->at(iTrk) << ", eleGsfEta->at(" << iElectron << ") = " << eleGsfEta->at(iElectron) << std::endl;
+            std::cout << "                                         trkPhi->at(" << iTrk << ") = " << trkPhi->at(iTrk) << ", eleGsfPhi->at(" << iElectron << ") = " << eleGsfPhi->at(iElectron) << std::endl;
+            std::cout << "                                         trkPt->at(" << iTrk << ") = " << trkPt->at(iTrk) << ", eleGsfPt->at(" << iElectron << ") = " << eleGsfPt->at(iElectron) << std::endl;
+            std::cout << "                                         Electron will not be considered for OS tagging.\n";
+          }
           closeTrk = true;
         }
         if(closeTrk)

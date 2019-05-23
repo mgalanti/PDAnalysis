@@ -192,11 +192,17 @@ const int MGGenTools::GetGenLepBsChargeCorrelation(const int iGenLep, int iGenBs
     int newIGenBs = RecursiveLookForMotherIds(iGenBs, {-idBs});
     if(newIGenBs >= 0)
     {
-      std::cout << "I N F O : MGGenTools::GetGenLepBsChargeCorrelation(...): The Bs meson at index " << iGenBs << " with id " << idBs << " comes from mixing!\n";
-      std::cout << "          Found pre-mixing meson at index " << newIGenBs;
+      if(verbose)
+      {
+        std::cout << "I N F O : MGGenTools::GetGenLepBsChargeCorrelation(...): The Bs meson at index " << iGenBs << " with id " << idBs << " comes from mixing!\n";
+        std::cout << "          Found pre-mixing meson at index " << newIGenBs;
+      }
       iGenBs = newIGenBs;
       idBs = genId->at(iGenBs);
-      std::cout << " with id " << idBs << std::endl;
+      if(verbose)
+      {
+        std::cout << " with id " << idBs << std::endl;
+      }
     }
   }
   // If we have a Bs*, we find the first Bs among the daughters
@@ -216,7 +222,6 @@ const int MGGenTools::GetGenLepBsChargeCorrelation(const int iGenLep, int iGenBs
     }
     idBs = genId->at(iGenBs);
   }
-  std::cout << "iGenBs = " << iGenBs << ", idBs = " << idBs << std::endl;
 //   PrintMotherChain(iGenBs);
 //   RecursivePrintMothers(iGenBs);
 //   int iBQuark = RecursiveLookForMotherIds(iGenBs, {5}, false);
@@ -327,11 +332,17 @@ const int MGGenTools::GetBsChargeCorrelation(const int charge, int iGenBs)
     int newIGenBs = RecursiveLookForMotherIds(iGenBs, {-idBs});
     if(newIGenBs >= 0)
     {
-      std::cout << "I N F O : MGGenTools::GetBsChargeCorrelation(...): The Bs meson at index " << iGenBs << " with id " << idBs << " comes from mixing!\n";
-      std::cout << "          Found pre-mixing meson at index " << newIGenBs;
+      if(verbose)
+      {
+        std::cout << "I N F O : MGGenTools::GetBsChargeCorrelation(...): The Bs meson at index " << iGenBs << " with id " << idBs << " comes from mixing!\n";
+        std::cout << "          Found pre-mixing meson at index " << newIGenBs;
+      }
       iGenBs = newIGenBs;
       idBs = genId->at(iGenBs);
-      std::cout << " with id " << idBs << std::endl;
+      if(verbose)
+      {
+        std::cout << " with id " << idBs << std::endl;
+      }
     }
   }
   // If we have a Bs*, we find the first Bs among the daughters
@@ -351,7 +362,6 @@ const int MGGenTools::GetBsChargeCorrelation(const int charge, int iGenBs)
     }
     idBs = genId->at(iGenBs);
   }
-  std::cout << "iGenBs = " << iGenBs << ", idBs = " << idBs << std::endl;
 //   PrintMotherChain(iGenBs);
 //   RecursivePrintMothers(iGenBs);
 //   int iBQuark = RecursiveLookForMotherIds(iGenBs, {5}, false);
