@@ -68,6 +68,8 @@ void ElectronVariablesPlotter::book()
   // it's automatically marked for saving on file; the option 
   // is uneffective when not using the full utility
   
+  autoSavedObject = hEleBChargeCorr = Create1DHistogram<TH1D>("hEleBChargeCorr", "Charge correlation between e and B", 5, -2.5, 2.5, "Correlation", "N. electrons");
+  
   int counter = 0;
   for(auto itEleMVAType : eleMVATypeMap)
   {
@@ -426,7 +428,8 @@ bool ElectronVariablesPlotter::analyze( int entry, int event_file, int event_tot
   // Now select based on the charge correlation
   if(chargeCorrCut && chargeCorr != chargeCorrCut)
     return false;
-  
+
+  hEleBChargeCorr->Fill(chargeCorr);  
     
   mhEleVariables["nElectrons"]->Fill(*(mAllNObjects["nElectrons"]));
   
@@ -501,6 +504,9 @@ bool ElectronVariablesPlotter::analyze( int entry, int event_file, int event_tot
 void ElectronVariablesPlotter::endJob() 
 {
   // This runs after the event loop
+  
+  autoSavedObject = cEleBChargeCorr = CreateCanvas("cEleBChargeCorr", 0, 21, 1, false, false, hEleBChargeCorr);
+  
   TCanvas* cTemp;
   
   for(auto histo : JoinMany<TH1D*>({vhEleMVAType, vhEleUserFloat, vhEleUserInt}))

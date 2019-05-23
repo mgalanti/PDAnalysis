@@ -39,6 +39,9 @@ class ElectronVariablesPlotter:
 
  private:
    
+   TH1D* hEleBChargeCorr;
+   TCanvas* cEleBChargeCorr;
+   
    std::vector<TH1D*> vhEleMVAType;
    std::vector<TCanvas*> vcEleMVAType;
 
