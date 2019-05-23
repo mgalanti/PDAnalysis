@@ -31,6 +31,7 @@ class MGRecoTools : public virtual MGBaseTools
     const TLorentzVector GetTLorentzVectorFromJPsiX(const int iSvt);
     
     const double dZ(const int iEle, const int iVtx);
+    const double dZTrk(const int iTrk, const int iVtx);
    
     // MG: none of the methods below works with the hitPattern implementation in PD ntuples.
 //     inline double GetTrackValidFraction(const unsigned short iTrack);

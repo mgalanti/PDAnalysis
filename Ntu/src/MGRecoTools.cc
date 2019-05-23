@@ -253,6 +253,12 @@ const double MGRecoTools::dZ(const int iEle, const int iVtx)
 
 
 
+const double MGRecoTools::dZTrk(const int iTrk, const int iVtx)
+{
+    return PDAnalyzerUtil::dZ(iTrk, pvtX->at(iVtx), pvtY->at(iVtx), pvtZ->at(iVtx));
+}
+
+
 // double RecoTools::GetTrackValidFraction(const unsigned short iTrack)
 // {
 //   int valid = GetNumberOfValidTrackerHits(iTrack);
