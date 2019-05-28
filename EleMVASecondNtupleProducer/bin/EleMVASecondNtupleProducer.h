@@ -45,6 +45,7 @@ class EleMVASecondNtupleProducer:
   float trueBMass;
   
   int nConeIterations;
+  float coneTolerance;
 
  private:
   

@@ -54,6 +54,16 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
     setBranch("eleEta", &eleEta, "eleEta/F", &b_eleEta);
     setBranch("elePhi", &elePhi, "elePhi/F", &b_elePhi);
     
+    setBranch("eleConePt", &eleConePt, "eleConePt/F", &b_eleConePt);
+    setBranch("eleConePtRel", &eleConePtRel, "eleConePtRel/F", &b_eleConePtRel);
+    setBranch("eleConeDR", &eleConeDR, "eleConeDR/F", &b_eleConeDR);
+    setBranch("eleConeEnergyRatio", &eleConeEnergyRatio, "eleConeEnergyRatio/F", &b_eleConeEnergyRatio);
+    setBranch("eleConeQ", &eleConeQ, "eleConeQ/F", &b_eleConeQ);
+    setBranch("eleConeSize", &eleConeSize, "eleConeSize/F", &b_eleConeSize);
+    setBranch("eleConeNF", &eleConeNF, "eleConeNF/F", &b_eleConeNF);
+    setBranch("eleConeCF", &eleConeCF, "eleConeCF/F", &b_eleConeCF);
+    setBranch("eleConeNCH", &eleConeNCH, "eleConeNCH/F", &b_eleConeNCH);
+    
   }
   
   // Second ntuple data
@@ -70,6 +80,7 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   int BidGen;
   
   float elePt, eleEta, elePhi;
+  float eleConePt, eleConePtRel, eleConeDR, eleConeEnergyRatio, eleConeQ, eleConeSize, eleConeNF, eleConeCF, eleConeNCH;
 
   // Second ntuple branches
   TBranch *b_evtNumber, *b_evtWeight, *b_tightEvent;
@@ -85,6 +96,7 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   TBranch *b_BidGen;
   
   TBranch *b_elePt, *b_eleEta, *b_elePhi;
+  TBranch *b_eleConePt, *b_eleConePtRel, *b_eleConeDR, *b_eleConeEnergyRatio, *b_eleConeQ, *b_eleConeSize, *b_eleConeNF, *b_eleConeCF, *b_eleConeNCH;
   
  private:
 

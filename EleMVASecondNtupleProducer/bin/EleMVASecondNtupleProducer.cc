@@ -38,6 +38,8 @@ void EleMVASecondNtupleProducer::beginJob() {
 
   getUserParameter("tightSelection", tightSelection);
   getUserParameter("nConeIterations", nConeIterations);
+  getUserParameter("coneTolerance", coneTolerance);
+  
 
   // user parameters are set as names associated to a string, 
   // default values can be set in the analyzer class contructor
@@ -294,7 +296,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   
   //CONE variables
   float eleConePtRel = -1;
-  float eleConeDr = -1;
+  float eleConeDR = -1;
   float eleConeEnergyRatio = -1;
   int   eleConeSize = 0;
   float eleConeQ = -1;
@@ -304,20 +306,25 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   int   eleConeNCH = 0;
   float kappa = 1;
   float drCone = 0.4;
-  float tolerance = 0.05;
   float axisEta = eleEta->at(iBestEle);
   float axisPhi = elePhi->at(iBestEle);
   TLorentzVector pEle;
   pEle.SetPtEtaPhiM(elePt->at(iBestEle), eleEta->at(iBestEle), elePhi->at(iBestEle), constants::electronMass);
   
+  if(verbose)
+  {
   std::cout << "Elec: eta = " << eleEta->at(iBestEle) << ", phi = " << elePhi->at(iBestEle) << ", pt = " << elePt->at(iBestEle) << std::endl;
-
+  }
+  
   float qCone = 0, ptCone = 0;
   for(int i = 0; i < nConeIterations; i++)
   {
-    std::cout << "   Iteration " << i << std::endl;
+    if(verbose)
+    {
+      std::cout << "   Iteration " << i << std::endl;
+    }
     eleConePtRel = -1;
-    eleConeDr = -1;
+    eleConeDR = -1;
     eleConeEnergyRatio = -1;
     eleConeSize = 0;
     eleConeQ = -1;
@@ -334,22 +341,18 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
       {
         continue;
       }
-//       std::cout << "   Sono qui 2\n";
       if(ptPF < 0.2)
       {
         continue;
       }
-//       std::cout << "   Sono qui 3\n";
       if(fabs(etaPF) > 3.0)
       {
         continue;  
       }
-//       std::cout << "   Sono qui 4\n";
       if(std::find(tracksFromB.begin(), tracksFromB.end(), pfcTrk->at(iPF)) != tracksFromB.end())
       {
         continue;
       }
-//       std::cout << "   Sono qui 5\n";
       if(pfcTrk->at(iPF) >= 0)
       {
 //         std::cout << "iBestPV = " << iBestPV << ", nPVertices = " << nPVertices << std::endl;
@@ -358,29 +361,24 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
           continue;
         }
       }
-//       std::cout << "   Sono qui 6\n";
 //       std::cout << "iPF = " << iPF << ", nPF = " << nPF << std::endl;
       TLorentzVector a;
       a.SetPtEtaPhiE(pfcPt->at(iPF), pfcEta->at(iPF), pfcPhi->at(iPF), pfcE->at(iPF));
       pCone += a;
       ++eleConeSize;
-//       std::cout << "   Sono qui 7\n";
       
       qCone += pfcCharge->at(iPF) * pow(ptPF, kappa);
       ptCone += pow(ptPF, kappa);
-//       std::cout << "   Sono qui 8\n";
 
       if(pfcCharge->at(iPF)==0)
       {
         eleConeNF += pfcE->at(iPF);
       }
-//       std::cout << "   Sono qui 9\n";
       if(abs(pfcCharge->at(iPF))==1)
       {
         eleConeNCH++;
         eleConeCF += pfcE->at(iPF);
       }
-//       std::cout << "   Sono qui 10\n";
     }
     
     if(ptCone != 0)
@@ -401,7 +399,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     eleConeQ = qCone;
     
     eleConePt = pCone.Pt();
-    eleConeDr = deltaR(pCone.Eta(), pCone.Phi(), eleEta->at(iBestEle), elePhi->at(iBestEle));
+    eleConeDR = deltaR(pCone.Eta(), pCone.Phi(), eleEta->at(iBestEle), elePhi->at(iBestEle));
     if(pCone.E() !=0)
     {
       eleConeEnergyRatio = eleE->at(iBestEle) / pCone.E();
@@ -413,18 +411,24 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     pCone -= pEle;
     eleConePtRel = elePt->at(iBestEle) * (pEle.Vect().Unit() * pCone.Vect().Unit());
     
-    
-    std::cout << "      Cone: eta = " << pCone.Eta() << ", phi = " << pCone.Phi() << ", pt = " << pCone.Pt() <<  std::endl; 
-    std::cout << "            eleConePt = " << eleConePt << std::endl;
-    std::cout << "            ptRel = " << eleConePtRel << std::endl;
-    std::cout << "            eleConeDr = " << eleConeDr << std::endl;
-    std::cout << "            eleConeEnergyRatio = " << eleConeEnergyRatio << std::endl;
-    std::cout << "            eleConeQ = " << eleConeQ << std::endl;
-    
+    if(verbose)
+    {
+      std::cout << "      Cone: eta = " << pCone.Eta() << ", phi = " << pCone.Phi() << ", pt = " << pCone.Pt() <<  std::endl; 
+      std::cout << "            eleConePt = " << eleConePt << std::endl;
+      std::cout << "            ptRel = " << eleConePtRel << std::endl;
+      std::cout << "            eleConeDR = " << eleConeDR << std::endl;
+      std::cout << "            eleConeEnergyRatio = " << eleConeEnergyRatio << std::endl;
+      std::cout << "            eleConeQ = " << eleConeQ << std::endl;
+    }
     
     float distance = deltaR(axisEta, axisPhi, pCone.Eta(), pCone.Phi());
-    std::cout << "      Distance = " << distance << std::endl;
-    if(distance > tolerance)
+    
+    if(verbose)
+    {
+      std::cout << "            Distance = " << distance << std::endl;
+    }
+    
+    if(distance > coneTolerance)
     {
       axisEta = pCone.Eta();
       axisPhi = pCone.Phi();
@@ -435,13 +439,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     }
   }
   
-  hEleConeDistance->Fill(eleConeDr);
-  
-  
-  
-  
-  
-  
+  hEleConeDistance->Fill(eleConeDR);
   
   // General event variables
   (tWriter->evtNumber) = event_tot;
@@ -483,6 +481,16 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->elePt) = elePt->at(iBestEle);
   (tWriter->eleEta) = eleEta->at(iBestEle);
   (tWriter->elePhi) = elePhi->at(iBestEle);
+  
+  (tWriter->eleConePt) = eleConePt;
+  (tWriter->eleConePtRel) = eleConePtRel;
+  (tWriter->eleConeDR) = eleConeDR;
+  (tWriter->eleConeEnergyRatio) = eleConeEnergyRatio;
+  (tWriter->eleConeQ) = eleConeQ;
+  (tWriter->eleConeSize) = eleConeSize;
+  (tWriter->eleConeNF) = eleConeNF;
+  (tWriter->eleConeCF) = eleConeCF;
+  (tWriter->eleConeNCH) = eleConeNCH;
   
   tWriter->fill();
     
