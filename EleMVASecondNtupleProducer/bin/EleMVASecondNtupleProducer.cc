@@ -40,7 +40,6 @@ void EleMVASecondNtupleProducer::beginJob() {
   getUserParameter("nConeIterations", nConeIterations);
   getUserParameter("coneTolerance", coneTolerance);
   
-
   // user parameters are set as names associated to a string, 
   // default values can be set in the analyzer class contructor
   
@@ -289,7 +288,46 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     }
   }
   
+  // EleID Variables
+  float eleIDNIV2Val = -1;
+  float eleIDIV2Val = -1;
+  float eleIDHZZV1Val = -1;
+  int eleIDNIV2Cat = 0;
+  int eleIDIV2Cat = 0;
+  int eleIDHZZV1Cat = 0;
   
+  for (int iUserInfo = 0; iUserInfo < nUserInfo; iUserInfo++)
+  {
+//     std::cout << "Looping on userInfo object #" << iUserInfo << std::endl;
+    if(useObjType->at(iUserInfo) == 3 && useObjIndex->at(iUserInfo) == iBestEle)
+    {
+      if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Fall17NoIsoV2Values)
+      {
+        eleIDNIV2Val = useInfoValue->at(iUserInfo);
+      }
+      if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Fall17IsoV2Values)
+      {
+        eleIDIV2Val = useInfoValue->at(iUserInfo);
+      }
+      if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Spring16HZZV1Values)
+      {
+        eleIDHZZV1Val = useInfoValue->at(iUserInfo);
+      }
+      
+      if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Fall17NoIsoV2Categories)
+      {
+        eleIDNIV2Cat = (int)(useInfoValue->at(iUserInfo));
+      }
+      if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Fall17IsoV2Categories)
+      {
+        eleIDIV2Cat = (int)(useInfoValue->at(iUserInfo));
+      }
+      if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Spring16HZZV1Categories)
+      {
+        eleIDHZZV1Cat = (int)(useInfoValue->at(iUserInfo));
+      }
+    }
+  }
   
   
   
@@ -481,6 +519,14 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->elePt) = elePt->at(iBestEle);
   (tWriter->eleEta) = eleEta->at(iBestEle);
   (tWriter->elePhi) = elePhi->at(iBestEle);
+  
+  (tWriter->eleIDNIV2Val) = eleIDNIV2Val;
+  (tWriter->eleIDIV2Val) = eleIDIV2Val;
+  (tWriter->eleIDHZZV1Val) = eleIDHZZV1Val;
+  
+  (tWriter->eleIDNIV2Cat) = eleIDNIV2Cat;
+  (tWriter->eleIDIV2Cat) = eleIDIV2Cat;
+  (tWriter->eleIDHZZV1Cat) = eleIDHZZV1Cat;
   
   (tWriter->eleConePt) = eleConePt;
   (tWriter->eleConePtRel) = eleConePtRel;
