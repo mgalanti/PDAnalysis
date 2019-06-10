@@ -464,10 +464,10 @@ int MGSelector::SelectBestBsToJPsiPhi(const std::string selection, int& iBestPV)
       {
         continue;
       }
-//       if(tB.Pt() < 10.)
-//       {
-//         continue;
-//       }
+      if(tB.Pt() < 10.)
+      {
+        continue;
+      }
       
       int iPV = SelectBestPV(iB, tB, "PointingV0");
       
