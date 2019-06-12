@@ -7,7 +7,10 @@ Other dependencies:
 - NtuTool
 - NtuAnalysis
 
-Instructions to install on top of PDAnalysis 2017V12 on CMSSW_10_2_6:
+Instructions to install on top of PDAnalysis 2017V13_02 on CMSSW_10_3_0:
+
+*** W A R N I N G ***  Porting to 2017V13_02 on CMSSW_10_3_0 is still ongoing! 
+                       Code does not work yet.
 
 - Download PDAnalysis according to Paolo installer
 
@@ -21,8 +24,6 @@ $ git remote add origin git@github.com:mgalanti/PDAnalysis.git
 
 $ git fetch
 
-$ git reset origin/2017V12-CMSSW_10_2_6
-
-$ git checkout -t origin/2017V12-CMSSW_10_2_6
+$ git reset origin/master
 
 $ git reset --hard HEAD
