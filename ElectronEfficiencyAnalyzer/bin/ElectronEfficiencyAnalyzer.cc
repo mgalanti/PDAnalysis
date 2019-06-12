@@ -981,7 +981,7 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
 //     phoIsoEle = elePhoIso->at(iElectron);
 //     pchIsoEle = elePCHIso->at(iElectron);
 //     aEffEle = eleAEff->at(iElectron);
-    idsEle = eleIDs->at(iElectron);
+    idsEle = eleID->at(iElectron);
 //     consChaEle = eleConsCha->at(iElectron);
 //     ebeeGapEle = eleEBEEGap->at(iElectron);
     dBEle = eleDb->at(iElectron);

@@ -157,7 +157,7 @@ void MGBaseAnalyzer::beginJob()
   insertVF(mAllEleFloats, eleSumPUpt         );
   insertVF(mAllEleFloats, eleAbsEta          );
   insertVF(mAllEleFloats, eleAEff            );
-  insertVI(mAllEleInts,   eleIDs             );
+  insertVI(mAllEleInts,   eleID              );
   insertVB(mAllEleBools,  eleConsCha         );
   insertVB(mAllEleBools,  eleEBEEGap         );
   insertVF(mAllEleFloats, eleDb              );

@@ -42,21 +42,17 @@ class ElectronVariablesPlotter:
    TH1D* hEleBChargeCorr;
    TCanvas* cEleBChargeCorr;
    
-   std::vector<TH1D*> vhEleMVAType;
-   std::vector<TCanvas*> vcEleMVAType;
+   std::vector<TH1D*> vhEleInfoType;
+   std::vector<TCanvas*> vcEleInfoType;
 
-   std::vector<TH1D*> vhEleUserFloat;
-   std::vector<TCanvas*> vcEleUserFloat;
-   
-   std::vector<TH1D*> vhEleUserInt;
-   std::vector<TCanvas*> vcEleUserInt;
+   std::vector<TH1D*> vhEIdInfoType;
+   std::vector<TCanvas*> vcEIdInfoType;
    
    std::map<std::string,TH1D*> mhEleVariables;
    std::map<std::string,TCanvas*> mcEleVariables;
 
-   std::map<int,std::string> eleMVATypeMap;
-   std::map<int,std::string> eleUserFloatMap;
-   std::map<int,std::string> eleUserIntMap;
+   std::map<int,std::string> eleInfoTypeMap;
+   std::map<int,std::string> eIdInfoTypeMap;
       
    std::string processName;   
    std::string chargeCorrCutName;

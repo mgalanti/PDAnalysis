@@ -29,8 +29,7 @@ class PDAnalyzerUtil: public NtuInterface< PDNtupleBranch<WrapperBase> > {
   bool goodMu( unsigned int iMuon );
 
   bool hlt( PDEnumString::trigPath path );
-  std::vector<number>* userInfo( PDEnumString::recoObject r,
-                                 PDEnumString::infoType   t );
+  std::vector<number>* userInfo( PDEnumString::recoObject r, int t );
 
   const std::vector<int>& muonTracks( PDEnumString::trackType type );
   const std::vector<int>& pfCandFromJet( int iJet );

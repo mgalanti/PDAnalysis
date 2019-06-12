@@ -24,6 +24,7 @@ PDAnalyzerUtil::PDAnalyzerUtil() {
   setUserParameter( "use_info"     , "false" );
   setUserParameter( "use_pflow"    , "true"  );
   setUserParameter( "use_tracks"   , "true"  );
+  setUserParameter( "use_trkper"   , "true"  );
   setUserParameter( "use_pvts"     , "true"  );
   setUserParameter( "use_svts"     , "true"  );
   setUserParameter( "use_tkips"    , "true"  );
@@ -119,6 +120,7 @@ void PDAnalyzerUtil::setupNtuple() {
   getUserParameter( "use_info"     , use_info      );
   getUserParameter( "use_pflow"    , use_pflow     );
   getUserParameter( "use_tracks"   , use_tracks    );
+  getUserParameter( "use_trkper"   , use_trkper    );
   getUserParameter( "use_pvts"     , use_pvts      );
   getUserParameter( "use_svts"     , use_svts      );
   getUserParameter( "use_tkips"    , use_tkips     );
@@ -280,8 +282,7 @@ bool PDAnalyzerUtil::hlt( PDEnumString::trigPath path ) {
 
 
 std::vector<PDNtupleData::number>* PDAnalyzerUtil::userInfo(
-                                   PDEnumString::recoObject r,
-                                   PDEnumString::infoType   t ) {
+                                   PDEnumString::recoObject r, int t ) {
   if ( chkNewEvent( lastInfo ) ) {
     uiMap.clear();
     int iUI;
@@ -303,6 +304,9 @@ std::vector<PDNtupleData::number>* PDAnalyzerUtil::userInfo(
           break;
         case PDEnumString::recTau:
           v.resize( nTaus     , 0.0 );
+          break;
+        case PDEnumString::idElectron:
+          v.resize( nElectrons, 0.0 );
           break;
         }
       }
@@ -339,6 +343,9 @@ const std::vector<int>& PDAnalyzerUtil::muonTracks(
     muTrkMap[PDEnumString::muInner     ].resize( nMuons, -1 );
     muTrkMap[PDEnumString::muStandalone].resize( nMuons, -1 );
     muTrkMap[PDEnumString::muGlobal    ].resize( nMuons, -1 );
+    muTrkMap[PDEnumString::muBest      ].resize( nMuons, -1 );
+    muTrkMap[PDEnumString::muPF        ].resize( nMuons, -1 );
+    muTrkMap[PDEnumString::muReco      ].resize( nMuons, -1 );
     int iMu;
     for ( iMu = 0; iMu < nMuons; ++iMu ) {
       int iTk = muoTrk->at( iMu );
@@ -349,6 +356,12 @@ const std::vector<int>& PDAnalyzerUtil::muonTracks(
                           muTrkMap[PDEnumString::muStandalone ][iMu] = iTk;
         if ( trkType-> at( iTk ) & PDEnumString::muGlobal     )
                           muTrkMap[PDEnumString::muGlobal     ][iMu] = iTk;
+        if ( trkType-> at( iTk ) & PDEnumString::muBest       )
+                          muTrkMap[PDEnumString::muBest       ][iMu] = iTk;
+        if ( trkType-> at( iTk ) & PDEnumString::muPF         )
+                          muTrkMap[PDEnumString::muPF         ][iMu] = iTk;
+        if ( trkType-> at( iTk ) & PDEnumString::muReco       )
+                          muTrkMap[PDEnumString::muReco       ][iMu] = iTk;
         iTk = trkNext->at( iTk );
       }
     }

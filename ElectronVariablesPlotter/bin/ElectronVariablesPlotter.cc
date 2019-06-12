@@ -28,9 +28,8 @@ void ElectronVariablesPlotter::beginJob() {
   MGBaseAnalyzer::beginJob();
   MGSelector::SetSelectionString(evtSelection);
   
-  eleMVATypeMap = PDEnumString::eleMVATypeMap();
-  eleUserFloatMap = PDEnumString::eleUserFloatMap();
-  eleUserIntMap = PDEnumString::eleUserIntMap();
+  eleInfoTypeMap = PDEnumString::eleInfoTypeMap();
+  eIdInfoTypeMap = PDEnumString::eIdInfoTypeMap();
   
   processName = selectionSubStrings[0];
   
@@ -75,42 +74,44 @@ void ElectronVariablesPlotter::book()
   autoSavedObject = hEleBChargeCorr = Create1DHistogram<TH1D>("hEleBChargeCorr", "Charge correlation between e and B", 5, -2.5, 2.5, "Correlation", "N. electrons");
   
   int counter = 0;
-  for(auto itEleMVAType : eleMVATypeMap)
+  for(auto itEleInfoType : eleInfoTypeMap)
   {
-    std::string name = itEleMVAType.second;
+    std::string name = itEleInfoType.second;
     std::string histoName = "h" + name;
     int nBins = 100;
-    int xMin = -1.;
-    int xMax = 1.;
+    int xMin = 0.;
+    int xMax = 100.;
     if(histoName.find("RawValues") != std::string::npos)
     {
       nBins = 100;
       xMin = -5.;
       xMax = 5.;
     }
+    else if(histoName.find("Values") != std::string::npos)
+    {
+      nBins = 100;
+      xMin = -1.;
+      xMax = 1.;
+    }
+    else if(histoName.find("Categories") != std::string::npos)
+    {
+      nBins = 8;
+      xMin = -0.5;
+      xMax = 7.5;
+    }
     TH1D* histo = Create1DHistogram<TH1D>(histoName.c_str(), name.c_str(), nBins, xMin, xMax, histoName.c_str(), "N. electrons");
-    vhEleMVAType.push_back(histo);
-    autoSavedObject = vhEleMVAType[counter++];
-  }
-  
-  counter = 0;
-  for(auto itEleUserFloat : eleUserFloatMap)
-  {
-    std::string name = itEleUserFloat.second;
-    std::string histoName = "h" + name;
-    TH1D* histo = Create1DHistogram<TH1D>(histoName.c_str(), name.c_str(), 100, 0., 100., histoName.c_str(), "N. electrons");
-    vhEleUserFloat.push_back(histo);
-    autoSavedObject = vhEleUserFloat[counter++];
+    vhEleInfoType.push_back(histo);
+    autoSavedObject = vhEleInfoType[counter++];
   }
 
   counter = 0;
-  for(auto itEleUserInt : eleUserIntMap)
+  for(auto itEIdInfoType : eIdInfoTypeMap)
   {
-    std::string name = itEleUserInt.second;
+    std::string name = itEIdInfoType.second;
     std::string histoName = "h" + name;
-    int nBins = 8;
+    int nBins = 100;
     double xMin = -0.5;
-    double xMax = 7.5;
+    double xMax = 9999.5;
     if(histoName.find("cutBased") != std::string::npos)
     {
       nBins = 4097;
@@ -118,8 +119,8 @@ void ElectronVariablesPlotter::book()
       xMax = 4096.5;
     }
     TH1D* histo = Create1DHistogram<TH1D>(histoName.c_str(), name.c_str(), nBins, xMin, xMax, histoName.c_str(), "N. electrons");
-    vhEleUserInt.push_back(histo);
-    autoSavedObject = vhEleUserInt[counter++];
+    vhEIdInfoType.push_back(histo);
+    autoSavedObject = vhEIdInfoType[counter++];
   }
   
   for(auto eleFloat : mAllEleFloats)
@@ -203,7 +204,6 @@ void ElectronVariablesPlotter::book()
       xMax = 1.;
     }
 
-    
     TH1D* histo = Create1DHistogram<TH1D>(histoName.c_str(), name.c_str(), nBins, xMin, xMax, name.c_str(), "N. electrons");
     mhEleVariables.insert(std::make_pair(name,histo));
     autoSavedObject = mhEleVariables[name];
@@ -451,33 +451,23 @@ bool ElectronVariablesPlotter::analyze( int entry, int event_file, int event_tot
       int infoType = useInfoType->at(iUserInfo);
       double infoValue = useInfoValue->at(iUserInfo);
       //         std::cout << "      type = " << infoType << ", value = " << infoValue << std::endl;
-      auto eleMVATypeMatch = eleMVATypeMap.find(infoType);
-      if(eleMVATypeMatch != eleMVATypeMap.end())
+      auto eleInfoTypeMatch = eleInfoTypeMap.find(infoType);
+      if(eleInfoTypeMatch != eleInfoTypeMap.end())
       {
-        std::string nameEleMVA = eleMVATypeMatch->second;
-        for(auto histo : vhEleMVAType)
+        std::string nameEleInfo = eleInfoTypeMatch->second;
+        for(auto histo : vhEleInfoType)
         {
-          if(nameEleMVA.compare(histo->GetTitle()) == 0)
+          if(nameEleInfo.compare(histo->GetTitle()) == 0)
             histo->Fill(infoValue);
         }
       }
-      auto eleUserFloatMatch = eleUserFloatMap.find(infoType);
-      if(eleUserFloatMatch != eleUserFloatMap.end())
+      auto eIdInfoTypeMatch = eIdInfoTypeMap.find(infoType);
+      if(eIdInfoTypeMatch != eIdInfoTypeMap.end())
       {
-        std::string nameEleUserFloat = eleUserFloatMatch->second;
-        for(auto histo : vhEleUserFloat)
+        std::string nameEIdInfoType = eIdInfoTypeMatch->second;
+        for(auto histo : vhEIdInfoType)
         {
-          if(nameEleUserFloat.compare(histo->GetTitle()) == 0)
-            histo->Fill(infoValue);
-        }
-      }
-      auto eleUserIntMatch = eleUserIntMap.find(infoType);
-      if(eleUserIntMatch != eleUserIntMap.end())
-      {
-        std::string nameEleUserInt = eleUserIntMatch->second;
-        for(auto histo : vhEleUserInt)
-        {
-          if(nameEleUserInt.compare(histo->GetTitle()) == 0)
+          if(nameEIdInfoType.compare(histo->GetTitle()) == 0)
             histo->Fill(infoValue);
         }
       }
@@ -519,7 +509,7 @@ void ElectronVariablesPlotter::endJob()
   
   TCanvas* cTemp;
   
-  for(auto histo : JoinMany<TH1D*>({vhEleMVAType, vhEleUserFloat, vhEleUserInt}))
+  for(auto histo : JoinMany<TH1D*>({vhEleInfoType, vhEIdInfoType}))
   {
     std::string name = histo->GetName();
     name = name.substr(1);
