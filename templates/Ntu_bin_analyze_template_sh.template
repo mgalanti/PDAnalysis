@@ -37,10 +37,15 @@ done
 
 echo " "
 
-echo Moving histogram output file: mv his__ANALYZERNAME__SAMPLENAME__EVTSELECTION__0.root his__ANALYZERNAME__SAMPLENAME__EVTSELECTION__TIMENOW__${skipEvents}__${lastEvent}.root
-mv his__ANALYZERNAME__SAMPLENAME__EVTSELECTION__0.root his__ANALYZERNAME__SAMPLENAME__EVTSELECTION__TIMENOW__${skipEvents}__${lastEvent}.root
+echo Moving histogram output file: mv his__ANALYZERNAME__SAMPLENAME__EVTSELECTION__0.root his/his__ANALYZERNAME__SAMPLENAME__EVTSELECTION__TIMENOW__${skipEvents}__${lastEvent}.root
+mkdir his
+mv his__ANALYZERNAME__SAMPLENAME__EVTSELECTION__0.root his/his__ANALYZERNAME__SAMPLENAME__EVTSELECTION__TIMENOW__${skipEvents}__${lastEvent}.root
 
 echo " "
 
-echo Moving second ntuple output file: mv SECONDNTUPLEBASENAME__SAMPLENAME__EVTSELECTION__0.root SECONDNTUPLEBASENAME__SAMPLENAME__EVTSELECTION__TIMENOW__${skipEvents}__${lastEvent}.root
-mv SECONDNTUPLEBASENAME__SAMPLENAME__EVTSELECTION__0.root SECONDNTUPLEBASENAME__SAMPLENAME__EVTSELECTION__TIMENOW__${skipEvents}__${lastEvent}.root
+if [[ -e "SECONDNTUPLEBASENAME__SAMPLENAME__EVTSELECTION__0.root" ]]
+then
+  echo Moving second ntuple output file: mv SECONDNTUPLEBASENAME__SAMPLENAME__EVTSELECTION__0.root ntu/SECONDNTUPLEBASENAME__SAMPLENAME__EVTSELECTION__TIMENOW__${skipEvents}__${lastEvent}.root
+  mkdir ntu
+  mv SECONDNTUPLEBASENAME__SAMPLENAME__EVTSELECTION__0.root ntu/SECONDNTUPLEBASENAME__SAMPLENAME__EVTSELECTION__TIMENOW__${skipEvents}__${lastEvent}.root
+fi
