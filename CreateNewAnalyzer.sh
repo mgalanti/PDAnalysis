@@ -130,6 +130,31 @@ if [[ -e $name/bin/compile.sh ]]
 fi
 sed "s#VERBNAME#$verbName#g" templates/Ntu_bin_compile_sh.template > $name/bin/compile.sh
 
+echo Creating file $name/bin/${verbName}_template.sh
+if [[ -e $name/bin/${verbName}_template.sh ]]
+  then echo ERROR: analyzer HTCondor template script file $name/bin/${verbName}_template.sh already exists!
+  echo Aborting analyzer creation!
+  exit
+fi
+sed -e "s#VERBNAME#$verbName#g" -e "s#ANALYZERNAME#$name#g" templates/Ntu_bin_analyze_template_sh.template > $name/bin/${verbName}_template.sh
+
+echo Creating file $name/bin/${verbName}_template.jobconfig
+if [[ -e $name/bin/${verbName}_template.jobconfig ]]
+  then echo ERROR: analyzer HTCondor template configuration file $name/bin/${verbName}_template.jobconfig already exists!
+  echo Aborting analyzer creation!
+  exit
+fi
+sed -e "s#VERBNAME#$verbName#g" -e "s#ANALYZERNAME#$name#g" templates/Ntu_bin_analyze_template_jobconfig.template > $name/bin/${verbName}_template.jobconfig
+
+echo Creating file $name/bin/setup_condor_job.sh
+if [[ -e $name/bin/setup_condor_job.sh ]]
+  then echo ERROR: HTCondor job creator script file $name/bin/setup_condor_job.sh already exists!
+  echo Aborting analyzer creation!
+  exit
+fi
+sed -e "s#VERBNAME#$verbName#g" -e "s#ANALYZERNAME#$name#g" templates/Ntu_bin_setup_condor_job_sh.template > $name/bin/setup_condor_job.sh
+chmod +x $name/bin/setup_condor_job.sh
+
 echo Creating directory $name/src
 if [[ -e $name/src ]]
   then echo ERROR: directory $name/src already exists!
