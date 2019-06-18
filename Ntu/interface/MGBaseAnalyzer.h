@@ -75,6 +75,7 @@ class MGBaseAnalyzer:
     bool has_info;
     bool has_pflow;
     bool has_tracks;
+    bool has_trkper;
     bool has_pvts;
     bool has_svts;
     bool has_vsub;

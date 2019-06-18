@@ -240,6 +240,7 @@ void MGBaseAnalyzer::checkBranches()
   has_info = checkBranch("nUserInfo", "User info", use_info);
   has_pflow = checkBranch("nPF", "Particle flow candidates", use_pflow);
   has_tracks = checkBranch("nTracks", "Tracks", use_tracks);
+  has_trkper = checkBranch("nTrkPer", "Track perigee parameters", use_trkper);
   has_pvts = checkBranch("nPVertices", "Primary vertices", use_pvts);
   has_svts = checkBranch("nSVertices", "Secondary vertices", use_svts);
   has_vsub = checkBranch("nCompVts", "Composite particle vertices", use_vsub);
