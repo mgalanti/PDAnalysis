@@ -15,8 +15,10 @@ cfgFile=produceEleMVASecondNtuple_${timeNow}.cfg
 scriptFile=produceEleMVASecondNtuple_${timeNow}.sh
 jobConfigFile=produceEleMVASecondNtuple_${timeNow}.jobconfig
 
-# Create directory to store job input/output files
+# Create directory tree to store job input/output files
 mkdir ${jobDir}
+mkdir ${jobDir}/his
+mkdir ${jobDir}/out
 
 # Compress and save custom libs to a tar.gz file
 # Needed only when not using a filesystem shared between master and slaves
@@ -26,6 +28,9 @@ tar -czvf ${jobDir}/${libFile} -C ${libDir}/ .
 # Read analyzer configuration file and modify it to be used with condor
 echo Creating analyzer configuration file ${jobDir}/${cfgFile}  ...
 touch ${jobDir}/${cfgFile}
+
+hasSecondNtuple=false
+
 while IFS= read -r inputLine
 do
   if [[ ${inputLine} == treeListName* ]]
@@ -41,6 +46,7 @@ do
     outputLine=${inputLine}
   elif [[ ${inputLine} == secondNtupleBaseName* ]]
   then
+    hasSecondNtuple=true
     secondNtupleBaseName=`echo ${inputLine} | awk '{print $2}'`
     outputLine=${inputLine}
   else
@@ -48,6 +54,14 @@ do
   fi
   echo $outputLine >> ${jobDir}/${cfgFile}
 done < produceEleMVASecondNtuple.cfg
+
+if [[ ${hasSecondNtuple} == "true" ]]
+then
+  mkdir ${jobDir}/ntu
+  outFiles="his,ntu"
+else
+  outFiles="his"
+fi
 
 sampleName="${treeListFile%.*}"
 echo treeListFileWithDir is ${treeListFileWithDir}
@@ -57,7 +71,7 @@ echo evtSelection is ${evtSelection}
 
 # Create jobconfig from template inside the job directory
 echo Creating file ${jobDir}/${jobConfigFile}
-sed -e "s#JOBDIR#${jobDir}#g" -e "s#SCRIPTFILE#${scriptFile}#g" -e "s#EVENTSPERJOB#${eventsPerJob}#g" -e "s#LIBFILE#${libFile}#g" -e "s#EXEDIR#${exeDir}#g" -e "s#CFGFILE#${cfgFile}#g" -e "s#TREELISTFILE#${treeListFile}#g" -e "s#NJOBS#${nJobs}#g" produceEleMVASecondNtuple_template.jobconfig > ${jobDir}/${jobConfigFile}
+sed -e "s#JOBDIR#${jobDir}#g" -e "s#SCRIPTFILE#${scriptFile}#g" -e "s#EVENTSPERJOB#${eventsPerJob}#g" -e "s#LIBFILE#${libFile}#g" -e "s#EXEDIR#${exeDir}#g" -e "s#CFGFILE#${cfgFile}#g" -e "s#TREELISTFILE#${treeListFile}#g" -e "s#OUTFILES#${outFiles}#g" -e "s#NJOBS#${nJobs}#g" produceEleMVASecondNtuple_template.jobconfig > ${jobDir}/${jobConfigFile}
 
 # Create shell script executable from template inside the job directory
 echo Creating file ${jobDir}/${scriptFile}
