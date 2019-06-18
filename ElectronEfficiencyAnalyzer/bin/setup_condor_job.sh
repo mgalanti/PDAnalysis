@@ -80,3 +80,6 @@ sed -e "s#LIBFILE#${libFile}#g" -e "s#CFGFILE#${cfgFile}#g" -e "s#SAMPLENAME#${s
 # Copy other needed files to job directory
 echo Copying tree list file ${treeListFileWithDir} to job directory
 cp ${treeListFileWithDir} ${jobDir}/${treeListFile}
+
+echo Copying executable ${exeDir}/analyzeElectronEfficiency to job directory
+cp ${exeDir}/analyzeElectronEfficiency ${jobDir}/analyzeElectronEfficiency

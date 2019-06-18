@@ -35,6 +35,8 @@ do
   fi
 done
 
+rm -v ./plotElectronVariables
+
 echo " "
 
 echo Moving histogram output file: mv his__ElectronVariablesPlotter__SAMPLENAME__EVTSELECTION__0.root his/his__ElectronVariablesPlotter__SAMPLENAME__EVTSELECTION__TIMENOW__${skipEvents}__${lastEvent}.root
