@@ -1067,7 +1067,7 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
     for (int iUserInfo = 0; iUserInfo < nUserInfo; iUserInfo++)
     {
 //       std::cout << "Looping on userInfo object #" << iUserInfo << std::endl;
-      if(useObjType->at(iUserInfo) == 3 && useObjIndex->at(iUserInfo) == iElectron)
+      if(useObjType->at(iUserInfo) == PDEnumString::recElectron && useObjIndex->at(iUserInfo) == iElectron)
       {
 //         std::cout << "Found information for this electron...\n";
         if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Spring16HZZV1Values)

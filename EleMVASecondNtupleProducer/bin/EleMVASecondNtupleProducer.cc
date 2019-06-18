@@ -299,7 +299,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   for (int iUserInfo = 0; iUserInfo < nUserInfo; iUserInfo++)
   {
 //     std::cout << "Looping on userInfo object #" << iUserInfo << std::endl;
-    if(useObjType->at(iUserInfo) == 3 && useObjIndex->at(iUserInfo) == iBestEle)
+    if(useObjType->at(iUserInfo) == PDEnumString::recElectron && useObjIndex->at(iUserInfo) == iBestEle)
     {
       if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Fall17NoIsoV2Values)
       {
