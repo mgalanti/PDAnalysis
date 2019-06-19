@@ -38,7 +38,7 @@ $ git checkout V13_02-CMSSW_10_3_0-v01-01
 - Now, make sure that you downloaded the write version of PDAnalysis according to Paolo installer:
 ***WARNING: the commands below can be destructive and you may lose any changes you made to the PDAnalysis directory. Try only on a pristine installation of PDAnalysis**
 
-# Do *NOT* rm -r PDAnalysis !
+$ # Do *NOT* rm -r PDAnalysis !
 
 $ cd PDAnalysis
 
