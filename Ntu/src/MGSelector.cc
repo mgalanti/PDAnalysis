@@ -120,6 +120,20 @@ bool MGSelector::SelectBsToJPsiPhiEvent(const std::string selection, std::vector
     selectedObjectsRef.push_back(selObject);
     return true;
   }
+  else if(selection.compare("eleTagLooseV1") == 0)
+  {
+    if(SelectHlt("eleTagHLTV1") == false)
+      return false;
+    int iPV = -1;
+    int bestBsToJPsiPhi = SelectBestBsToJPsiPhi("LooseV0", iPV);
+    if(bestBsToJPsiPhi < 0) return false;
+    if(iPV < 0) return false;
+    std::pair<int,int> selObject = std::make_pair(PDEnumString::recSvt, bestBsToJPsiPhi);
+    selectedObjectsRef.push_back(selObject);
+    selObject = std::make_pair(PDEnumString::recPV, iPV);
+     selectedObjectsRef.push_back(selObject);
+     return true;
+  }  
   else if(selection.compare("eleTagLooseV0") == 0)
   {
     if(SelectHlt("eleTagHLTV0") == false)
@@ -170,7 +184,11 @@ bool MGSelector::SelectHlt(const std::string selection)
     jpsitk = true;
   } 
   
-  if(selection.compare("eleTagHLTV0") == 0)
+  if(selection.compare("eleTagHLTV1") == 0)
+  {
+    return (jpsitktk || jpsitk);
+  }
+  else if(selection.compare("eleTagHLTV0") == 0)
   {
     return ((!jpsimu) && (jpsitktk || jpsitk));
   }
@@ -196,6 +214,7 @@ int MGSelector::SelectOSElectron(const std::string selection, const int iPV, con
   if(selection.compare("eleTagTightV2") == 0 || 
      selection.compare("eleTagTightV1") == 0 || 
      selection.compare("eleTagTightV0") == 0 || 
+     selection.compare("eleTagLooseV1") == 0 || 
      selection.compare("eleTagLooseV0") == 0)
   {
     std::vector <int> tkSsB = tracksFromSV(iB);
