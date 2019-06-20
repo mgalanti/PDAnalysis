@@ -70,7 +70,19 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
     setBranch("eleConeNF", &eleConeNF, "eleConeNF/F", &b_eleConeNF);
     setBranch("eleConeCF", &eleConeCF, "eleConeCF/F", &b_eleConeCF);
     setBranch("eleConeNCH", &eleConeNCH, "eleConeNCH/F", &b_eleConeNCH);
-    
+        
+    setBranch("eleConeCleanPt",          &eleConeCleanPt,          "eleConeCleanPt/F",          &b_eleConeCleanPt);
+    setBranch("eleConeCleanPtRel",       &eleConeCleanPtRel,       "eleConeCleanPtRel/F",       &b_eleConeCleanPtRel);
+    setBranch("eleConeCleanDR",          &eleConeCleanDR,          "eleConeCleanDR/F",          &b_eleConeCleanDR);
+    setBranch("eleConeCleanEnergyRatio", &eleConeCleanEnergyRatio, "eleConeCleanEnergyRatio/F", &b_eleConeCleanEnergyRatio);
+    setBranch("eleConeCleanQ",           &eleConeCleanQ,           "eleConeCleanQ/F",           &b_eleConeCleanQ);
+    setBranch("eleConeCleanSize",        &eleConeCleanSize,        "eleConeCleanSize/F",        &b_eleConeCleanSize);
+    setBranch("eleConeCleanNF",          &eleConeCleanNF,          "eleConeCleanNF/F",          &b_eleConeCleanNF);
+    setBranch("eleConeCleanCF",          &eleConeCleanCF,          "eleConeCleanCF/F",          &b_eleConeCleanCF);
+    setBranch("eleConeCleanNCH",         &eleConeCleanNCH,         "eleConeCleanNCH/F",         &b_eleConeCleanNCH);
+        
+    // Tagging truth
+    setBranch("chargeCorr", &chargeCorr, "chargeCorr/I", &b_chargeCorr);
   }
   
   // Second ntuple data
@@ -90,6 +102,9 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   float eleIDNIV2Val, eleIDIV2Val, eleIDHZZV1Val;
   int eleIDNIV2Cat, eleIDIV2Cat, eleIDHZZV1Cat;
   float eleConePt, eleConePtRel, eleConeDR, eleConeEnergyRatio, eleConeQ, eleConeSize, eleConeNF, eleConeCF, eleConeNCH;
+  float eleConeCleanPt, eleConeCleanPtRel, eleConeCleanDR, eleConeCleanEnergyRatio, eleConeCleanQ, eleConeCleanSize, eleConeCleanNF, eleConeCleanCF, eleConeCleanNCH;
+  
+  int chargeCorr;
 
   // Second ntuple branches
   TBranch *b_evtNumber, *b_evtWeight, *b_tightEvent;
@@ -108,6 +123,9 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   TBranch *b_eleIDNIV2Val, *b_eleIDIV2Val, *b_eleIDHZZV1Val;
   TBranch *b_eleIDNIV2Cat, *b_eleIDIV2Cat, *b_eleIDHZZV1Cat;
   TBranch *b_eleConePt, *b_eleConePtRel, *b_eleConeDR, *b_eleConeEnergyRatio, *b_eleConeQ, *b_eleConeSize, *b_eleConeNF, *b_eleConeCF, *b_eleConeNCH;
+  TBranch *b_eleConeCleanPt, *b_eleConeCleanPtRel, *b_eleConeCleanDR, *b_eleConeCleanEnergyRatio, *b_eleConeCleanQ, *b_eleConeCleanSize, *b_eleConeCleanNF, *b_eleConeCleanCF, *b_eleConeCleanNCH;
+  
+  TBranch *b_chargeCorr;
   
  private:
 

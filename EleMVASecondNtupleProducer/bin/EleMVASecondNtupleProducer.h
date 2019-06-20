@@ -58,6 +58,15 @@ class EleMVASecondNtupleProducer:
   TH1D* hEleConeDistance;
   TCanvas* cEleConeDistance;
   
+  TH1D* hEleConePtRel;
+  TCanvas* cEleConePtRel;
+  
+  TH1D* hEleConeCleanDistance;
+  TCanvas* cEleConeCleanDistance;
+  
+  TH1D* hEleConeCleanPtRel;
+  TCanvas* cEleConeCleanPtRel;
+  
   // dummy copy constructor and assignment
   EleMVASecondNtupleProducer           ( const EleMVASecondNtupleProducer& );
   EleMVASecondNtupleProducer& operator=( const EleMVASecondNtupleProducer& );

@@ -111,12 +111,22 @@ void EleMVASecondNtupleProducer::book()
   float minDr = 0;
   float maxDr = 5.0;
   int nDrBins = 100;
+
+  float minPtRel = 0;
+  float maxPtRel = 50.0;
+  int nPtRelBins = 100;
   
   autoSavedObject = hEleBTrkDistance = Create2DHistogram<TH2D>("hEleBTrkDistance", "Distance in #Delta(R) and #Delta(p_{T})/p_{T} between electron and B tracks", 100, 0., 5., 100, 0., 2., "#Delta(R)", "2#times|p_{T,ele}-p_{T,Trk}|/(p_{T,ele}+p_{T,Trk})");
   
   autoSavedObject = hWeightedBMass = Create1DHistogram<TH1D>("hWeightedBMass", "B mass (entries weighted by number of gen B in the event)", nMassBins, minMass, maxMass, "M(B) [GeV]", "Event weights");
   
   autoSavedObject = hEleConeDistance = Create1DHistogram<TH1D>("hEleConeDistance", "Distance between electron and cone axis", nDrBins, minDr, maxDr, "#Delta(R)", "N. Electrons");
+  
+  autoSavedObject = hEleConePtRel = Create1DHistogram<TH1D>("hEleConePtRel", "PtRel of electron with respect to cone", nPtRelBins, minPtRel, maxPtRel, "PtRel", "N. Electrons");
+  
+  autoSavedObject = hEleConeCleanDistance = Create1DHistogram<TH1D>("hEleConeCleanDistance", "Distance between electron and coneclean axis", nDrBins, minDr, maxDr, "#Delta(R)", "N. Electrons");
+  
+  autoSavedObject = hEleConeCleanPtRel = Create1DHistogram<TH1D>("hEleConeCleanPtRel", "PtRel of electron with respect to coneclean", nPtRelBins, minPtRel, maxPtRel, "PtRel", "N. Electrons");
   
   return;
 }
@@ -212,14 +222,26 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     hEleBTrkDistance->Fill(dR, dpTOverpT);
   }
   
+  // Truth information for B
   int iGenB = -1;
   int nGenB = -1;
   int idGenB = 0;
   int genBMixStatus = -1;
   int evtWeight = 1;
+
+  // Truth information for electron
+  int iGenEle = -1;
+  int idGenEle = 0;
+  
+  // Variables needed to compute the tagging truth (stored into chargeCorr)
+  int chargeB = 0;
+  int chargeCorr = 0;
+  int chargeEle = eleCharge->at(iBestEle);
+  
   // Use generator information if available
   if(has_gen)
   {
+    // Truth information for B
     std::vector<int> longLivedBHadrons = GetAllLongLivedBHadrons();
     iGenB = GetClosestGenInList(pB.Pt(), pB.Eta(), pB.Phi(), longLivedBHadrons, 0.4, 0.4);
     nGenB = longLivedBHadrons.size();
@@ -265,6 +287,32 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
       if(abs(genId->at(iGen)) == abs(idGenB))
         evtWeight++; // FIXME: was evtWeight = 2 in original code. Check which is correct.
     }
+    
+    // Truth information for electron
+    iGenEle = GetClosestGen(elePt->at(iBestEle), eleEta->at(iBestEle), elePhi->at(iBestEle));
+    if (iGenEle >= 0)
+      idGenEle = genId->at(iGenEle);
+    if(selectionSubStrings[0].compare("BsToJPsiPhi") == 0)
+    {
+      if(abs(idGenEle) == 11)
+        chargeCorr = GetGenLepBsChargeCorrelation(iGenEle, iGenB);
+      if(!chargeCorr)
+      {
+        chargeCorr = GetBsChargeCorrelation(chargeEle, iGenB);
+        // In this case, correlation value goes to the +/-2 bins
+        chargeCorr*=2;
+      }
+    }
+    else if(selectionSubStrings[0].compare("BuToJPsiK") == 0)
+    {
+      chargeCorr = GetGenLepBuChargeCorrelation(iGenEle, iGenB);
+      if(!chargeCorr)
+      {
+        chargeCorr = GetBuChargeCorrelation(chargeEle, iGenB);
+        // In this case, correlation value goes to the +/-2 bins
+        chargeCorr*=2;
+      }
+    }
   }
   else  // If no gen information is available, only the BuToJPsiK channel can be useful
   {
@@ -285,6 +333,14 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
           continue;
         idGenB = trkCharge->at(iTrk) > 0 ? +521 : -521;
       }
+      
+      chargeB = 0;
+      for(auto iTrack : tracksFromB)
+      {
+        chargeB += trkCharge->at(iTrack);
+      }
+      
+      chargeCorr = chargeEle * chargeB;
     }
   }
   
@@ -329,10 +385,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     }
   }
   
-  
-  
-  
-  //CONE variables
+  // CONE variables
   float eleConePtRel = -1;
   float eleConeDR = -1;
   float eleConeEnergyRatio = -1;
@@ -478,6 +531,167 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   }
   
   hEleConeDistance->Fill(eleConeDR);
+  hEleConePtRel->Fill(eleConePtRel);  
+  
+  
+  
+  
+  
+  // CONECLEAN variables
+  float eleConeCleanPtRel = -1;
+  float eleConeCleanDR = -1;
+  float eleConeCleanEnergyRatio = -1;
+  int   eleConeCleanSize = 0;
+  float eleConeCleanQ = -1;
+  float eleConeCleanPt = -1;
+  float eleConeCleanNF = 0;
+  float eleConeCleanCF = 0;
+  int   eleConeCleanNCH = 0;
+  kappa = 1;
+  drCone = 0.4;
+  axisEta = eleEta->at(iBestEle);
+  axisPhi = elePhi->at(iBestEle);
+//   TLorentzVector pEle;
+//   pEle.SetPtEtaPhiM(elePt->at(iBestEle), eleEta->at(iBestEle), elePhi->at(iBestEle), constants::electronMass);
+//   
+//   if(verbose)
+//   {
+//   std::cout << "Elec: eta = " << eleEta->at(iBestEle) << ", phi = " << elePhi->at(iBestEle) << ", pt = " << elePt->at(iBestEle) << std::endl;
+//   }
+//   
+  float qConeClean = 0, ptConeClean = 0;
+  for(int i = 0; i < nConeIterations; i++)
+  {
+    if(verbose)
+    {
+      std::cout << "   Iteration " << i << std::endl;
+    }
+    eleConeCleanPtRel = -1;
+    eleConeCleanDR = -1;
+    eleConeCleanEnergyRatio = -1;
+    eleConeCleanSize = 0;
+    eleConeCleanQ = -1;
+    eleConeCleanPt = -1;
+    eleConeCleanNF = 0;
+    eleConeCleanCF = 0;
+    eleConeCleanNCH = 0;
+    TLorentzVector pConeClean(0.,0.,0.,0.);
+    for(int iPF=0; iPF < nPF; ++iPF)
+    {
+      float ptPF = pfcPt->at(iPF);
+      float etaPF = pfcEta->at(iPF);
+      if(deltaR(etaPF, pfcPhi->at(iPF), axisEta, axisPhi) > drCone)
+      {
+        continue;
+      }
+      if(ptPF < 0.5)
+      {
+        continue;
+      }
+      if(fabs(etaPF) > 3.0)
+      {
+        continue;  
+      }
+      if(pfcCharge->at(iPF) == 0)
+      {
+        continue;
+      }
+      if(std::find(tracksFromB.begin(), tracksFromB.end(), pfcTrk->at(iPF)) != tracksFromB.end())
+      {
+        continue;
+      }
+      if(pfcTrk->at(iPF) < 0)
+      {
+        continue;
+      }
+      if(fabs(dZTrk(pfcTrk->at(iPF), iBestPV)) >= 1.0)
+      {
+        continue;
+      }
+//       std::cout << "iPF = " << iPF << ", nPF = " << nPF << std::endl;
+      TLorentzVector a;
+      a.SetPtEtaPhiE(pfcPt->at(iPF), pfcEta->at(iPF), pfcPhi->at(iPF), pfcE->at(iPF));
+      pConeClean += a;
+      ++eleConeCleanSize;
+      
+      qConeClean += pfcCharge->at(iPF) * pow(ptPF, kappa);
+      ptConeClean += pow(ptPF, kappa);
+
+      if(pfcCharge->at(iPF)==0)
+      {
+        eleConeCleanNF += pfcE->at(iPF);
+      }
+      if(abs(pfcCharge->at(iPF))==1)
+      {
+        eleConeCleanNCH++;
+        eleConeCleanCF += pfcE->at(iPF);
+      }
+    }
+    
+    if(ptConeClean != 0)
+    {
+      qConeClean /= ptConeClean;
+    }
+    else
+    {
+      qConeClean = 1;
+    }
+    qConeClean *= eleCharge->at(iBestEle); // FIXME: why multiply and not add?
+    if(pConeClean.E() != 0)
+    {
+      eleConeCleanCF /= pConeClean.E();
+      eleConeCleanNF /= pConeClean.E();
+    }
+    
+    eleConeCleanQ = qConeClean;
+    
+    eleConeCleanPt = pConeClean.Pt();
+    eleConeCleanDR = deltaR(pConeClean.Eta(), pConeClean.Phi(), eleEta->at(iBestEle), elePhi->at(iBestEle));
+    if(pConeClean.E() !=0)
+    {
+      eleConeCleanEnergyRatio = eleE->at(iBestEle) / pConeClean.E();
+    }
+    else
+    {
+      eleConeCleanEnergyRatio = 1;
+    }
+    pConeClean -= pEle;
+    eleConeCleanPtRel = elePt->at(iBestEle) * (pEle.Vect().Unit() * pConeClean.Vect().Unit());
+    pConeClean += pEle; // for IP sign
+    
+    if(verbose)
+    {
+      std::cout << "      ConeClean: eta = " << pConeClean.Eta() << ", phi = " << pConeClean.Phi() << ", pt = " << pConeClean.Pt() <<  std::endl; 
+      std::cout << "                 eleConeCleanPt = " << eleConeCleanPt << std::endl;
+      std::cout << "                 ptRel = " << eleConeCleanPtRel << std::endl;
+      std::cout << "                 eleConeCleanDR = " << eleConeCleanDR << std::endl;
+      std::cout << "                 eleConeCleanEnergyRatio = " << eleConeCleanEnergyRatio << std::endl;
+      std::cout << "                 eleConeCleanQ = " << eleConeCleanQ << std::endl;
+    }
+    
+    float distance = deltaR(axisEta, axisPhi, pConeClean.Eta(), pConeClean.Phi());
+    
+    if(verbose)
+    {
+      std::cout << "            Distance = " << distance << std::endl;
+    }
+    
+    if(distance > coneTolerance)
+    {
+      axisEta = pConeClean.Eta();
+      axisPhi = pConeClean.Phi();
+    }
+    else
+    {
+      break;
+    }
+  }
+  
+  hEleConeCleanDistance->Fill(eleConeCleanDR);
+  hEleConeCleanPtRel->Fill(eleConeCleanPtRel);
+
+  
+  
   
   // General event variables
   (tWriter->evtNumber) = event_tot;
@@ -538,6 +752,19 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->eleConeCF) = eleConeCF;
   (tWriter->eleConeNCH) = eleConeNCH;
   
+  (tWriter->eleConeCleanPt) = eleConeCleanPt;
+  (tWriter->eleConeCleanPtRel) = eleConeCleanPtRel;
+  (tWriter->eleConeCleanDR) = eleConeCleanDR;
+  (tWriter->eleConeCleanEnergyRatio) = eleConeCleanEnergyRatio;
+  (tWriter->eleConeCleanQ) = eleConeCleanQ;
+  (tWriter->eleConeCleanSize) = eleConeCleanSize;
+  (tWriter->eleConeCleanNF) = eleConeCleanNF;
+  (tWriter->eleConeCleanCF) = eleConeCleanCF;
+  (tWriter->eleConeCleanNCH) = eleConeCleanNCH;
+  
+  // Tagging truth
+  (tWriter->chargeCorr) = chargeCorr;
+  
   tWriter->fill();
     
   return true;
@@ -555,6 +782,12 @@ void EleMVASecondNtupleProducer::endJob()
   autoSavedObject = cWeightedBMass = CreateCanvas("cWeightedBMass", 0, 21, 1, false, false, hWeightedBMass);
   
   autoSavedObject = cEleConeDistance = CreateCanvas("cEleConeDistance", 0, 21, 1, false, true, hEleConeDistance);
+  
+  autoSavedObject = cEleConePtRel = CreateCanvas("cEleConePtRel", 0, 21, 1, false, true, hEleConePtRel);
+    
+  autoSavedObject = cEleConeCleanDistance = CreateCanvas("cEleConeCleanDistance", 0, 21, 1, false, true, hEleConeCleanDistance);
+  
+  autoSavedObject = cEleConeCleanPtRel = CreateCanvas("cEleConeCleanPtRel", 0, 21, 1, false, true, hEleConeCleanPtRel);
   
   return;
 }
