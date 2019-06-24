@@ -30,8 +30,12 @@ class MGRecoTools : public virtual MGBaseTools
     // Taken from https://github.com/abragagn/BPHPD-AlbertoUtilities/blob/master/PDAnalysis/Ntu/bin/AlbertoUtil.cc
     const TLorentzVector GetTLorentzVectorFromJPsiX(const int iSvt);
     
+    const double dXEle(const int iEle);
+    const double dYEle(const int iEle);
     const double dZ(const int iEle, const int iVtx);
     const double dZTrk(const int iTrk, const int iVtx);
+    // Returns sign of 2D IP of track with respect to a direction
+    const int dSignEle(const int iEle, const float px, const float py);
    
     // MG: none of the methods below works with the hitPattern implementation in PD ntuples.
 //     inline double GetTrackValidFraction(const unsigned short iTrack);
