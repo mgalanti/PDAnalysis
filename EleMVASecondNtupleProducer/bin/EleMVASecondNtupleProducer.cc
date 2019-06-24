@@ -232,17 +232,23 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   // Truth information for electron
   int iGenEle = -1;
   int idGenEle = 0;
+  int genEleBMot = -1;
   
-  // Variables needed to compute the tagging truth (stored into chargeCorr)
+  // Variables needed to compute the tagging truth (stored into tagTruth)
   int chargeB = 0;
   int chargeCorr = 0;
   int chargeEle = eleCharge->at(iBestEle);
+  
+  // Other variables needed for the ntuple production
+  std::vector<int> allBHadrons(true); // true removes particles with mix status = 2
+  std::vector<int> longLivedBHadrons(true); // true removes particles with mix status = 2
   
   // Use generator information if available
   if(has_gen)
   {
     // Truth information for B
-    std::vector<int> longLivedBHadrons = GetAllLongLivedBHadrons();
+    allBHadrons = GetAllBHadrons();
+    longLivedBHadrons = GetAllLongLivedBHadrons();
     iGenB = GetClosestGenInList(pB.Pt(), pB.Eta(), pB.Phi(), longLivedBHadrons, 0.4, 0.4);
     nGenB = longLivedBHadrons.size();
     // Do not consider events where the signal-side is not matched to a gen B
@@ -285,13 +291,18 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
       if(iGen == iGenB)
         continue;
       if(abs(genId->at(iGen)) == abs(idGenB))
-        evtWeight++; // FIXME: was evtWeight = 2 in original code. Check which is correct.
+        evtWeight = 2;
     }
     
     // Truth information for electron
     iGenEle = GetClosestGen(elePt->at(iBestEle), eleEta->at(iBestEle), elePhi->at(iBestEle));
     if (iGenEle >= 0)
+    {
       idGenEle = genId->at(iGenEle);
+      genEleBMot = RecursiveLookForMother(iGenEle, allBHadrons);
+      if(genEleBMot < 0)
+        genEleBMot = -1;
+    }
     if(selectionSubStrings[0].compare("BsToJPsiPhi") == 0)
     {
       if(abs(idGenEle) == 11)
@@ -299,8 +310,6 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
       if(!chargeCorr)
       {
         chargeCorr = GetBsChargeCorrelation(chargeEle, iGenB);
-        // In this case, correlation value goes to the +/-2 bins
-        chargeCorr*=2;
       }
     }
     else if(selectionSubStrings[0].compare("BuToJPsiK") == 0)
@@ -309,8 +318,6 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
       if(!chargeCorr)
       {
         chargeCorr = GetBuChargeCorrelation(chargeEle, iGenB);
-        // In this case, correlation value goes to the +/-2 bins
-        chargeCorr*=2;
       }
     }
   }
@@ -343,6 +350,12 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
       chargeCorr = chargeEle * chargeB;
     }
   }
+  
+  int tagTruth;
+  if(chargeCorr > 0)
+    tagTruth = 1;
+  else
+    tagTruth = 0;
   
   // EleID Variables
   float eleIDNIV2Val = -1;
@@ -480,7 +493,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     {
       qCone = 1;
     }
-    qCone *= eleCharge->at(iBestEle); // FIXME: why multiply and not add?
+    qCone *= eleCharge->at(iBestEle);
     if(pCone.E() != 0)
     {
       eleConeCF /= pCone.E();
@@ -533,10 +546,6 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   hEleConeDistance->Fill(eleConeDR);
   hEleConePtRel->Fill(eleConePtRel);  
   
-  
-  
-  
-  
   // CONECLEAN variables
   float eleConeCleanPtRel = -1;
   float eleConeCleanDR = -1;
@@ -560,6 +569,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
 //   }
 //   
   float qConeClean = 0, ptConeClean = 0;
+  TLorentzVector pConeClean(0.,0.,0.,0.);
   for(int i = 0; i < nConeIterations; i++)
   {
     if(verbose)
@@ -575,7 +585,8 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     eleConeCleanNF = 0;
     eleConeCleanCF = 0;
     eleConeCleanNCH = 0;
-    TLorentzVector pConeClean(0.,0.,0.,0.);
+    pConeClean.SetPtEtaPhiE(0.,0.,0.,0.);
+//     TLorentzVector pConeClean(0.,0.,0.,0.);
     for(int iPF=0; iPF < nPF; ++iPF)
     {
       float ptPF = pfcPt->at(iPF);
@@ -636,7 +647,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     {
       qConeClean = 1;
     }
-    qConeClean *= eleCharge->at(iBestEle); // FIXME: why multiply and not add?
+    qConeClean *= eleCharge->at(iBestEle);
     if(pConeClean.E() != 0)
     {
       eleConeCleanCF /= pConeClean.E();
@@ -734,6 +745,9 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->eleEta) = eleEta->at(iBestEle);
   (tWriter->elePhi) = elePhi->at(iBestEle);
   
+  (tWriter->eleIdGen) = idGenEle;
+  (tWriter->eleBMot) = genEleBMot;
+  
   (tWriter->eleIDNIV2Val) = eleIDNIV2Val;
   (tWriter->eleIDIV2Val) = eleIDIV2Val;
   (tWriter->eleIDHZZV1Val) = eleIDHZZV1Val;
@@ -741,6 +755,13 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->eleIDNIV2Cat) = eleIDNIV2Cat;
   (tWriter->eleIDIV2Cat) = eleIDIV2Cat;
   (tWriter->eleIDHZZV1Cat) = eleIDHZZV1Cat;
+  
+  (tWriter->eleDxy) = dSignEle(iBestEle, pConeClean.Px(), pConeClean.Py())*abs(eleGsfDxy->at(iBestEle));
+  (tWriter->eleDz) = dZ(iBestEle, iBestPV);
+  (tWriter->eleExy) = eleGsfExy->at(iBestEle);
+  (tWriter->eleEz) = eleGsfEz->at(iBestEle);
+  
+  (tWriter->eleDRB) = deltaR(pB.Eta(), pB.Phi(), eleEta->at(iBestEle), elePhi->at(iBestEle));
   
   (tWriter->eleConePt) = eleConePt;
   (tWriter->eleConePtRel) = eleConePtRel;
@@ -763,7 +784,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->eleConeCleanNCH) = eleConeCleanNCH;
   
   // Tagging truth
-  (tWriter->chargeCorr) = chargeCorr;
+  (tWriter->tagTruth) = tagTruth;
   
   tWriter->fill();
     
