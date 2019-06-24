@@ -44,13 +44,15 @@ class MGGenTools:
     
     const std::vector<int> GetAllGenElectrons();
     const std::vector<int> GetAllGenElectronsFromB();
-    const std::vector<int> GetAllLongLivedBHadrons();
+    const std::vector<int> GetAllBHadrons(const bool removeMixing=false);
+    const std::vector<int> GetAllLongLivedBHadrons(const bool removeMixing=false);
     
     const void PrintMotherChain(const int iGen); // From Alberto Bragagnolo
 //     const void PrintDaughterTree(const int iGen); // From Alberto Bragagnolo
 //     const void PrintDaughterTreePt(const int iGen); // From Alberto Bragagnolo
     const void RecursivePrintMothers(const unsigned short iGen, int recursionOrder = 0, std::string prepend = "");
     const void RecursivePrintDaughters(const unsigned short iGen, int recursionOrder = 0, std::string prepend = "");
+    const int RecursiveLookForMother(const unsigned short iGen, const std::vector<int> vIGenList, const int recursionOrder = 0);
     const int RecursiveLookForMotherIds(const unsigned short iGen, const std::vector<int> vIdList, const bool withSign = true, const int recursionOrder = 0);
     const int RecursiveLookForDaughterIds(const unsigned short iGen, const std::vector<int> vIdList, const bool withSign = true, const int recursionOrder = 0);
   

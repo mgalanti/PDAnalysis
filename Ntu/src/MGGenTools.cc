@@ -485,7 +485,35 @@ const std::vector<int> MGGenTools::GetAllGenElectronsFromB()
 
 
 
-const std::vector<int> MGGenTools::GetAllLongLivedBHadrons()
+const std::vector<int> MGGenTools::GetAllBHadrons(const bool removeMixing)
+{
+  std::vector<int> bHadrons;
+  for(uint iGen = 0; iGen < genId->size(); iGen++)
+  {
+    int pId = abs(genId->at(iGen));
+    for(auto bId: listBMesonsAndBaryons)
+    {
+      if(pId == bId)
+      {
+        if(removeMixing)
+        {
+          if(GetMixStatus(iGen) == 2)
+          {
+            continue;
+          }
+        }
+        bHadrons.push_back(iGen);
+        break;
+      }
+    }
+  }
+  return bHadrons;
+}
+
+
+
+
+const std::vector<int> MGGenTools::GetAllLongLivedBHadrons(const bool removeMixing)
 {
   std::vector<int> longLivedBHadrons;
   for(uint iGen = 0; iGen < genId->size(); iGen++)
@@ -495,6 +523,13 @@ const std::vector<int> MGGenTools::GetAllLongLivedBHadrons()
     {
       if(pId == longLivedId)
       {
+        if(removeMixing)
+        {
+          if(GetMixStatus(iGen) == 2)
+          {
+            continue;
+          }
+        }
         longLivedBHadrons.push_back(iGen);
         break;
       }
@@ -583,6 +618,53 @@ const void MGGenTools::RecursivePrintDaughters(const unsigned short iGen, int re
       RecursivePrintDaughters(vDaughters[i], recursionOrder + 1, prepend + "    ");
     }
   }
+}
+
+
+
+
+const int MGGenTools::RecursiveLookForMother(const unsigned short iGen, const std::vector<int> vIGenList, const int recursionOrder)
+{
+  const std::vector <int>& vMothers = allMothers(iGen);
+  uint nMot = vMothers.size();
+  if(recursionOrder == 0 && nMot == 0)
+  {
+    std::cout << "MGGenTools::RecursiveLookForMother(...): W A R N I N G! Gen particle " << iGen << " has no mothers!\n";
+    std::cout << "                                            Returning -65535.\n";
+    return -65535;
+  }
+  if(recursionOrder > 99)
+  {
+    std::cout << "MGGenTools::RecursiveLookForMother(...): E R R O R ! Too many recursions!\n";
+    std::cout << "                                            recursionOrder = " << recursionOrder << ", genp " << iGen << " has " << nMot << " mothers.\n";
+    std::cout << "                                            Returning -65535.\n";
+    return -65535;
+  }
+//   bool found = false;
+//   int iFound = -65535;
+  for(unsigned int i = 0; i < nMot; i++)
+  {
+    unsigned short iMot = vMothers[i];
+    for(unsigned int j = 0; j < vIGenList.size(); j++)
+    {
+      int jGen = vIGenList[j];
+      if(iMot == jGen)
+      {
+        return jGen;
+      }
+    }
+    // Protection against infinite loops...
+    if(vMothers[i] < iGen)
+    {
+      return RecursiveLookForMother(vMothers[i], vIGenList, recursionOrder + 1);
+    }
+  }
+  if(recursionOrder == 0)
+  {
+    std::cout << "MGGenTools::RecursiveLookForMotherIds(...): W A R N I N G! Reached default return statement! Gen particle = " << iGen << "\n";
+    std::cout << "                                            Returning -65535.\n";
+  }
+  return -65535;
 }
 
 
