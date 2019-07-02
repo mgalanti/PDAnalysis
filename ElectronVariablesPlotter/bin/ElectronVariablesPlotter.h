@@ -42,6 +42,9 @@ class ElectronVariablesPlotter:
    TH1D* hEleBChargeCorr;
    TCanvas* cEleBChargeCorr;
    
+   TH1D* hEleRelPFIsoScaled;
+   TCanvas* cEleRelPFIsoScaled;
+   
    std::vector<TH1D*> vhEleInfoType;
    std::vector<TCanvas*> vcEleInfoType;
 

@@ -73,6 +73,8 @@ void ElectronVariablesPlotter::book()
   
   autoSavedObject = hEleBChargeCorr = Create1DHistogram<TH1D>("hEleBChargeCorr", "Charge correlation between e and B", 5, -2.5, 2.5, "Correlation", "N. electrons");
   
+  autoSavedObject = hEleRelPFIsoScaled = Create1DHistogram<TH1D>("hEleRelPFIsoScaled", "Scaled relative PF Isolation of e", 110, -10., 100., "Isolation", "N. electrons");
+  
   int counter = 0;
   for(auto itEleInfoType : eleInfoTypeMap)
   {
@@ -439,7 +441,8 @@ bool ElectronVariablesPlotter::analyze( int entry, int event_file, int event_tot
     if(abs(chargeCorrCut) < 3 && chargeCorr != chargeCorrCut)
       return false;
   }
-  hEleBChargeCorr->Fill(chargeCorr);  
+  hEleBChargeCorr->Fill(chargeCorr);
+  hEleRelPFIsoScaled->Fill(GetEleRelPFIsoScaled(iBestEle));
     
   mhEleVariables["nElectrons"]->Fill(*(mAllNObjects["nElectrons"]));
   
@@ -506,6 +509,7 @@ void ElectronVariablesPlotter::endJob()
   // This runs after the event loop
   
   autoSavedObject = cEleBChargeCorr = CreateCanvas("cEleBChargeCorr", 0, 21, 1, false, false, hEleBChargeCorr);
+  autoSavedObject = cEleRelPFIsoScaled = CreateCanvas("cEleRelPFIsoScaled", 0, 21, 1, false, false, hEleRelPFIsoScaled);
   
   TCanvas* cTemp;
   
