@@ -15,10 +15,10 @@ if [[ $1 == '' || $2 != '' ]]
 fi
 
 # Some common words that can be present in the analyzer name, to use in string substitution below
-declare -a -r MainStrings=("Analyzer" "Reader" "Writer" "Producer" "Ntuplizer" "Plotter")
-# declare -a -r LCStrings=("analyzer" "reader" "writer" "producer" "ntuplizer" "plotter")
-declare -a -r VerbStrings=("analyze" "read" "write" "produce" "ntuplize" "plot")
-declare -a -r NounStrings=("Analysis" "Reading" "Writing" "Production" "Ntuplization" "Plotting")
+declare -a -r MainStrings=("Analyzer" "Reader" "Writer" "Producer" "Ntuplizer" "Plotter" "FlavorTagger")
+# declare -a -r LCStrings=("analyzer" "reader" "writer" "producer" "ntuplizer" "plotter" "flavortagger")
+declare -a -r VerbStrings=("analyze" "read" "write" "produce" "ntuplize" "plot" "flavortag")
+declare -a -r NounStrings=("Analysis" "Reading" "Writing" "Production" "Ntuplization" "Plotting" "FlavorTagging")
 
 name=$1
 LCName=${name,}
