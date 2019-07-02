@@ -240,15 +240,15 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   int chargeEle = eleCharge->at(iBestEle);
   
   // Other variables needed for the ntuple production
-  std::vector<int> allBHadrons(true); // true removes particles with mix status = 2
-  std::vector<int> longLivedBHadrons(true); // true removes particles with mix status = 2
+  std::vector<int> allBHadrons;
+  std::vector<int> longLivedBHadrons;
   
   // Use generator information if available
   if(has_gen)
   {
     // Truth information for B
-    allBHadrons = GetAllBHadrons();
-    longLivedBHadrons = GetAllLongLivedBHadrons();
+    allBHadrons = GetAllBHadrons(true);  // true removes particles with mix status = 2
+    longLivedBHadrons = GetAllLongLivedBHadrons(true); // true removes particles with mix status = 2
     iGenB = GetClosestGenInList(pB.Pt(), pB.Eta(), pB.Phi(), longLivedBHadrons, 0.4, 0.4);
     nGenB = longLivedBHadrons.size();
     // Do not consider events where the signal-side is not matched to a gen B
@@ -587,7 +587,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     eleConeCleanNCH = 0;
     pConeClean.SetPtEtaPhiE(0.,0.,0.,0.);
 //     TLorentzVector pConeClean(0.,0.,0.,0.);
-    for(int iPF=0; iPF < nPF; ++iPF)
+    for(int iPF = 0; iPF < nPF; ++iPF)
     {
       float ptPF = pfcPt->at(iPF);
       float etaPF = pfcEta->at(iPF);
@@ -701,9 +701,6 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   hEleConeCleanDistance->Fill(eleConeCleanDR);
   hEleConeCleanPtRel->Fill(eleConeCleanPtRel);
 
-  
-  
-  
   // General event variables
   (tWriter->evtNumber) = event_tot;
   (tWriter->evtWeight) = evtWeight;
