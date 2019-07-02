@@ -36,6 +36,34 @@ short MGRecoTools::FindJetNearToMuon(const unsigned short iMuon, const double de
 
 
 
+const float MGRecoTools::GetFixedGridRhoFastJetAll()
+{
+  for(int iUserInfo = 0; iUserInfo < nUserInfo; iUserInfo++)
+  {
+    if(useObjType->at(iUserInfo) == PDEnumString::eventInfo && useInfoType->at(iUserInfo) == PDEnumString::fixedGridRhoFastjetAll)
+    {
+      return useInfoValue->at(iUserInfo);
+    }
+  }
+  return 0;
+}
+
+
+
+const float MGRecoTools::GetFixedGridRhoFastJetAllCalo()
+{
+  for(int iUserInfo = 0; iUserInfo < nUserInfo; iUserInfo++)
+  {
+    if(useObjType->at(iUserInfo) == PDEnumString::eventInfo && useInfoType->at(iUserInfo) == PDEnumString::fixedGridRhoFastjetAllCalo)
+    {
+      return useInfoValue->at(iUserInfo);
+    }
+  }
+  return 0;
+}
+    
+
+
 const int MGRecoTools::GetClosestRecoElectron(const double pt, const double eta, const double phi, double dRMax, double dPtMax)
 {
 //   std::cout << "MGRecoTools::GetClosestRecoElectron(...): pt = " << pt << ", eta = " << eta << ", phi = " << phi << std::endl;
@@ -43,8 +71,6 @@ const int MGRecoTools::GetClosestRecoElectron(const double pt, const double eta,
   int matched = -1;
   double dRMatch = dRMax;
   double dPtMatch = dPtMax;
-  
-  std::cout << "nElectrons = " << nElectrons << std::endl;
   
   for(int iEle = 0; iEle < nElectrons; iEle++)
   {
@@ -308,4 +334,48 @@ const int MGRecoTools::dSignEle(const int iEle, const float px, const float py)
 {
   return (((dXEle(iEle) * px) + 
            (dYEle(iEle) * py)) > 0 ? 1 : -1);
+}
+
+
+
+const float MGRecoTools::GetEleEffArea(const float eta, const std::string dataName)
+{
+  float absEta = fabs(eta);
+  if(dataName.compare("effAreaElectrons_cone03_pfNeuHadronsAndPhotons_94X") == 0)
+  {
+    if(absEta < 1.)
+      return 0.1440;
+    if(absEta < 1.479)
+      return 0.1562;
+    if(absEta < 2.)
+      return 0.1032;
+    if(absEta < 2.2)
+      return 0.0859;
+    if(absEta < 2.3)
+      return 0.1116;
+    if(absEta < 2.4)
+      return 0.1321;
+    if(absEta < 2.5)
+      return 0.1654;
+    else
+      return 0;
+  }
+  else
+    return 0;
+}
+
+
+
+const double MGRecoTools::GetEleRelPFIsoScaled(const int iEle) 
+{
+  double absEta = eleAbsEta->at(iEle);
+  
+  // Compute the combined isolation with effective area correction
+  const float chad = eleSumCHpt->at(iEle);
+  const float nhad = eleSumNHet->at(iEle);
+  const float pho  = eleSumPHet->at(iEle);
+  const float  eA  = GetEleEffArea(absEta);
+  const float rho  = GetFixedGridRhoFastJetAll(); // std::max likes float arguments
+  const float iso  = chad + std::max(0.0f, nhad + pho - rho*eA);
+  return iso/elePt->at(iEle);
 }

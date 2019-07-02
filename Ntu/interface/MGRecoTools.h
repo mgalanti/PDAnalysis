@@ -15,8 +15,10 @@ class MGRecoTools : public virtual MGBaseTools
     
     virtual ~MGRecoTools() {};
     
-    inline short FindJetNearToMuon(const unsigned short iMuon, const double deltaRThreshold);
+    const float GetFixedGridRhoFastJetAll();
+    const float GetFixedGridRhoFastJetAllCalo();
     
+    inline short FindJetNearToMuon(const unsigned short iMuon, const double deltaRThreshold);
     
     // GetCt* methods adapted from https://github.com/abragagn/BPHPD-AlbertoUtilities/blob/master/PDAnalysis/Ntu/bin/AlbertoUtil.cc
     float GetCt2D(const TLorentzVector& p, const int iSV, const float mass = constants::BsMass);
@@ -37,6 +39,14 @@ class MGRecoTools : public virtual MGBaseTools
     // Returns sign of 2D IP of track with respect to a direction
     const int dSignEle(const int iEle, const float px, const float py);
    
+    // Returns electron effective area (not present in ntuple, so must be calculated on the fly)
+    const float GetEleEffArea(const float eta, const std::string dataName="effAreaElectrons_cone03_pfNeuHadronsAndPhotons_94X");
+    
+    // Returns combined electron isolation with effective area correction
+    // Code taken from RecoEgamma/ElectronIdentification/plugins/cuts/GsfEleRelPFIsoScaledCut.cc (method GsfEleRelPFIsoScaledCut::value())
+    // Using effective areas from: RecoEgamma/ElectronIdentification/data/Fall17/effAreaElectrons_cone03_pfNeuHadronsAndPhotons_94X.txt
+    const double GetEleRelPFIsoScaled(const int iEle);
+    
     // MG: none of the methods below works with the hitPattern implementation in PD ntuples.
 //     inline double GetTrackValidFraction(const unsigned short iTrack);
 //     inline int GetNumberOfValidTrackerHits(const unsigned short iTrack);
