@@ -711,13 +711,14 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
   if(entry == 0)
     checkBranches();
   
-  std::vector<std::pair<int,int> > selectedObjects;
+//   std::vector<std::pair<int,int> > selectedObjects;
 //   std::vector<std::pair<int,int> > selectedObjectsLoose;
 //   std::vector<std::pair<int,int> > selectedObjectsTight;
   
-  bool evtSelected = SelectBsToJPsiPhiEvent(evtSelection.c_str(), selectedObjects);  
+//   bool evtSelected = SelectBsToJPsiPhiEvent(evtSelection.c_str(), selectedObjects);  
 //   bool evtSelectedLoose = SelectBsToJPsiPhiEvent("eleTagLooseV0", selectedObjectsLoose);  
 //   bool evtSelectedTight = SelectBsToJPsiPhiEvent("eleTagTightV1", selectedObjectsTight);
+  bool evtSelected = SelectEvent();
   
 //   if(evtSelectedLoose)
 //     std::cout << "Event " << eventNumber << " is" << (evtSelectedLoose?" ":" NOT ") << "selected by the loose selection!\n";
@@ -734,17 +735,25 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
       iBestBs = itSelObjects->second;
     iSelObject++;
   }
+
+  // Main event selection
+  if(!evtSelected)
+    return false;
   
+  TLorentzVector pB = GetTLorentzVectorFromJPsiX(iBestBs);
+    
   int iGenBs = -1;
+  std::vector<int> allBHadrons = GetAllBHadrons(true);  // true removes particles with mix status = 2
+  std::vector<int> longLivedBHadrons = GetAllLongLivedBHadrons(true); // true removes particles with mix status = 2
   if (iBestBs > -1)
-    iGenBs = GetClosestGenNoLL(iBestBs);
-  int idGenBs = 0;
-  if(iGenBs > 0)
-  {
-    idGenBs = genId->at(iGenBs);
-  }
+    iGenBs = GetClosestGenInList(pB.Pt(), pB.Eta(), pB.Phi(), longLivedBHadrons, 0.4, 0.4);
+//   int idGenBs = 0;
+//   if(iGenBs > 0)
+//   {
+//     idGenBs = genId->at(iGenBs);
+//   }
   
-  std::cout << "iGenBs = " << iGenBs << ", idGenBs = " << idGenBs << std::endl;
+//   std::cout << "iGenBs = " << iGenBs << ", idGenBs = " << idGenBs << std::endl;
 
 //   int iSelObjectLoose = 0;
 //   for (auto itSelObjects = selectedObjectsLoose.begin(); itSelObjects != selectedObjectsLoose.end(); itSelObjects++)
@@ -793,9 +802,6 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
   
   
 
-  // Main event selection
-  if(!evtSelected)
-    return false;
   
 //   std::cout << "iBestPV = " << iBestPV << std::endl;
 
@@ -848,7 +854,7 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
 //       genEleFromBType.push_back(2);
 //     }
     
-    if(iBMot > 1 && bsChargeCorrGenEle < 0)
+    if(iBMot > 1 && bsChargeCorrGenEle < 0 && verbose)
     {
       std::cout << "POSSIBLE PATHOLOGIC CASE: electron from B that has the wrong charge correlation w.r.t. the Bs\n";
       std::cout << "iGenElectron = " << iGenElectron << std::endl;
@@ -934,7 +940,7 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
 //   bool consChaEle;
 //   bool ebeeGapEle;
   float dBEle;
-  int bsChargeCorrEle;
+  int bsChargeCorrEle = 0;
   int genChargeCorrEle;
   bool HZZV1IDEle;
   bool HZZV2IDEle;
@@ -1023,8 +1029,11 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
       std::cout << "               Gen particle matched to electron has i = " << iMatchedGenPNoLL << ", id = " << idMatchedGenPNoLL << " (no LL requirement)" << std::endl;
       std::cout << "                   dRMatchedNoLL = " << dRMatchedNoLL << ", dPtMatchedNoLL = " << dPtMatchedNoLL << std::endl << std::endl;
     }
-    std::cout << "I N F O : Reco electron " << iElectron << " is matched to gen particle at index " << iMatchedGenP << " with Id " << idMatchedGenP << std::endl;
-
+    if(verbose)
+    {
+      std::cout << "I N F O : Reco electron " << iElectron << " is matched to gen particle at index " << iMatchedGenP << " with Id " << idMatchedGenP << std::endl;
+    }
+    
     genChargeCorrEle = 0;
     if(abs(idMatchedGenP) == 11)
     {
@@ -1149,7 +1158,8 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
 
     // Finds the charge correlation between the gen particle matched to the electron and the Bs
     // Returns +/-1 only if the matched gen particle is a lepton (11, 13)
-    bsChargeCorrEle = GetGenLepBsChargeCorrelation(iMatchedGenP, iGenBs);
+    if(iMatchedGenP > -1 && abs(idMatchedGenP) == 11)
+      bsChargeCorrEle = GetGenLepBsChargeCorrelation(iMatchedGenP, iGenBs);
     // If the above method returns 0, try with the reco electron charge...
     if(!bsChargeCorrEle)
     {
