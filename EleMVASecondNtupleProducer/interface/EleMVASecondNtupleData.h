@@ -70,6 +70,7 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
     setBranch("eleEz", &eleEz, "eleEz/F", &b_eleEz);
     
     setBranch("eleDRB", &eleDRB, "eleDRB/F", &b_eleDRB);
+    setBranch("elePFIsoScaled", &elePFIsoScaled, "elePFIsoScaled/F", &b_elePFIsoScaled);
     
     setBranch("eleConePt", &eleConePt, "eleConePt/F", &b_eleConePt);
     setBranch("eleConePtRel", &eleConePtRel, "eleConePtRel/F", &b_eleConePtRel);
@@ -114,6 +115,7 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   int eleIDNIV2Cat, eleIDIV2Cat, eleIDHZZV1Cat;
   float eleDxy, eleDz, eleExy, eleEz;
   float eleDRB;
+  float elePFIsoScaled;
   float eleConePt, eleConePtRel, eleConeDR, eleConeEnergyRatio, eleConeQ, eleConeSize, eleConeNF, eleConeCF, eleConeNCH;
   float eleConeCleanPt, eleConeCleanPtRel, eleConeCleanDR, eleConeCleanEnergyRatio, eleConeCleanQ, eleConeCleanSize, eleConeCleanNF, eleConeCleanCF, eleConeCleanNCH;
   
@@ -138,6 +140,7 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   TBranch *b_eleIDNIV2Cat, *b_eleIDIV2Cat, *b_eleIDHZZV1Cat;
   TBranch *b_eleDxy, *b_eleDz, *b_eleExy, *b_eleEz;
   TBranch *b_eleDRB;
+  TBranch *b_elePFIsoScaled;
   TBranch *b_eleConePt, *b_eleConePtRel, *b_eleConeDR, *b_eleConeEnergyRatio, *b_eleConeQ, *b_eleConeSize, *b_eleConeNF, *b_eleConeCF, *b_eleConeNCH;
   TBranch *b_eleConeCleanPt, *b_eleConeCleanPtRel, *b_eleConeCleanDR, *b_eleConeCleanEnergyRatio, *b_eleConeCleanQ, *b_eleConeCleanSize, *b_eleConeCleanNF, *b_eleConeCleanCF, *b_eleConeCleanNCH;
   

@@ -314,7 +314,8 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     }
     else if(selectionSubStrings[0].compare("BuToJPsiK") == 0)
     {
-      chargeCorr = GetGenLepBuChargeCorrelation(iGenEle, iGenB);
+      if(abs(idGenEle) == 11)
+        chargeCorr = GetGenLepBuChargeCorrelation(iGenEle, iGenB);
       if(!chargeCorr)
       {
         chargeCorr = GetBuChargeCorrelation(chargeEle, iGenB);
@@ -759,6 +760,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->eleEz) = eleGsfEz->at(iBestEle);
   
   (tWriter->eleDRB) = deltaR(pB.Eta(), pB.Phi(), eleEta->at(iBestEle), elePhi->at(iBestEle));
+  (tWriter->elePFIsoScaled) = GetEleRelPFIsoScaled(iBestEle);
   
   (tWriter->eleConePt) = eleConePt;
   (tWriter->eleConePtRel) = eleConePtRel;
