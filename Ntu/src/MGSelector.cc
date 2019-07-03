@@ -157,7 +157,34 @@ bool MGSelector::SelectBsToJPsiPhiEvent(const std::string selection, std::vector
 
 bool MGSelector::SelectBuToJPsiKEvent(const std::string selection, std::vector<std::pair<int, int> >& selectedObjectsRef)
 {
-  // FIXME: To be written
+  if(selection.compare("eleTagTightV0") == 0)
+  {
+    if(SelectHlt("eleTagHLTV0") == false)
+      return false;
+    int iPV = -1;
+    int bestBuToJPsiK = SelectBestBuToJPsiK(selection.substr(6).c_str(), iPV);
+    if(bestBuToJPsiK < 0) return false;
+    if(iPV < 0) return false;
+    std::pair<int,int> selObject = std::make_pair(PDEnumString::recSvt, bestBuToJPsiK);
+    selectedObjectsRef.push_back(selObject);
+    selObject = std::make_pair(PDEnumString::recPV, iPV);
+    selectedObjectsRef.push_back(selObject);
+    return true;
+  }
+  if(selection.compare("eleTagLooseV0") == 0)
+  {
+    if(SelectHlt("eleTagHLTV0") == false)
+      return false;
+        int iPV = -1;
+    int bestBuToJPsiK = SelectBestBuToJPsiK("LooseV0", iPV);
+    if(bestBuToJPsiK < 0) return false;
+    if(iPV < 0) return false;
+    std::pair<int,int> selObject = std::make_pair(PDEnumString::recSvt, bestBuToJPsiK);
+    selectedObjectsRef.push_back(selObject);
+    selObject = std::make_pair(PDEnumString::recPV, iPV);
+     selectedObjectsRef.push_back(selObject);
+     return true;
+  }
   std::cout << "MGSelector::SelectBuToJPsiKEvent(): W A R N I N G ! Reached default return statement. Event will not be selected...\n";
   std::cout << "                                    The selection string passed to this method is: \"" << selection << "\"\n";
   return false;
@@ -495,8 +522,7 @@ int MGSelector::SelectBestBsToJPsiPhi(const std::string selection, int& iBestPV)
         continue;
       }
       
-      float ct2DCut = 0.02;
-      if(GetCt2D(tB, iB) < ct2DCut)
+      if(GetCt2D(tB, iB) < 0.02)
       {
         continue;
       }
@@ -642,8 +668,131 @@ int MGSelector::SelectBestBsToJPsiPhi(const std::string selection, int& iBestPV)
 
 int MGSelector::SelectBestBuToJPsiK(const std::string selection, int& iBestPV)
 {
-  std::cout << "MGSelector::SelectBestBuToJPsiK(): W A R N I N G ! Method is not implemented yet. Reached default return statement. Noo BuToJpsiK will be selected...\n";
   iBestPV = -1;
+  TLorentzVector tB(0,0,0,0);
+  if(selection.compare("TightV0") == 0)
+  {
+    int index = -1;
+    float best = 0.;
+    for(int iB = 0; iB < nSVertices; iB++)
+    {
+      if((svtType->at(iB) != PDEnumString::svtBuJPsiK))
+      {
+        continue;
+      }
+      
+      int iJPsi = (subVtxFromSV(iB)).at(0);
+      
+      std::vector<int> tkSsB = tracksFromSV(iB);
+      std::vector<int> tkJpsi = tracksFromSV(iJPsi);
+      
+      //JPsi
+      if(!SelectJPsi(iJPsi, "TightV1"))
+      {
+        continue;
+      }
+      
+      float ptK = 0;
+      
+      for(uint i = 0; i < tkSsB.size(); i++)
+      {
+        int j = tkSsB[i];
+        float m = constants::kaonMass;
+        if(j == tkJpsi[0] || j == tkJpsi[1])
+        {
+          m = constants::muonMass;
+        }
+        else
+        {
+          ptK = trkPt->at(j);
+        }
+        TLorentzVector a;
+        a.SetPtEtaPhiM(trkPt->at(j), trkEta->at(j), trkPhi->at(j), m);
+        tB += a;
+      }
+      
+      //BU
+      float bVprob = ChiSquaredProbability(svtChi2->at(iB), svtNDOF->at(iB));
+      if(svtMass->at(iB) < 5.1 || svtMass->at(iB) > 5.65)
+      {
+        continue;
+      }
+      if(bVprob < 0.02)
+      {
+        continue;
+      }
+      if(tB.Pt() < 10.)
+      {
+        continue;
+      }
+      if(ptK < 1.6)
+      {
+        continue;
+      }
+      
+      int iPV = SelectBestPV(iB, tB, "PointingV0");
+      
+      if(iPV < 0)
+      {
+        continue;
+      }
+      
+      if(GetCt2D(tB, iB) < 0.02)
+      {
+        continue;
+      }
+      
+      if(bVprob < best)
+      {
+        continue;
+      }
+      iBestPV = iPV;
+      index = iB;
+      best = bVprob;
+    }
+    return index;
+  }
+  else if(selection.compare("LooseV0") == 0) // This is the same as GetBestBup() in Alberto code.
+  {
+    int index = -1;
+    float bestChi2 = 1e9;
+    for(int iB = 0; iB < nSVertices; iB++)
+    {
+      if((svtType->at(iB) != PDEnumString::svtBuJPsiK))
+      {
+        continue;
+      }
+      if(svtMass->at(iB) < 5.1 || svtMass->at(iB) > 5.65)
+      {
+        continue;
+      } 
+      if(svtChi2->at(iB) > bestChi2)
+      {
+        continue;
+      }
+      std::vector<int> tkSsB = tracksFromSV(iB);
+      int iJPsi = (subVtxFromSV(iB)).at(0);
+      std::vector<int> tkJpsi = tracksFromSV(iJPsi);
+      
+      for(uint i = 0; i < tkSsB.size(); i++)
+      {
+        int j = tkSsB[i];
+        float m = constants::kaonMass;
+        if(j == tkJpsi[0] || j == tkJpsi[1])
+        {
+          m = constants::muonMass;
+        }
+        TLorentzVector a;
+        a.SetPtEtaPhiM(trkPt->at(j), trkEta->at(j), trkPhi->at(j), m);
+        tB += a;
+      }
+      iBestPV = SelectBestPV(iB, tB, "PointingV0");
+      index = iB;
+      bestChi2 = svtChi2->at(iB);
+    }
+    return index;
+  }
+  std::cout << "MGSelector::SelectBestBuToJPsiK(): W A R N I N G ! Reached default return statement. Best BuToJpsiK will not be selected...\n";
   return -1;
 }
 
