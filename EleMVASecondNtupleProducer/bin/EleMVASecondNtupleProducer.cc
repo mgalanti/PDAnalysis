@@ -161,12 +161,12 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   // Main per-event analysis code goes here
   
   tWriter->Reset();
-  
+
   // Check if the event passes the default selection defined in the cfg
   bool evtSelected = SelectEvent();
   
-  if(!evtSelected)
-    return false;
+//   if(!evtSelected)
+//     return false;
  
   // Check if the event passes the tight selection
   std::vector<std::pair<int, int> > selectedObjectsTight;
@@ -192,18 +192,22 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     iSelObject++;
   }
   
-  // Depending on the selection string provided in the configuration, it is not granted 
-  // that we have all the needed objects at this point, even if the event passed the selection.
-  // Thus, let's check explicitly.  
-  if(iBestPV == -1 || iBestB == -1 || iBestEle == -1)
-  {
-    std::cout << "E R R O R ! Event passed the selection \"" << evtSelection << "\" but not all the needed objects are available!\n";
-    std::cout << "            iBestPV = " << iBestPV << ", iBestB = " << iBestB << ", iBestEle = " << iBestEle << std::endl;
-    std::cout << "            Please fix the configuration file or the MGSelector::SelectEvent() code to avoid this error.";
-    std::cout << "            Exiting...\n";
-    exit(1);
-  }
+  // Reject the event if the signal side has not been selected
+  if(iBestPV == -1 || iBestB == -1)
+    return false;
   
+//   // Depending on the selection string provided in the configuration, it is not granted 
+//   // that we have all the needed objects at this point, even if the event passed the selection.
+//   // Thus, let's check explicitly.  
+//   if(iBestPV == -1 || iBestB == -1 || iBestEle == -1)
+//   {
+//     std::cout << "E R R O R ! Event passed the selection \"" << evtSelection << "\" but not all the signal-side objects are available!\n";
+//     std::cout << "            iBestPV = " << iBestPV << ", iBestB = " << iBestB << ", iBestEle = " << iBestEle << std::endl;
+//     std::cout << "            Please fix the configuration file or the MGSelector::SelectEvent() code to avoid this error.";
+//     std::cout << "            Exiting...\n";
+//     exit(1);
+//   }
+
   // HLT bit values
   bool jPsiMuHltBit = hlt(PDEnumString::HLT_Dimuon0_Jpsi3p5_Muon2_v) || hlt(PDEnumString::HLT_Dimuon0_Jpsi_Muon_v);
   bool jPsiTrkTrkHltBit = hlt(PDEnumString::HLT_DoubleMu4_JpsiTrkTrk_Displaced_v);
@@ -213,15 +217,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   TLorentzVector pB = GetTLorentzVectorFromJPsiX(iBestB);
   int iBestJPsi = (subVtxFromSV(iBestB)).at(0);
   std::vector<int> tracksFromJPsi = tracksFromSV(iBestJPsi);
-  
-  // For monitoring purposes
-  for(auto iTrk: tracksFromB)
-  {
-    float dR = deltaR(trkEta->at(iTrk), trkPhi->at(iTrk), eleGsfEta->at(iBestEle), eleGsfPhi->at(iBestEle));
-    float dpTOverpT = 2*fabs(trkPt->at(iTrk) - eleGsfPt->at(iBestEle))/(trkPt->at(iTrk) + eleGsfPt->at(iBestEle));
-    hEleBTrkDistance->Fill(dR, dpTOverpT);
-  }
-  
+
   // Truth information for B
   int iGenB = -1;
   int nGenB = -1;
@@ -229,20 +225,10 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   int genBMixStatus = -1;
   int evtWeight = 1;
 
-  // Truth information for electron
-  int iGenEle = -1;
-  int idGenEle = 0;
-  int genEleBMot = -1;
-  
-  // Variables needed to compute the tagging truth (stored into tagTruth)
-  int chargeB = 0;
-  int chargeCorr = 0;
-  int chargeEle = eleCharge->at(iBestEle);
-  
   // Other variables needed for the ntuple production
   std::vector<int> allBHadrons;
   std::vector<int> longLivedBHadrons;
-  
+
   // Use generator information if available
   if(has_gen)
   {
@@ -260,21 +246,20 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     // Do not consider events where the signal B is matched to a hadron different from the one looked for
     if(selectionSubStrings[0].compare("BsToJPsiPhi") == 0 && abs(idGenB) != 531)
     {
-      std::cout << "Event rejected 1\n";
+      std::cout << "I N F O: Event rejected - looking for BsToJPsiPhi but signal B is matched to a hadron with id = " << idGenB << ".\n";
       return false;
     }
     if(selectionSubStrings[0].compare("BuToJPsiK") == 0 && abs(idGenB) != 521)
     {
-      std::cout << "Event rejected 2\n";
+      std::cout << "I N F O: Event rejected - looking for BuToJPsiK but signal B is matched to a hadron with id = " << idGenB << ".\n";
       return false;
     }
     // Check whether the matched B has mixed or will mix
     genBMixStatus = GetMixStatus(iGenB);
     
-    // FIXME: This is taken from Alberto's code, however I am not sure that it is the correct logic...
     if(genBMixStatus == 2)
     {
-      std::cout << "Event rejected 3\n";
+      std::cout << "I N F O: Event rejected - mix status of generated B is 2.\n";
       return false;
     }
     
@@ -294,33 +279,6 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
         evtWeight = 2;
     }
     
-    // Truth information for electron
-    iGenEle = GetClosestGen(elePt->at(iBestEle), eleEta->at(iBestEle), elePhi->at(iBestEle));
-    if (iGenEle >= 0)
-    {
-      idGenEle = genId->at(iGenEle);
-      genEleBMot = RecursiveLookForMother(iGenEle, allBHadrons);
-      if(genEleBMot < 0)
-        genEleBMot = -1;
-    }
-    if(selectionSubStrings[0].compare("BsToJPsiPhi") == 0)
-    {
-      if(abs(idGenEle) == 11)
-        chargeCorr = GetGenLepBsChargeCorrelation(iGenEle, iGenB);
-      if(!chargeCorr)
-      {
-        chargeCorr = GetBsChargeCorrelation(chargeEle, iGenB);
-      }
-    }
-    else if(selectionSubStrings[0].compare("BuToJPsiK") == 0)
-    {
-      if(abs(idGenEle) == 11)
-        chargeCorr = GetGenLepBuChargeCorrelation(iGenEle, iGenB);
-      if(!chargeCorr)
-      {
-        chargeCorr = GetBuChargeCorrelation(chargeEle, iGenB);
-      }
-    }
   }
   else  // If no gen information is available, only the BuToJPsiK channel can be useful
   {
@@ -342,6 +300,115 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
         idGenB = trkCharge->at(iTrk) > 0 ? +521 : -521;
       }
       
+    }
+  }
+  
+  // Write general event variables to secondary ntuple
+  (tWriter->evtNumber) = event_tot;
+  (tWriter->evtWeight) = evtWeight;
+  (tWriter->tightEvent) = tightEvent;
+
+  (tWriter->nGenB) = nGenB;
+  
+  (tWriter->JPsiMuHltBit) = jPsiMuHltBit;
+  (tWriter->JPsiTrkTrkHltBit) = jPsiTrkTrkHltBit;
+  (tWriter->JPsiTrkHltBit) = jPsiTrkHltBit;  
+  
+  (tWriter->iPV) = iBestPV;
+    
+  // Write signal-side variables to secondary ntuple
+  (tWriter->BPt) = pB.Pt();
+  (tWriter->BEta) = pB.Eta();
+  (tWriter->BPhi) = pB.Phi();
+  (tWriter->BMass) = svtMass->at(iBestB);
+  
+  hWeightedBMass->Fill(svtMass->at(iBestB), evtWeight);
+  
+  (tWriter->BLxy) = GetCt2D(pB, iBestB) / (trueBMass / pB.Pt());
+  (tWriter->BCt2DBS) = GetCt2D(pB, iBestB, trueBMass);
+  
+  (tWriter->BCt2DPV) = GetCt2DPV(pB, iBestB, iBestPV, trueBMass);
+  (tWriter->BCt2DPVErr) = GetCt2DPVErr(pB, iBestB, iBestPV, trueBMass);
+  (tWriter->BCt2DPVSigmaUnit) = GetCt2DPV(pB, iBestB, iBestPV, trueBMass) / GetCt2DPVErr(pB, iBestB, iBestPV, trueBMass);
+
+  (tWriter->BCt3DPV) = GetCt3DPV(pB, iBestB, iBestPV, trueBMass);
+  (tWriter->BCt3DPVErr) = GetCt3DPVErr(pB, iBestB, iBestPV, trueBMass);
+  (tWriter->BCt3DPVSigmaUnit) = GetCt3DPV(pB, iBestB, iBestPV, trueBMass) / GetCt3DPVErr(pB, iBestB, iBestPV, trueBMass);
+
+  (tWriter->BiSV) = iBestB;
+  
+  (tWriter->BidGen) = idGenB;
+  
+  // If no electron has been selected, do not write detailed tag-side information to the ntuple and pass to the next event
+  if(iBestEle == -1)
+  {
+    (tWriter->eleSelected) = 0;
+    (tWriter->tagTruth) = -1;
+    (tWriter->chargeCorr) = 0;
+    tWriter->fill();
+    
+    return true;
+  }
+  
+  // If we are here, then an electron has been selected. Let's use it.
+  (tWriter->eleSelected) = 1;
+
+  // For monitoring purposes
+  for(auto iTrk: tracksFromB)
+  {
+    float dR = deltaR(trkEta->at(iTrk), trkPhi->at(iTrk), eleGsfEta->at(iBestEle), eleGsfPhi->at(iBestEle));
+    float dpTOverpT = 2*fabs(trkPt->at(iTrk) - eleGsfPt->at(iBestEle))/(trkPt->at(iTrk) + eleGsfPt->at(iBestEle));
+    hEleBTrkDistance->Fill(dR, dpTOverpT);
+  }
+    
+  // Truth information for electron
+  int iGenEle = -1;
+  int idGenEle = 0;
+  int genEleBMot = -1;
+  
+  // Variables needed to compute the tagging truth (stored into tagTruth)
+  int chargeB = 0;
+  int chargeCorr = 0;
+  int chargeEle = eleCharge->at(iBestEle);
+  
+  // Use generator information if available
+  if(has_gen)
+  {
+    // Truth information for electron
+    iGenEle = GetClosestGen(elePt->at(iBestEle), eleEta->at(iBestEle), elePhi->at(iBestEle));
+    if (iGenEle >= 0)
+    {
+      idGenEle = genId->at(iGenEle);
+      genEleBMot = RecursiveLookForMother(iGenEle, allBHadrons);
+      if(genEleBMot < 0)
+        genEleBMot = -1;
+    }
+    if(selectionSubStrings[0].compare("BsToJPsiPhi") == 0)
+    {
+      if(abs(idGenEle) == 11)
+        chargeCorr = GetGenLepBsChargeCorrelation(iGenEle, iGenB);
+      if(!chargeCorr)
+      {
+        chargeCorr = GetBsChargeCorrelation(chargeEle, iGenB);
+        chargeCorr*=2;
+      }
+    }
+    else if(selectionSubStrings[0].compare("BuToJPsiK") == 0)
+    {
+      if(abs(idGenEle) == 11)
+        chargeCorr = GetGenLepBuChargeCorrelation(iGenEle, iGenB);
+      if(!chargeCorr)
+      {
+        chargeCorr = GetBuChargeCorrelation(chargeEle, iGenB);
+        chargeCorr*=2;
+      }
+    }    
+  }  
+  else  // If no gen information is available, only the BuToJPsiK channel can be useful
+  {
+    // Bu is a self-tagging channel - OK!
+    if(selectionSubStrings[0].compare("BuToJPsiK") == 0)
+    {
       chargeB = 0;
       for(auto iTrack : tracksFromB)
       {
@@ -349,7 +416,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
       }
       
       chargeCorr = chargeEle * chargeB;
-    }
+    }    
   }
   
   int tagTruth;
@@ -398,7 +465,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
       }
     }
   }
-  
+
   // CONE variables
   float eleConePtRel = -1;
   float eleConeDR = -1;
@@ -546,7 +613,7 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   
   hEleConeDistance->Fill(eleConeDR);
   hEleConePtRel->Fill(eleConePtRel);  
-  
+
   // CONECLEAN variables
   float eleConeCleanPtRel = -1;
   float eleConeCleanDR = -1;
@@ -698,46 +765,10 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
       break;
     }
   }
-  
+
   hEleConeCleanDistance->Fill(eleConeCleanDR);
   hEleConeCleanPtRel->Fill(eleConeCleanPtRel);
 
-  // General event variables
-  (tWriter->evtNumber) = event_tot;
-  (tWriter->evtWeight) = evtWeight;
-  (tWriter->tightEvent) = tightEvent;
-
-  (tWriter->nGenB) = nGenB;
-  
-  (tWriter->JPsiMuHltBit) = jPsiMuHltBit;
-  (tWriter->JPsiTrkTrkHltBit) = jPsiTrkTrkHltBit;
-  (tWriter->JPsiTrkHltBit) = jPsiTrkHltBit;  
-  
-  (tWriter->iPV) = iBestPV;
-    
-  // Signal-side variables
-  (tWriter->BPt) = pB.Pt();
-  (tWriter->BEta) = pB.Eta();
-  (tWriter->BPhi) = pB.Phi();
-  (tWriter->BMass) = svtMass->at(iBestB);
-  
-  hWeightedBMass->Fill(svtMass->at(iBestB), evtWeight);
-  
-  (tWriter->BLxy) = GetCt2D(pB, iBestB) / (trueBMass / pB.Pt());
-  (tWriter->BCt2DBS) = GetCt2D(pB, iBestB, trueBMass);
-  
-  (tWriter->BCt2DPV) = GetCt2DPV(pB, iBestB, iBestPV, trueBMass);
-  (tWriter->BCt2DPVErr) = GetCt2DPVErr(pB, iBestB, iBestPV, trueBMass);
-  (tWriter->BCt2DPVSigmaUnit) = GetCt2DPV(pB, iBestB, iBestPV, trueBMass) / GetCt2DPVErr(pB, iBestB, iBestPV, trueBMass);
-
-  (tWriter->BCt3DPV) = GetCt3DPV(pB, iBestB, iBestPV, trueBMass);
-  (tWriter->BCt3DPVErr) = GetCt3DPVErr(pB, iBestB, iBestPV, trueBMass);
-  (tWriter->BCt3DPVSigmaUnit) = GetCt3DPV(pB, iBestB, iBestPV, trueBMass) / GetCt3DPVErr(pB, iBestB, iBestPV, trueBMass);
-
-  (tWriter->BiSV) = iBestB;
-  
-  (tWriter->BidGen) = idGenB;
-  
   // Opposite-side variables
   (tWriter->elePt) = elePt->at(iBestEle);
   (tWriter->eleEta) = eleEta->at(iBestEle);
@@ -784,9 +815,10 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   
   // Tagging truth
   (tWriter->tagTruth) = tagTruth;
+  (tWriter->chargeCorr) = chargeCorr;
   
   tWriter->fill();
-    
+
   return true;
 }
 

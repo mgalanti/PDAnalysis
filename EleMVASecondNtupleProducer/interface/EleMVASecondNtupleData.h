@@ -50,6 +50,8 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
     setBranch("BidGen", &BidGen, "BidGen/I", &b_BidGen);
     
     // Opposite-side variables
+    setBranch("eleSelected", &eleSelected, "eleSelected/I", &b_eleSelected);
+    
     setBranch("elePt", &elePt, "elePt/F", &b_elePt);
     setBranch("eleEta", &eleEta, "eleEta/F", &b_eleEta);
     setBranch("elePhi", &elePhi, "elePhi/F", &b_elePhi);
@@ -94,6 +96,7 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
         
     // Tagging truth
     setBranch("tagTruth", &tagTruth, "tagTruth/I", &b_tagTruth);
+    setBranch("chargeCorr", &chargeCorr, "chargecorr/I", &b_chargeCorr);
   }
   
   // Second ntuple data
@@ -109,6 +112,7 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   int BiSV;
   int BidGen;
   
+  int eleSelected;
   float elePt, eleEta, elePhi;
   int eleIdGen, eleBMot;
   float eleIDNIV2Val, eleIDIV2Val, eleIDHZZV1Val;
@@ -119,7 +123,7 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   float eleConePt, eleConePtRel, eleConeDR, eleConeEnergyRatio, eleConeQ, eleConeSize, eleConeNF, eleConeCF, eleConeNCH;
   float eleConeCleanPt, eleConeCleanPtRel, eleConeCleanDR, eleConeCleanEnergyRatio, eleConeCleanQ, eleConeCleanSize, eleConeCleanNF, eleConeCleanCF, eleConeCleanNCH;
   
-  int tagTruth;
+  int tagTruth, chargeCorr;
 
   // Second ntuple branches
   TBranch *b_evtNumber, *b_evtWeight, *b_tightEvent;
@@ -134,6 +138,7 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   TBranch *b_BiSV;
   TBranch *b_BidGen;
   
+  TBranch *b_eleSelected;
   TBranch *b_elePt, *b_eleEta, *b_elePhi;
   TBranch *b_eleIdGen, *b_eleBMot;
   TBranch *b_eleIDNIV2Val, *b_eleIDIV2Val, *b_eleIDHZZV1Val;
@@ -144,7 +149,7 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   TBranch *b_eleConePt, *b_eleConePtRel, *b_eleConeDR, *b_eleConeEnergyRatio, *b_eleConeQ, *b_eleConeSize, *b_eleConeNF, *b_eleConeCF, *b_eleConeNCH;
   TBranch *b_eleConeCleanPt, *b_eleConeCleanPtRel, *b_eleConeCleanDR, *b_eleConeCleanEnergyRatio, *b_eleConeCleanQ, *b_eleConeCleanSize, *b_eleConeCleanNF, *b_eleConeCleanCF, *b_eleConeCleanNCH;
   
-  TBranch *b_tagTruth;
+  TBranch *b_tagTruth, *b_chargeCorr;
   
  private:
 
