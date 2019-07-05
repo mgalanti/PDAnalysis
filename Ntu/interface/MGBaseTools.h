@@ -14,7 +14,12 @@ class MGBaseTools :
     
     virtual void beginJob();
     
+    void setCurrentEvt(const int iEvt) {currentEvt = iEvt;}    
+    
     bool verbose;
+
+    // Index of current entry
+    int currentEvt;
     
   private:
     // Nothing for the moment
