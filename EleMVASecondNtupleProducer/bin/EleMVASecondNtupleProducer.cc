@@ -157,7 +157,8 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   }
   if(entry == 0)
     checkBranches();
-
+  setCurrentEvt(event_tot);
+  
   // Main per-event analysis code goes here
   
   tWriter->Reset();
