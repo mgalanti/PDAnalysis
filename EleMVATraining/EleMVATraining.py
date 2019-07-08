@@ -47,14 +47,14 @@ TMVA.Tools.Instance()
 TMVA.PyMethodBase.PyInitialize()
 
 # Load data
-file = '../../../../datasets/EleMVASecondNtuple__BsToJpsiPhiDG0_2018_DCAP__BsToJPsiPhi_eleTagLooseV1__20190621_172808__1MMissing.root'
+file = '../../../../datasets/EleMVASecondNtuple__BsToJpsiPhiDG0_2018_DCAP__BsToJPsiPhi_eleTagLooseV1__20190703_190644__11M_Missing.root'
 
 data = TFile.Open(file)
 
 tree = data.Get('EleMVAsecondTree')
 
 # Prepare factory
-name = 'OsElectron'
+name = 'OsElectronHLTJpsiTrkTrk'
 
 outputName = 'TMVA' + name + '.root'
 
@@ -76,7 +76,7 @@ varList = [
     ,('eleIDNIV2Val', 'F')
     ,('eleIDNIV2Cat', 'I')
     ,('eleDRB', 'F')
-    #,('muoPFIso', 'F')
+    ,('elePFIsoScaled', 'F')
     ,('eleConePt', 'F')
     ,('eleConePtRel', 'F')
     ,('eleConeDR', 'F')
@@ -95,9 +95,9 @@ varListClean = [
     ,('eleDz', 'F')
     ,('eleEz', 'F')
     ,('eleIDNIV2Val', 'F')
-    ,('eleIDNIV2Cat', 'I')
+    #,('eleIDNIV2Cat', 'F')
     ,('eleDRB', 'F')
-    #,('muoPFIso', 'F')
+    ,('elePFIsoScaled', 'F')
     ,('eleConeCleanPt', 'F')
     ,('eleConeCleanPtRel', 'F')
     ,('eleConeCleanDR', 'F')
@@ -115,7 +115,8 @@ for var in varList:
 
 # prepare dataloader
 # Event wise selection
-cut = 'JPsiMuHltBit==0&&eleIDNIV2Val>-0.98'
+#cut = 'JPsiMuHltBit==0&&eleIDNIV2Val>-0.98'
+cut = 'JPsiMuHltBit==0 && JPsiTrkTrkHltBit==1 && eleSelected==1'
 
 cutSgn = cut + '&&tagTruth==1' #Correcly tagged events selection i.e. sign(charge lepton) -> correct flavour 
 cutBkg = cut + '&&tagTruth==0' #Uncorrecly tagged events
