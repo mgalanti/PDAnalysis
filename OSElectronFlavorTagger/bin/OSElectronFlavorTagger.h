@@ -7,12 +7,14 @@
 #include "PDAnalysis/Ntu/interface/MGSelector.h"
 #include "PDAnalysis/Ntu/interface/MGGenTools.h"
 #include "MGTools/PlottingTools/interface/PlottingTools.h"
+#include "PDAnalysis/OSElectronFlavorTagger/interface/OsElectronMvaTag.h"
 
 class OSElectronFlavorTagger: 
     public MGBaseAnalyzer,
     public virtual MGSelector,
     public virtual MGGenTools, 
-    public virtual PlottingTools 
+    public virtual PlottingTools,
+    public virtual OsElectronMvaTag
 {
  public:
 

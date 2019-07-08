@@ -6,53 +6,38 @@
 
 using namespace std;
 
-OSElectronMvaTag::OSElectronMvaTag():
+OsElectronMvaTag::OsElectronMvaTag():
                 osElectronTagReader_("!Color:Silent")
-,               ssIndex_(-1)
-,               pvIndex_(-1)
-,               osElectronIndex_(-1)
-,               osElectronTrackIndex_(-1)
 ,               osElectronTagDecision_(0)
 ,               osElectronTagMvaValue_(-1.)
 ,               osElectronTagMistagProbRaw_(-1.)
 ,               osElectronTagMistagProbCalProcess_(-1.)
 ,               osElectronTagMistagProbCalProcessBuBs_(-1.)
-,               wp_(0.21)
-,               dzCut_(1.)
-,               nElectronsSel_(0)
 {}
 
-OSElectronMvaTag::~OSElectronMvaTag() {}
+OsElectronMvaTag::~OsElectronMvaTag() {}
 
 // =====================================================================================
-void OSElectronMvaTag::inizializeOsElectronTagVars()
+void OsElectronMvaTag::inizializeOsElectronTagVars()
 {
-    ssIndex_ = -1;
-    pvIndex_ = -1;
-    osElectronIndex_ = -1;
-    osElectronTrackIndex_ = -1;
     osElectronTagDecision_ = 0;
     osElectronTagMvaValue_ = -1;
     osElectronTagMistagProbRaw_ = -1;
     osElectronTagMistagProbCalProcess_ = -1;
     osElectronTagMistagProbCalProcessBuBs_ = -1;
-    nElectronsSel_ = 0;
 }
 
-void OSElectronMvaTag::setOsElectronMvaCut(float wp = 0.21)
+void OsElectronMvaTag::setOsElectronMvaCut(float wp = 0.21)
 {
     wp_ = wp;
 }
 
-void OSElectronMvaTag::setOsElectronDzCut(float dzCut = 1.)
+void OsElectronMvaTag::setOsElectronDzCut(float dzCut = 1.)
 {
     dzCut_ = dzCut;
 }
 
-void OSElectronMvaTag::inizializeOSElectronMvaReader(
-    TString methodName = "DNNOsElectronHLTJpsiTrkTrk"
-,   TString methodPath = ""
-    )
+void OsElectronMvaTag::initializeOsElectronMvaReader(TString methodName, TString methodPath)
 {
 
     if(methodPath == "") methodPath = methodPath_;
@@ -66,18 +51,18 @@ void OSElectronMvaTag::inizializeOSElectronMvaReader(
     osElectronTagReader_.AddVariable("eleDz", &eleDz_);
     osElectronTagReader_.AddVariable("eleEz", &eleEz_);
     osElectronTagReader_.AddVariable("eleIDNIV2Val", &eleIDNIV2Val_);
-    osElectronTagReader_.AddVariable("eleIDNIV2Cat", &eleIDNIV2Cat_);
+//     osElectronTagReader_.AddVariable("eleIDNIV2Cat", &eleIDNIV2Cat_);
     osElectronTagReader_.AddVariable("eleDRB", &eleDRB_);
     osElectronTagReader_.AddVariable("elePFIsoScaled", &elePFIso_);
     osElectronTagReader_.AddVariable("eleConeCleanPt", &eleConeCleanPt_);
     osElectronTagReader_.AddVariable("eleConeCleanPtRel", &eleConeCleanPtRel_);
-    osElectronTagReader_.AddVariable("eleConeCleanDr", &eleConeCleanDr_);
+    osElectronTagReader_.AddVariable("eleConeCleanDR", &eleConeCleanDr_);
     osElectronTagReader_.AddVariable("eleConeCleanEnergyRatio", &eleConeCleanEnergyRatio_);
     osElectronTagReader_.AddVariable("eleConeCleanQ", &eleConeCleanQ_);
     osElectronTagReader_.BookMVA( methodName_, methodPath + "TMVAClassification_" + methodName_ + ".weights.xml" );
 }
 
-bool OSElectronMvaTag::inizializeOSElectronCalibration( 
+bool OsElectronMvaTag::initializeOsElectronCalibration( 
     TString process = "BuJPsiKData2018"
 ,   TString processBuMC = "BuJPsiKMC2018"
 ,   TString processBsMC = "BsJPsiPhiMC2018"
@@ -110,17 +95,38 @@ bool OSElectronMvaTag::inizializeOSElectronCalibration(
     return true;  
 }
 
-bool OSElectronMvaTag::makeOsElectronTagging(){
-    if(ssIndex_ < 0){ cout<<"SS NOT INITIALIZED"<<endl; return -999; }
+bool OsElectronMvaTag::makeOsElectronTagging()
+{
+//     if(iB_ < 0){ cout<<"B index NOT INITIALIZED"<<endl; return -999; }
 //     selectOsElectron();
-    if(osElectronIndex_ < 0){ osElectronTagDecision_ = 0; return 1;}
-    else osElectronTagDecision_ = -1*trkCharge->at(osElectronTrackIndex_); 
+//     if(iEle_ < 0){ osElectronTagDecision_ = 0; return 1;}
+//     else 
+    osElectronTagDecision_ = -1*eleCharge->at(iEle_); 
 
-    computeOsElectronTagVariables();
+    computeOsElectronMvaTagVariables();
+    OsElectronMvaTagVariables tagVars = getEleTagVars();
+    elePt_ = tagVars.elePt;
+    eleEta_ = tagVars.eleEta;
+    eleDxy_ = tagVars.eleDxy;
+    eleExy_ = tagVars.eleExy;
+    eleDz_ = tagVars.eleDz;
+    eleEz_ = tagVars.eleEz;
+    eleIDNIV2Val_ = tagVars.eleIDNIV2Val;
+    eleIDNIV2Cat_ = tagVars.eleIDNIV2Cat;
+    eleDRB_ = tagVars.eleDRB;
+    elePFIso_ = tagVars.elePFIsoScaled;
+    eleConeCleanPt_ = tagVars.eleConeCleanPt;
+    eleConeCleanPtRel_ = tagVars.eleConeCleanPtRel;
+    eleConeCleanDr_ = tagVars.eleConeCleanDr;
+    eleConeCleanEnergyRatio_ = tagVars.eleConeCleanEnergyRatio;
+    eleConeCleanQ_ = tagVars.eleConeCleanQ;
+    eleCharge_ = eleCharge->at(iEle_);
+
+    
     osElectronTagMvaValue_ = osElectronTagReader_.EvaluateMVA(methodName_);
     osElectronTagMistagProbRaw_ = 1 - osElectronTagMvaValue_;
-    osElectronTagMistagProbCalProcess_ = wCalProcess_->Eval(osElectronTagMistagProbRaw_);
-    osElectronTagMistagProbCalProcessBuBs_ = wCalBuBs_->Eval(osElectronTagMistagProbCalProcess_);
+//     osElectronTagMistagProbCalProcess_ = wCalProcess_->Eval(osElectronTagMistagProbRaw_);
+//     osElectronTagMistagProbCalProcessBuBs_ = wCalBuBs_->Eval(osElectronTagMistagProbCalProcess_);
 
     return 1;
 }
@@ -167,8 +173,8 @@ bool OSElectronMvaTag::makeOsElectronTagging(){
 //     return bestMuIndex;
 // }
 
-void OSElectronMvaTag::computeOsElectronTagVariables()
-{
+// void OSElectronMvaTag::computeOsElectronTagVariables()
+// {
 //   // FIXME: to be rewritten
 //     int iB = ssIndex_;
 //     int iElectron = osElectronIndex_;
@@ -242,4 +248,4 @@ void OSElectronMvaTag::computeOsElectronTagVariables()
 //     muoDrB_ = deltaR(tB.Eta(), tB.Phi(), muoEta->at(iMuon), muoPhi->at(iMuon));
 //     muoPFIso_ = GetMuoPFiso(iMuon);
     
-}
+// }

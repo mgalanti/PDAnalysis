@@ -25,6 +25,8 @@ void OSElectronFlavorTagger::beginJob() {
 
   MGBaseAnalyzer::beginJob();
   MGSelector::SetSelectionString(evtSelection);
+  
+  initializeOsElectronMvaReader();
 
 
   // user parameters are retrieved as strings by using their names;
@@ -92,8 +94,30 @@ bool OSElectronFlavorTagger::analyze( int entry, int event_file, int event_tot )
   
   if(!evtSelected)
     return false;
- 
+  
+  int iSelObject = 0;
+  int iBestPV = -1;
+  int iBestB = -1;
+  int iBestEle = -1;
   // Do something with the event and the selected objects...
+  for (auto itSelObjects = selectedObjects.begin(); itSelObjects != selectedObjects.end(); itSelObjects++)
+  {
+    //     std::cout << "Event selection: selected object #" << iSelObject << ": type = " << itSelObjects->first << ", index = " << itSelObjects->second << std::endl;
+    if(itSelObjects->first == PDEnumString::recPV)
+      iBestPV = itSelObjects->second;
+    if(itSelObjects->first == PDEnumString::recSvt)
+      iBestB = itSelObjects->second;
+    if(itSelObjects->first == PDEnumString::recElectron)
+      iBestEle = itSelObjects->second;
+    iSelObject++;
+  }
+  
+  setObjectIndexes(iBestEle, iBestB, iBestPV);
+  bool tagOk = makeOsElectronTagging();
+  std::cout << "tagOk = " << tagOk << std::endl;
+  
+  std::cout << "osElectronTagDecision = " << getOsElectronTag() << std::endl;
+  std::cout << "osElectronTagMvaValue = " << getOsElectronTagMvaValue() << std::endl;
   
   float fixedGridRhoFastJetAll = GetFixedGridRhoFastJetAll();
   float fixedGridRhoFastJetAllCalo = GetFixedGridRhoFastJetAllCalo();

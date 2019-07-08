@@ -14,13 +14,13 @@ struct OsElectronMvaTagVariables
   float eleEz;
   float eleIDNIV2RawVal;
   float eleIDNIV2Val;
-  int eleIDNIV2Cat;
+  float eleIDNIV2Cat;
   float eleIDIV2RawVal;
   float eleIDIV2Val;
-  int eleIDIV2Cat;
+  float eleIDIV2Cat;
   float eleIDHZZV1RawVal;
   float eleIDHZZV1Val;
-  int eleIDHZZV1Cat;
+  float eleIDHZZV1Cat;
   float eleDRB;
   float elePFIsoScaled;
   float eleConePt;

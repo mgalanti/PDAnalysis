@@ -6,9 +6,9 @@
 #include <map>
 #include <string>
 
-#include "OsElectronMvaTagVariables.h"
+// #include "OsElectronMvaTagVariables.h"
 #include "OsElectronMvaTagVariablesComputer.h"
-#include "PDAnalysis/Ntu/interface/MGBaseAnalyzer.h"
+// #include "PDAnalysis/Ntu/interface/MGBaseAnalyzer.h"
 
 #include "TString.h"
 #include "TGraph.h"
@@ -16,33 +16,33 @@
 #include "TMVA/Reader.h"
 #include "TMVA/PyMethodBase.h"
 
-class OSElectronMvaTag : 
-      public virtual MGBaseAnalyzer, 
+class OsElectronMvaTag : 
+//       public virtual MGBaseAnalyzer, 
       public virtual OsElectronMvaTagVariablesComputer
 {
 
 public:
-    OSElectronMvaTag();
-    ~OSElectronMvaTag();
+    OsElectronMvaTag();
+    ~OsElectronMvaTag();
 
     void    inizializeOsElectronTagVars();
 
     bool    makeOsElectronTagging();
 //     int     selectOSElectron(); // defined in MGSelector class 
 
-    int     getOsElectron(){ return osElectronIndex_; }
+    int     getOsElectron(){ return iEle_; }
     int     getOsElectronTag(){ return osElectronTagDecision_; }
     float   getOsElectronTagMvaValue(){ return osElectronTagMvaValue_; }
     float   getOsElectronTagMistagProbRaw(){ return osElectronTagMistagProbRaw_; }
     float   getOsElectronTagMistagProbCalProcess(){ return osElectronTagMistagProbCalProcess_; }
     float   getOsElectronTagMistagProbCalProcessBuBs(){ return osElectronTagMistagProbCalProcessBuBs_; }
 
-    void    setVtxOsElectronTag(int iB, int iPV) { ssIndex_ = iB; pvIndex_ = iPV;}
-    void    setOsElectron(int iEle) {osElectronIndex_ = iEle;}
+//     void    setVtxOsElectronTag(int iB, int iPV) { ssIndex_ = iB; pvIndex_ = iPV;}
+//     void    setOsElectron(int iEle) {osElectronIndex_ = iEle;}
     void    setOsElectronMvaCut(float wp);
     void    setOsElectronDzCut(float dzCut);
-    void    inizializeOSElectronMvaReader(TString, TString);
-    bool    inizializeOSElectronCalibration(TString process, TString processBuMC, TString processBsMC, TString methodPath);
+    void    initializeOsElectronMvaReader(TString methodName = "DNNOsElectronHLTJpsiTrkTrk", TString methodPath = "/home/galanti/work/CMSSW_10_3_0/src/PDAnalysis/EleMVATraining/dataset/weights/");
+    bool    initializeOsElectronCalibration(TString process, TString processBuMC, TString processBsMC, TString methodPath);
 
     int     getNosElectrons(){ return nElectronsSel_; }
 
@@ -56,10 +56,10 @@ private:
     TString methodName_;
     TString methodPath_ = "mvaWeights/OsElectronTag/";
 
-    int ssIndex_;
-    int pvIndex_;
-    int osElectronIndex_;
-    int osElectronTrackIndex_;
+//     int ssIndex_;
+//     int pvIndex_;
+//     int osElectronIndex_;
+//     int osElectronTrackIndex_;
     int osElectronTagDecision_;
 
     float osElectronTagMvaValue_;
@@ -81,7 +81,7 @@ private:
     float eleDz_;
     float eleEz_;
     float eleIDNIV2Val_;
-    int eleIDNIV2Cat_;
+    float eleIDNIV2Cat_;
     float eleDRB_;
     float elePFIso_;
     float eleConeCleanPt_;

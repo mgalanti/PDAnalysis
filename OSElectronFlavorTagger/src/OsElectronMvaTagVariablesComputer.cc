@@ -210,7 +210,6 @@ void OsElectronMvaTagVariablesComputer::computeOsElectronMvaTagVariables()
     std::cout << "               eleConeQ = " << eleTagVars.eleConeQ << std::endl;
   }
   
-  
   // CONECLEAN variables
   kappa = 1;
   drCone = 0.4;
@@ -324,4 +323,11 @@ void OsElectronMvaTagVariablesComputer::computeOsElectronMvaTagVariables()
   
   // Computed at the end because it needs the coneClean
   eleTagVars.eleDxy = dSignEle(iEle_, pConeClean.Px(), pConeClean.Py())*abs(eleGsfDxy->at(iEle_));
+}
+
+
+
+const OsElectronMvaTagVariables OsElectronMvaTagVariablesComputer::getEleTagVars()
+{
+  return eleTagVars;
 }

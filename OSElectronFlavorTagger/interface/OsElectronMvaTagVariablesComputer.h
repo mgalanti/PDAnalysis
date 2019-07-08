@@ -5,14 +5,16 @@
 
 #include "TLorentzVector.h"
 
-#include "PDAnalysis/Ntu/interface/MGBaseAnalyzer.h"
+// #include "PDAnalysis/Ntu/interface/MGBaseTools.h"
+#include "PDAnalysis/Ntu/interface/MGRecoTools.h"
 #include "OsElectronMvaTagVariables.h"
 
 
 
 
 class OsElectronMvaTagVariablesComputer :
-      public virtual MGBaseAnalyzer
+//       public virtual MGBaseTools,
+      public virtual MGRecoTools
 {
 public:
   OsElectronMvaTagVariablesComputer();
@@ -26,10 +28,12 @@ public:
   
   const OsElectronMvaTagVariables getEleTagVars();
   
-private:
   int iEle_;
   int iB_;
-  int iPV_;
+  int iPV_;  
+  
+private:
+
   bool isInitialized_;
   int evtInitialized_;
 
