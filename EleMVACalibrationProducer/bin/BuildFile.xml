@@ -1,0 +1,14 @@
+<use   name="root"/>
+<use   name="rootgraphics"/>
+<use   name="NtuAnalysis/Common"/>
+<use   name="NtuTool/Common"/>
+<use   name="NtuTool/Read"/>
+<use   name="PDAnalysis/Ntu"/>
+<use   name="MGTools/PlottingTools"/>
+<use   name="rootpymva"/>
+<use   name="roottmva"/>
+<!-- <use   name="PDAnalysis/EleMVASecondNtupleReader"/> -->
+<environment>
+  <bin   file="produceEleMVACalibration.cc" name="produceEleMVACalibration"></bin>
+</environment>
+

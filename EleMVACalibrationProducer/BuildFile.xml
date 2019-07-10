@@ -1,0 +1,19 @@
+<use   name="CommonTools/Statistics"/>
+<use   name="NtuTool/Read"/>
+<use   name="NtuAnalysis/Common"/>
+<use   name="MGTools/PlottingTools"/>
+<use   name="PDAnalysis/Ntu"/>
+<use   name="PDAnalysis/EleMVASecondNtupleProducer"/>
+<use   name="rootpymva"/>
+<use   name="roottmva"/>
+<export>
+  <use   name="NtuTool/Read"/>
+  <use   name="CommonTools/Statistics"/>
+  <use   name="NtuAnalysis/Common"/>
+  <use   name="MGTools/PlottingTools"/>
+  <use   name="PDAnalysis/Ntu"/>
+  <use   name="PDAnalysis/EleMVASecondNtupleProducer"/>
+  <use   name="rootpymva"/>
+  <use   name="roottmva"/>
+  <lib   name="1"/>
+</export>
