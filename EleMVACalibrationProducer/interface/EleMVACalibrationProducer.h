@@ -41,6 +41,8 @@ class EleMVACalibrationProducer:
    
   bool verbose;
 
+  std::string sampleName;
+  
   TH1D* hNGenB;
   std::vector<TH1D*>* vhMassCalRightTag;
   std::vector<TH1D*>* vhMassCalWrongTag;

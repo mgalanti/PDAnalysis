@@ -48,27 +48,37 @@ void EleMVACalibrationProducer::beginJob()
   getUserParameter("useTightSelection", useTightSelection);
   getUserParameter("useSyst", useSyst);
   getUserParameter("nBinsCal", nBinsCal);
-  getUserParameter("inputTreeName", inputTreeName);
   getUserParameter("systematics2017", systematics2017);
   getUserParameter("systematics2018", systematics2018);
   getUserParameter("mvaInputPath", mvaInputPath);
   getUserParameter("eleIdWP", eleIdWP);
   
+  sampleName = inputFileName;
+  
+  do
+  {
+    sampleName = sampleName.substr(sampleName.find("/") + 1);
+  } 
+  while(sampleName.find("/") != std::string::npos);
+  
+  sampleName = sampleName.substr(0, sampleName.find("."));
+
   
   std::cout << "I N F O : EleMVACalibrationProducer::beginJob() - Parameters:" << std::endl;
   std::cout << "          inputFileName = " << inputFileName << std::endl;
+  std::cout << "          sampleName = " << sampleName << std::endl;
   std::cout << "          mvaMethod = " << mvaMethod << std::endl;
   std::cout << "          mvaInputPath = " << mvaInputPath << std::endl;
   std::cout << "          useTightSelection = " << useTightSelection << std::endl;
   std::cout << "          nBinsCal = " << nBinsCal << std::endl;
   
   
-  auto *inputFile = new TFile(inputFileName.c_str());
-  auto *inputTree = (TTree*)inputFile->Get(inputTreeName.c_str());
-  if(inputFile->IsZombie())
-  {
-    return;
-  }
+//   auto *inputFile = new TFile(inputFileName.c_str());
+//   auto *inputTree = (TTree*)inputFile->Get(inputTreeName.c_str());
+//   if(inputFile->IsZombie())
+//   {
+//     return;
+//   }
 
   
   if(inputFileName.find("Bs") != std::string::npos)
@@ -155,7 +165,7 @@ void EleMVACalibrationProducer::beginJob()
   reader->AddVariable("eleConeCleanDR", &eleConeCleanDR);
   reader->AddVariable("eleConeCleanEnergyRatio", &eleConeCleanEnergyRatio);
   reader->AddVariable("eleConeCleanQ", &eleConeCleanQ);
-  reader->BookMVA(mvaMethod, mvaInputPath + mvaMethod + ".weights.xml");
+  reader->BookMVA(mvaMethod, mvaInputPath + "TMVAClassification_" + mvaMethod + ".weights.xml");
 }
 
 
