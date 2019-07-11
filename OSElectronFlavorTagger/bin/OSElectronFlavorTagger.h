@@ -36,6 +36,11 @@ class OSElectronFlavorTagger:
 
   // function called at the end of the analysis
   virtual void endJob();
+  
+  int nMisTags;
+  int nAllTags;
+  int nAllBEvts;
+  float sumMisTagProb;
 
  private:
   

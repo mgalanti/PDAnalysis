@@ -37,6 +37,10 @@ void OSElectronFlavorTagger::beginJob() {
   // user parameters are set as names associated to a string, 
   // default values can be set in the analyzer class contructor
   
+  nMisTags = 0;
+  nAllTags = 0;
+  nAllBEvts = 0;
+  sumMisTagProb = 0;
   return;
 }
 
@@ -92,8 +96,6 @@ bool OSElectronFlavorTagger::analyze( int entry, int event_file, int event_tot )
   // std::vector<std::pair<int,int> > mySelectedObjects;
   // bool myEvtSelected = SelectEvent(mySelection.c_str(), mySelectedObjects);
   
-  if(!evtSelected)
-    return false;
   
   int iSelObject = 0;
   int iBestPV = -1;
@@ -111,20 +113,218 @@ bool OSElectronFlavorTagger::analyze( int entry, int event_file, int event_tot )
       iBestEle = itSelObjects->second;
     iSelObject++;
   }
+
+  if(iBestPV < 0 || iBestB < 0)
+    return false;
+  
+  nAllBEvts++;
+  
+  if(!evtSelected)
+    return false;
+  
+  float eleIDNIV2Val = -1;
+  for (int iUserInfo = 0; iUserInfo < nUserInfo; iUserInfo++)
+  {
+    if(useObjType->at(iUserInfo) == PDEnumString::recElectron && useObjIndex->at(iUserInfo) == iBestEle)
+    {
+      if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Fall17NoIsoV2Values)
+      {
+        eleIDNIV2Val = useInfoValue->at(iUserInfo);
+      }
+    }
+  }
+  
+  if(eleIDNIV2Val > -1.)
+    return false;
   
   setObjectIndexes(iBestEle, iBestB, iBestPV);
   bool tagOk = makeOsElectronTagging();
   std::cout << "tagOk = " << tagOk << std::endl;
   
-  std::cout << "osElectronTagDecision = " << getOsElectronTag() << std::endl;
-  std::cout << "osElectronTagMvaValue = " << getOsElectronTagMvaValue() << std::endl;
+  float tagDecision = getOsElectronTag();
+  float tagMvaValue = getOsElectronTagMvaValue();
+  float misTagProb = 1 - tagMvaValue;
   
-  float fixedGridRhoFastJetAll = GetFixedGridRhoFastJetAll();
-  float fixedGridRhoFastJetAllCalo = GetFixedGridRhoFastJetAllCalo();
-  
-  std::cout << "fixedGridRhoFastJetAll = " << fixedGridRhoFastJetAll << std::endl;
-  std::cout << "fixedGridRhoFastJetAllCalo = " << fixedGridRhoFastJetAllCalo << std::endl;
+  std::cout << "tagDecision = " << tagDecision << std::endl;
+  std::cout << "tagMvaValue = " << tagMvaValue << std::endl;
+  std::cout << "misTagProb = " << misTagProb << std::endl;
     
+//   float fixedGridRhoFastJetAll = GetFixedGridRhoFastJetAll();
+//   float fixedGridRhoFastJetAllCalo = GetFixedGridRhoFastJetAllCalo();
+  
+//   std::cout << "fixedGridRhoFastJetAll = " << fixedGridRhoFastJetAll << std::endl;
+//   std::cout << "fixedGridRhoFastJetAllCalo = " << fixedGridRhoFastJetAllCalo << std::endl;
+  
+  std::vector<int> tracksFromB = tracksFromSV(iBestB);
+  TLorentzVector pB = GetTLorentzVectorFromJPsiX(iBestB);
+  int iBestJPsi = (subVtxFromSV(iBestB)).at(0);
+  std::vector<int> tracksFromJPsi = tracksFromSV(iBestJPsi);
+ 
+  // Truth information for B
+  int iGenB = -1;
+  int nGenB = -1;
+  int idGenB = 0;
+  int genBMixStatus = -1;
+  int evtWeight = 1;
+
+  // Other variables needed for the ntuple production
+  std::vector<int> allBHadrons;
+  std::vector<int> longLivedBHadrons;
+
+  // Use generator information if available
+  if(has_gen)
+  {
+    // Truth information for B
+    allBHadrons = GetAllBHadrons(true);  // true removes particles with mix status = 2
+    longLivedBHadrons = GetAllLongLivedBHadrons(true); // true removes particles with mix status = 2
+    iGenB = GetClosestGenInList(pB.Pt(), pB.Eta(), pB.Phi(), longLivedBHadrons, 0.4, 0.4);
+    nGenB = longLivedBHadrons.size();
+    // Do not consider events where the signal-side is not matched to a gen B
+    if(iGenB < 0)
+      return false;
+
+    idGenB = genId->at(iGenB);
+
+    // Do not consider events where the signal B is matched to a hadron different from the one looked for
+    if(selectionSubStrings[0].compare("BsToJPsiPhi") == 0 && abs(idGenB) != 531)
+    {
+      std::cout << "I N F O: Event rejected - looking for BsToJPsiPhi but signal B is matched to a hadron with id = " << idGenB << ".\n";
+      return false;
+    }
+    if(selectionSubStrings[0].compare("BuToJPsiK") == 0 && abs(idGenB) != 521)
+    {
+      std::cout << "I N F O: Event rejected - looking for BuToJPsiK but signal B is matched to a hadron with id = " << idGenB << ".\n";
+      return false;
+    }
+    // Check whether the matched B has mixed or will mix
+    genBMixStatus = GetMixStatus(iGenB);
+    
+    if(genBMixStatus == 2)
+    {
+      std::cout << "I N F O: Event rejected - mix status of generated B is 2.\n";
+      return false;
+    }
+    
+    // If the matched B hadron comes from mixing, then go back to the pre-mixing one
+    if(genBMixStatus == 1)
+    {
+      iGenB = RecursiveLookForMotherIds(iGenB, {-idGenB});
+      idGenB = genId->at(iGenB);
+    }
+
+    // Change event weight according to how many "interesting" B hadrons are there
+    for(auto iGen: longLivedBHadrons)
+    {
+      if(iGen == iGenB)
+        continue;
+      if(abs(genId->at(iGen)) == abs(idGenB))
+        evtWeight = 2;
+    }
+    
+  }
+  else  // If no gen information is available, only the BuToJPsiK channel can be useful
+  {
+    // Set id randomly for Bs - this should not be used
+    if(selectionSubStrings[0].compare("BsToJPsiPhi") == 0)
+    {
+      idGenB = ((double)rand() / (RAND_MAX)) < 0.5 ? +531 : -531;
+      std::cout << "EleMVASecondNtupleProducer::analyze():  W A R N I N G ! Trying to save tagging information for BsToJPsiPhi but\n";
+      std::cout << "                                                        no generator information is available in the input files!\n";
+      std::cout << "                                                        idGenB is filled randomly to " << idGenB << "!\n";
+    }
+    // Bu is a self-tagging channel - OK!
+    if(selectionSubStrings[0].compare("BuToJPsiK") == 0)
+    {
+      for(auto iTrk: tracksFromB)
+      {
+        if(iTrk == tracksFromJPsi[0] || iTrk == tracksFromJPsi[1])
+          continue;
+        idGenB = trkCharge->at(iTrk) > 0 ? +521 : -521;
+      }
+      
+    }
+  }
+
+  
+  
+  
+  // Truth information for electron
+  int iGenEle = -1;
+  int idGenEle = 0;
+  int genEleBMot = -1;
+  
+  // Variables needed to compute the tagging truth (stored into tagTruth)
+  int chargeB = 0;
+  int chargeCorr = 0;
+  int chargeEle = eleCharge->at(iBestEle);
+  
+  // Use generator information if available
+  if(has_gen)
+  {
+    // Truth information for electron
+    iGenEle = GetClosestGen(elePt->at(iBestEle), eleEta->at(iBestEle), elePhi->at(iBestEle));
+    if (iGenEle >= 0)
+    {
+      idGenEle = genId->at(iGenEle);
+      genEleBMot = RecursiveLookForMother(iGenEle, allBHadrons);
+      if(genEleBMot < 0)
+        genEleBMot = -1;
+    }
+    if(selectionSubStrings[0].compare("BsToJPsiPhi") == 0)
+    {
+      if(abs(idGenEle) == 11)
+        chargeCorr = GetGenLepBsChargeCorrelation(iGenEle, iGenB);
+      if(!chargeCorr)
+      {
+        chargeCorr = GetBsChargeCorrelation(chargeEle, iGenB);
+        chargeCorr*=2;
+      }
+    }
+    else if(selectionSubStrings[0].compare("BuToJPsiK") == 0)
+    {
+      if(abs(idGenEle) == 11)
+        chargeCorr = GetGenLepBuChargeCorrelation(iGenEle, iGenB);
+      if(!chargeCorr)
+      {
+        chargeCorr = GetBuChargeCorrelation(chargeEle, iGenB);
+        chargeCorr*=2;
+      }
+    }    
+  }  
+  else  // If no gen information is available, only the BuToJPsiK channel can be useful
+  {
+    // Bu is a self-tagging channel - OK!
+    if(selectionSubStrings[0].compare("BuToJPsiK") == 0)
+    {
+      chargeB = 0;
+      for(auto iTrack : tracksFromB)
+      {
+        chargeB += trkCharge->at(iTrack);
+      }
+      
+      chargeCorr = chargeEle * chargeB;
+    }    
+  }
+  
+  int tagTruth;
+  if(chargeCorr > 0)
+    tagTruth = 1;
+  else
+    tagTruth = 0;
+  
+  std::cout << "Charge corr = " << chargeCorr << std::endl;
+  std::cout << "Tag truth = " << tagTruth << std::endl;
+  
+  nAllTags++;
+  if((chargeCorr > 0 && tagDecision < 0) || (chargeCorr < 0 && tagDecision > 0))
+  {
+    std::cout << "Different!\n\n";
+    nMisTags++;
+  }
+  sumMisTagProb+=misTagProb;
+  
+  nGenB++; nGenB--;
+  evtWeight++; evtWeight--;
   return true;
 }
 
@@ -132,6 +332,19 @@ bool OSElectronFlavorTagger::analyze( int entry, int event_file, int event_tot )
 void OSElectronFlavorTagger::endJob() 
 {
   // This runs after the event loop
-  
+  float misTagProbFromRatio = (float)nMisTags/(float)nAllTags;
+  float misTagProbFromDNN = sumMisTagProb/(float)nAllTags;
+  float dilutionFromRatio = 1. - 2. * misTagProbFromRatio;
+  float dilutionFromDNN = 1. - 2. * misTagProbFromDNN; 
+  float taggingEfficiency = (float)nAllTags/(float)nAllBEvts;
+  float taggingPowerFromRatio = taggingEfficiency * dilutionFromRatio * dilutionFromRatio;
+  float taggingPowerFromDNN = taggingEfficiency * dilutionFromDNN * dilutionFromDNN;
+  std::cout << "tagging efficiency from ratio = " << taggingEfficiency << std::endl;
+  std::cout << "misTagProb from dnn = " << misTagProbFromDNN << std::endl; 
+  std::cout << "misTagProb from ratio = " << misTagProbFromRatio << std::endl; 
+  std::cout << "dilution from dnn = " << dilutionFromDNN << std::endl; 
+  std::cout << "dilution from ratio = " << dilutionFromRatio << std::endl;   
+  std::cout << "tagging power from dnn = " << taggingPowerFromDNN << std::endl; 
+  std::cout << "tagging power from ratio = " << taggingPowerFromRatio << std::endl; 
   return;
 }
