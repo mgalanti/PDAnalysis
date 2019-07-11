@@ -136,10 +136,10 @@ dataloader.SetWeightExpression( 'evtWeight' );
 #nBkgTest = '42306'
 #nSgnTest = '98339'
 
-nBkg = '100000'
-nSgn = '100000'
-nBkgTest = '50000'
-nSgnTest = '50000'
+nBkg = '500000'
+nSgn = '600000'
+nBkgTest = '46000'
+nSgnTest = '82000'
 
 
 dataloaderOpt = 'nTrain_Signal=' + nSgn + ':nTrain_Background=' + nBkg + ':nTest_Signal=' + nSgnTest + ':nTest_Background=' + nBkgTest
@@ -155,10 +155,10 @@ dropValue = 0.4
 modelName = getKerasModel(nVars, 'model' + name + '.h5', nLayers, layerSize, dropValue)
 # modelName = 'TrainedModel_DNNOsMuonHLTJpsiMu.h5'
 # Book methods
-dnnOptions = '!H:!V:NumEpochs=50:TriesEarlyStopping=10:BatchSize=1024:ValidationSize=33%:SaveBestOnly=True'
-dnnOptions = dnnOptions + ':Tensorboard=./logs:FilenameModel=' + modelName
-#dnnOptions = '!H:!V:NumEpochs=50:TriesEarlyStopping=10:BatchSize=1024:SaveBestOnly=True'
-#dnnOptions = dnnOptions + ':FilenameModel=' + modelName
+#dnnOptions = '!H:!V:NumEpochs=50:TriesEarlyStopping=10:BatchSize=1024:ValidationSize=33%:SaveBestOnly=True'
+#dnnOptions = dnnOptions + ':Tensorboard=./logs:FilenameModel=' + modelName
+dnnOptions = '!H:!V:NumEpochs=50:TriesEarlyStopping=10:BatchSize=1024:SaveBestOnly=True'
+dnnOptions = dnnOptions + ':FilenameModel=' + modelName
 # 
 
 # Preprocessing string creator, loop was for selection of which variable to apply gaussianification
