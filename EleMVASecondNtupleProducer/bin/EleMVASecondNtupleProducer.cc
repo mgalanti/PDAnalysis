@@ -172,11 +172,29 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   // Check if the event passes the tight selection
   std::vector<std::pair<int, int> > selectedObjectsTight;
   bool tightEvent = SelectEvent(tightSelection, selectedObjectsTight);
-
+  
+  bool tightB = false;
+  for (auto itSelObjectsTight = selectedObjectsTight.begin(); itSelObjectsTight != selectedObjectsTight.end(); itSelObjectsTight++)
+  {
+    if(itSelObjectsTight->first == PDEnumString::recSvt)
+      tightB = true;
+  }
+  
   // If the event passes the tight selection, let's use those candidates instead of the loose ones
   if(tightEvent)
     selectedObjects = selectedObjectsTight;
 
+  if(verbose && tightB && !tightEvent)
+  {
+    std::cout << "I N F O : signal B is tight but event is not tight!\n";
+  }
+
+  if(!tightB && tightEvent)
+  {
+    std::cout << "E R R O R ! signal B is not tight but event is tight!\n";
+    exit(1);
+  }
+  
   int iSelObject = 0;
   int iBestPV = -1;
   int iBestB = -1;
@@ -316,6 +334,8 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->JPsiTrkHltBit) = jPsiTrkHltBit;  
   
   (tWriter->iPV) = iBestPV;
+  
+  (tWriter->tightB) = tightB;
     
   // Write signal-side variables to secondary ntuple
   (tWriter->BPt) = pB.Pt();
@@ -430,6 +450,9 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   float eleIDNIV2Val = -1;
   float eleIDIV2Val = -1;
   float eleIDHZZV1Val = -1;
+  float eleIDNIV2RawVal = -10;
+  float eleIDIV2RawVal = -10;
+  float eleIDHZZV1RawVal = -10;
   int eleIDNIV2Cat = 0;
   int eleIDIV2Cat = 0;
   int eleIDHZZV1Cat = 0;
@@ -450,6 +473,19 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
       if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Spring16HZZV1Values)
       {
         eleIDHZZV1Val = useInfoValue->at(iUserInfo);
+      }
+      
+      if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Fall17NoIsoV2RawValues)
+      {
+        eleIDNIV2RawVal = useInfoValue->at(iUserInfo);
+      }
+      if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Fall17IsoV2RawValues)
+      {
+        eleIDIV2RawVal = useInfoValue->at(iUserInfo);
+      }
+      if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Spring16HZZV1RawValues)
+      {
+        eleIDHZZV1RawVal = useInfoValue->at(iUserInfo);
       }
       
       if(useInfoType->at(iUserInfo) == PDEnumString::ElectronMVAEstimatorRun2Fall17NoIsoV2Categories)
@@ -775,12 +811,18 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->eleEta) = eleEta->at(iBestEle);
   (tWriter->elePhi) = elePhi->at(iBestEle);
   
+  (tWriter->eleCharge) = eleCharge->at(iBestEle);
+  
   (tWriter->eleIdGen) = idGenEle;
   (tWriter->eleBMot) = genEleBMot;
   
   (tWriter->eleIDNIV2Val) = eleIDNIV2Val;
   (tWriter->eleIDIV2Val) = eleIDIV2Val;
   (tWriter->eleIDHZZV1Val) = eleIDHZZV1Val;
+  
+  (tWriter->eleIDNIV2RawVal) = eleIDNIV2RawVal;
+  (tWriter->eleIDIV2RawVal) = eleIDIV2RawVal;
+  (tWriter->eleIDHZZV1RawVal) = eleIDHZZV1RawVal;
   
   (tWriter->eleIDNIV2Cat) = eleIDNIV2Cat;
   (tWriter->eleIDIV2Cat) = eleIDIV2Cat;

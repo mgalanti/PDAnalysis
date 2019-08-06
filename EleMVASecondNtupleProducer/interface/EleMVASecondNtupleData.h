@@ -29,6 +29,8 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
     setBranch("iPV", &iPV, "iPV/I", &b_iPV);
     
     // Signal-side variables
+    setBranch("tightB", &tightB, "tightB/I", &b_tightB);
+    
     setBranch("BPt", &BPt, "BPt/F", &b_BPt);
     setBranch("BEta", &BEta, "BEta/F", &b_BEta);
     setBranch("BPhi", &BPhi, "BPhi/F", &b_BPhi);
@@ -56,12 +58,17 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
     setBranch("eleEta", &eleEta, "eleEta/F", &b_eleEta);
     setBranch("elePhi", &elePhi, "elePhi/F", &b_elePhi);
     
+    setBranch("eleCharge", &eleCharge, "eleCharge/I", &b_eleCharge);
+    
     setBranch("eleIdGen", &eleIdGen, "eleIdGen/I", &b_eleIdGen);
     setBranch("eleBMot", &eleBMot, "eleBMot/I", &b_eleBMot);
     
     setBranch("eleIDNIV2Val", &eleIDNIV2Val, "eleIDNIV2Val/F", &b_eleIDNIV2Val);
     setBranch("eleIDIV2Val", &eleIDIV2Val, "eleIDIV2Val/F", &b_eleIDIV2Val);
     setBranch("eleIDHZZV1Val", &eleIDHZZV1Val, "eleIDHZZV1Val/F", &b_eleIDHZZV1Val);
+    setBranch("eleIDNIV2RawVal", &eleIDNIV2RawVal, "eleIDNIV2RawVal/F", &b_eleIDNIV2RawVal);
+    setBranch("eleIDIV2RawVal", &eleIDIV2RawVal, "eleIDIV2RawVal/F", &b_eleIDIV2RawVal);
+    setBranch("eleIDHZZV1RawVal", &eleIDHZZV1RawVal, "eleIDHZZV1RawVal/F", &b_eleIDHZZV1RawVal);
     setBranch("eleIDNIV2Cat", &eleIDNIV2Cat, "eleIDNIV2Cat/I", &b_eleIDNIV2Cat);
     setBranch("eleIDIV2Cat", &eleIDIV2Cat, "eleIDIV2Cat/I", &b_eleIDIV2Cat);
     setBranch("eleIDHZZV1Cat", &eleIDHZZV1Cat, "eleIDHZZV1Cat/I", &b_eleIDHZZV1Cat);
@@ -105,6 +112,8 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   bool JPsiMuHltBit, JPsiTrkTrkHltBit, JPsiTrkHltBit;
   int iPV;
   
+  int tightB;
+  
   float BPt, BEta, BPhi, BMass;
   float BLxy, BCt2DBS;
   float BCt2DPV, BCt2DPVErr, BCt2DPVSigmaUnit;
@@ -114,8 +123,10 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   
   int eleSelected;
   float elePt, eleEta, elePhi;
+  int eleCharge;
   int eleIdGen, eleBMot;
   float eleIDNIV2Val, eleIDIV2Val, eleIDHZZV1Val;
+  float eleIDNIV2RawVal, eleIDIV2RawVal, eleIDHZZV1RawVal;
   int eleIDNIV2Cat, eleIDIV2Cat, eleIDHZZV1Cat;
   float eleDxy, eleDz, eleExy, eleEz;
   float eleDRB;
@@ -131,6 +142,7 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   TBranch *b_JPsiMuHltBit, *b_JPsiTrkTrkHltBit, *b_JPsiTrkHltBit;
   TBranch *b_iPV;
   
+  TBranch *b_tightB;  
   TBranch *b_BPt, *b_BEta, *b_BPhi, *b_BMass;
   TBranch *b_BLxy, *b_BCt2DBS;
   TBranch *b_BCt2DPV, *b_BCt2DPVErr, *b_BCt2DPVSigmaUnit;
@@ -140,8 +152,10 @@ class EleMVASecondNtupleData: public virtual TreeWrapper {
   
   TBranch *b_eleSelected;
   TBranch *b_elePt, *b_eleEta, *b_elePhi;
+  TBranch *b_eleCharge;
   TBranch *b_eleIdGen, *b_eleBMot;
   TBranch *b_eleIDNIV2Val, *b_eleIDIV2Val, *b_eleIDHZZV1Val;
+  TBranch *b_eleIDNIV2RawVal, *b_eleIDIV2RawVal, *b_eleIDHZZV1RawVal;
   TBranch *b_eleIDNIV2Cat, *b_eleIDIV2Cat, *b_eleIDHZZV1Cat;
   TBranch *b_eleDxy, *b_eleDz, *b_eleExy, *b_eleEz;
   TBranch *b_eleDRB;
