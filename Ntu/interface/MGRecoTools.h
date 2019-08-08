@@ -34,7 +34,13 @@ class MGRecoTools : public virtual MGBaseTools
     
     const double dXEle(const int iEle);
     const double dYEle(const int iEle);
-    const double dZ(const int iEle, const int iVtx);
+    const double dXEle(const int iEle, const int iVtx);
+    const double dYEle(const int iEle, const int iVtx);
+    const double dXYEle(const int iEle, const int iVtx);
+    const double dZEle(const int iEle, const int iVtx);
+    const double dXTrk(const int iTrk, const int iVtx);
+    const double dYTrk(const int iTrk, const int iVtx);
+    const double dXYTrk(const int iTrk, const int iVtx);
     const double dZTrk(const int iTrk, const int iVtx);
     // Returns sign of 2D IP of track with respect to a direction
     const int dSignEle(const int iEle, const float px, const float py);

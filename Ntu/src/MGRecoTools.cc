@@ -263,9 +263,88 @@ const double MGRecoTools::dYEle(const int iEle)
 
 
 
-const double MGRecoTools::dZ(const int iEle, const int iVtx)
+const double MGRecoTools::dXEle(const int iEle, const int iVtx)
 {
-//   std::cout << "Inside MGRecoTools::dZ(...)\n";
+  float px;
+  float py;
+  if(eleGsfPx->size())
+  {
+    px = eleGsfPx->at(iEle);
+    py = eleGsfPy->at(iEle);
+  }
+  else
+  {
+    TVector3 pEle;
+    pEle.SetPtEtaPhi(eleGsfPt->at(iEle), eleGsfEta->at(iEle), eleGsfPhi->at(iEle));
+    px = pEle.Px();
+    py = pEle.Py();
+  }
+  float pq = modSqua(px, py, 0);
+  float pm = sqrt( pq );
+  return ( ( ( ( bsX - pvtX->at(iVtx) ) * py ) + ( ( pvtY->at(iVtx) - bsY ) * px ) ) * py / pq ) -
+         ( eleGsfDxy->at( iEle ) * py / pm );
+}
+
+
+
+const double MGRecoTools::dYEle(const int iEle, const int iVtx)
+{
+  float px;
+  float py;
+  if(eleGsfPx->size())
+  {
+    px = eleGsfPx->at(iEle);
+    py = eleGsfPy->at(iEle);
+  }
+  else
+  {
+    TVector3 pEle;
+    pEle.SetPtEtaPhi(eleGsfPt->at(iEle), eleGsfEta->at(iEle), eleGsfPhi->at(iEle));
+    px = pEle.Px();
+    py = pEle.Py();
+  }
+  float pq = modSqua( px, py, 0 );
+  float pm = sqrt( pq );
+  return ( ( ( ( bsY - pvtY->at(iVtx) ) * px ) + ( ( pvtX->at(iVtx) - bsX ) * py ) ) * px / pq ) +
+         ( eleGsfDxy->at( iEle ) * px / pm );
+}
+
+
+
+const double MGRecoTools::dXYEle(const int iEle, const int iVtx)
+{
+  float vx = pvtX->at(iVtx);
+  float vy = pvtY->at(iVtx);
+  float px;
+  float py;
+  if(eleGsfPx->size())
+  {
+    px = eleGsfPx->at(iEle);
+    py = eleGsfPy->at(iEle);
+  }
+  else
+  {
+    TVector3 pEle;
+    pEle.SetPtEtaPhi(eleGsfPt->at(iEle), eleGsfEta->at(iEle), eleGsfPhi->at(iEle));
+    px = pEle.Px();
+    py = pEle.Py();
+  }
+  float pq = modSqua( px, py, 0 );
+  float pm = sqrt( pq );
+  float dx = ( vx - bsX ) * py / pm;
+  float dy = ( vy - bsY ) * px / pm;
+  float d1 = eleGsfDxy->at( iEle );
+  number xy = sqrt( ( dx * dx ) +     ( dy * dy ) - ( 2 * dx * dy )
+                  + ( d1 * d1 ) + ( 2 * d1 * dx ) - ( 2 * d1 * dy ) );
+  return ( ( px * dYEle( iEle, iVtx ) ) - ( py * dXEle( iEle, iVtx ) ) > 0 ?
+           xy : -xy );
+}
+
+
+
+const double MGRecoTools::dZEle(const int iEle, const int iVtx)
+{
+//   std::cout << "Inside MGRecoTools::dZEle(...)\n";
 //   std::cout << "       iEle = " << iEle << ", iVtx = " << iVtx << std::endl;
   //  number px = trkVtxPx->at( iTk );
   //  number py = trkVtxPy->at( iTk );
@@ -319,6 +398,27 @@ const double MGRecoTools::dZ(const int iEle, const int iVtx)
   number pq = modSqua(px, py, 0);
   return (((px * (pvtX->at(iVtx) - bsX))) + (py * (pvtY->at(iVtx) - bsY)) * pz/pq) +
             eleGsfDz->at(iEle) + bsZ - pvtZ->at(iVtx);
+}
+
+
+
+const double MGRecoTools::dXTrk(const int iTrk, const int iVtx)
+{
+    return PDAnalyzerUtil::dX(iTrk, pvtX->at(iVtx), pvtY->at(iVtx));
+}
+
+
+
+const double MGRecoTools::dYTrk(const int iTrk, const int iVtx)
+{
+    return PDAnalyzerUtil::dY(iTrk, pvtX->at(iVtx), pvtY->at(iVtx));
+}
+
+
+
+const double MGRecoTools::dXYTrk(const int iTrk, const int iVtx)
+{
+    return PDAnalyzerUtil::dXY(iTrk, pvtX->at(iVtx), pvtY->at(iVtx));
 }
 
 
