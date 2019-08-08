@@ -513,6 +513,18 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   float eleConeNF = 0;
   float eleConeCF = 0;
   int   eleConeNCH = 0;
+  std::vector<float> eleConeDx;
+  float eleConeAvgDx = 0;
+  float eleConeStdDevDx = 0;
+  std::vector<float> eleConeDy;
+  float eleConeAvgDy = 0;
+  float eleConeStdDevDy = 0;
+  std::vector<float> eleConeDxy;
+  float eleConeAvgDxy = 0;
+  float eleConeStdDevDxy = 0;
+  std::vector<float> eleConeDz;
+  float eleConeAvgDz = 0;
+  float eleConeStdDevDz = 0;
   float kappa = 1;
   float drCone = 0.4;
   float axisEta = eleEta->at(iBestEle);
@@ -541,6 +553,19 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     eleConeNF = 0;
     eleConeCF = 0;
     eleConeNCH = 0;
+    eleConeDx.clear();
+    eleConeAvgDx = 0;
+    eleConeStdDevDx = 0;
+    eleConeDy.clear();
+    eleConeAvgDy = 0;
+    eleConeStdDevDy = 0;
+    eleConeDxy.clear();
+    eleConeAvgDxy = 0;
+    eleConeStdDevDxy = 0;
+    eleConeDz.clear();
+    eleConeAvgDz = 0;
+    eleConeStdDevDz = 0;
+    
     TLorentzVector pCone(0.,0.,0.,0.);
     for(int iPF=0; iPF < nPF; ++iPF)
     {
@@ -564,11 +589,16 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
       }
       if(pfcTrk->at(iPF) >= 0)
       {
+        int iTrk = pfcTrk->at(iPF);
 //         std::cout << "iBestPV = " << iBestPV << ", nPVertices = " << nPVertices << std::endl;
-        if(fabs(dZTrk(pfcTrk->at(iPF), iBestPV)) >= 1.0)
+        if(fabs(dZTrk(iTrk, iBestPV)) >= 1.0)
         {
           continue;
         }
+        eleConeDx.push_back(dXTrk(iTrk, iBestPV));
+        eleConeDy.push_back(dYTrk(iTrk, iBestPV));
+        eleConeDxy.push_back(dXYTrk(iTrk, iBestPV));
+        eleConeDz.push_back(dZTrk(iTrk, iBestPV));
       }
 //       std::cout << "iPF = " << iPF << ", nPF = " << nPF << std::endl;
       TLorentzVector a;
@@ -620,6 +650,39 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     pCone -= pEle;
     eleConePtRel = elePt->at(iBestEle) * (pEle.Vect().Unit() * pCone.Vect().Unit());
     
+    for(unsigned int i = 0; i < eleConeDx.size(); i++)
+    {
+      eleConeAvgDx+=eleConeDx[i];
+      eleConeAvgDy+=eleConeDy[i];
+      eleConeAvgDxy+=eleConeDxy[i];
+      eleConeAvgDz+=eleConeDz[i];
+    }
+    if(eleConeDx.size())
+    {
+      eleConeAvgDx/=eleConeDx.size();
+      eleConeAvgDy/=eleConeDy.size();
+      eleConeAvgDxy/=eleConeDxy.size();
+      eleConeAvgDz/=eleConeDz.size();
+    }
+    for(unsigned int i = 0; i < eleConeDx.size(); i++)
+    {
+      eleConeStdDevDx+=(eleConeDx[i]-eleConeAvgDx)*(eleConeDx[i]-eleConeAvgDx);
+      eleConeStdDevDy+=(eleConeDy[i]-eleConeAvgDy)*(eleConeDy[i]-eleConeAvgDy);
+      eleConeStdDevDxy+=(eleConeDxy[i]-eleConeAvgDxy)*(eleConeDxy[i]-eleConeAvgDxy);
+      eleConeStdDevDz+=(eleConeDz[i]-eleConeAvgDz)*(eleConeDz[i]-eleConeAvgDz);
+    }
+    if(eleConeDx.size())
+    {
+      eleConeStdDevDx/=eleConeDx.size();
+      eleConeStdDevDx = sqrt(eleConeStdDevDx);
+      eleConeStdDevDy/=eleConeDy.size();
+      eleConeStdDevDy = sqrt(eleConeStdDevDy);
+      eleConeStdDevDxy/=eleConeDxy.size();
+      eleConeStdDevDxy = sqrt(eleConeStdDevDxy);
+      eleConeStdDevDz/=eleConeDz.size();
+      eleConeStdDevDz = sqrt(eleConeStdDevDz);
+    }
+    
     if(verbose)
     {
       std::cout << "      Cone: eta = " << pCone.Eta() << ", phi = " << pCone.Phi() << ", pt = " << pCone.Pt() <<  std::endl; 
@@ -661,6 +724,18 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   float eleConeCleanNF = 0;
   float eleConeCleanCF = 0;
   int   eleConeCleanNCH = 0;
+    std::vector<float> eleConeCleanDx;
+  float eleConeCleanAvgDx = 0;
+  float eleConeCleanStdDevDx = 0;
+  std::vector<float> eleConeCleanDy;
+  float eleConeCleanAvgDy = 0;
+  float eleConeCleanStdDevDy = 0;
+  std::vector<float> eleConeCleanDxy;
+  float eleConeCleanAvgDxy = 0;
+  float eleConeCleanStdDevDxy = 0;
+  std::vector<float> eleConeCleanDz;
+  float eleConeCleanAvgDz = 0;
+  float eleConeCleanStdDevDz = 0;
   kappa = 1;
   drCone = 0.4;
   axisEta = eleEta->at(iBestEle);
@@ -690,6 +765,19 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     eleConeCleanNF = 0;
     eleConeCleanCF = 0;
     eleConeCleanNCH = 0;
+    eleConeCleanDx.clear();
+    eleConeCleanAvgDx = 0;
+    eleConeCleanStdDevDx = 0;
+    eleConeCleanDy.clear();
+    eleConeCleanAvgDy = 0;
+    eleConeCleanStdDevDy = 0;
+    eleConeCleanDxy.clear();
+    eleConeCleanAvgDxy = 0;
+    eleConeCleanStdDevDxy = 0;
+    eleConeCleanDz.clear();
+    eleConeCleanAvgDz = 0;
+    eleConeCleanStdDevDz = 0;
+
     pConeClean.SetPtEtaPhiE(0.,0.,0.,0.);
 //     TLorentzVector pConeClean(0.,0.,0.,0.);
     for(int iPF = 0; iPF < nPF; ++iPF)
@@ -716,14 +804,19 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
       {
         continue;
       }
-      if(pfcTrk->at(iPF) < 0)
+      int iTrk = pfcTrk->at(iPF);
+      if(iTrk < 0)
       {
         continue;
       }
-      if(fabs(dZTrk(pfcTrk->at(iPF), iBestPV)) >= 1.0)
+      if(fabs(dZTrk(iTrk, iBestPV)) >= 1.0)
       {
         continue;
       }
+      eleConeCleanDx.push_back(dXTrk(iTrk, iBestPV));
+      eleConeCleanDy.push_back(dYTrk(iTrk, iBestPV));
+      eleConeCleanDxy.push_back(dXYTrk(iTrk, iBestPV));
+      eleConeCleanDz.push_back(dZTrk(iTrk, iBestPV));
 //       std::cout << "iPF = " << iPF << ", nPF = " << nPF << std::endl;
       TLorentzVector a;
       a.SetPtEtaPhiE(pfcPt->at(iPF), pfcEta->at(iPF), pfcPhi->at(iPF), pfcE->at(iPF));
@@ -774,6 +867,39 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
     pConeClean -= pEle;
     eleConeCleanPtRel = elePt->at(iBestEle) * (pEle.Vect().Unit() * pConeClean.Vect().Unit());
     pConeClean += pEle; // for IP sign
+    
+    for(unsigned int i = 0; i < eleConeCleanDx.size(); i++)
+    {
+      eleConeCleanAvgDx+=eleConeCleanDx[i];
+      eleConeCleanAvgDy+=eleConeCleanDy[i];
+      eleConeCleanAvgDxy+=eleConeCleanDxy[i];
+      eleConeCleanAvgDz+=eleConeCleanDz[i];
+    }
+    if(eleConeCleanDx.size())
+    {
+      eleConeCleanAvgDx/=eleConeCleanDx.size();
+      eleConeCleanAvgDy/=eleConeCleanDy.size();
+      eleConeCleanAvgDxy/=eleConeCleanDxy.size();
+      eleConeCleanAvgDz/=eleConeCleanDz.size();
+    }
+    for(unsigned int i = 0; i < eleConeCleanDx.size(); i++)
+    {
+      eleConeCleanStdDevDx+=(eleConeCleanDx[i]-eleConeCleanAvgDx)*(eleConeCleanDx[i]-eleConeCleanAvgDx);
+      eleConeCleanStdDevDy+=(eleConeCleanDy[i]-eleConeCleanAvgDy)*(eleConeCleanDy[i]-eleConeCleanAvgDy);
+      eleConeCleanStdDevDxy+=(eleConeCleanDxy[i]-eleConeCleanAvgDxy)*(eleConeCleanDxy[i]-eleConeCleanAvgDxy);
+      eleConeCleanStdDevDz+=(eleConeCleanDz[i]-eleConeCleanAvgDz)*(eleConeCleanDz[i]-eleConeCleanAvgDz);
+    }
+    if(eleConeCleanDx.size())
+    {
+      eleConeCleanStdDevDx/=eleConeCleanDx.size();
+      eleConeCleanStdDevDx = sqrt(eleConeCleanStdDevDx);
+      eleConeCleanStdDevDy/=eleConeCleanDy.size();
+      eleConeCleanStdDevDy = sqrt(eleConeCleanStdDevDy);
+      eleConeCleanStdDevDxy/=eleConeCleanDxy.size();
+      eleConeCleanStdDevDxy = sqrt(eleConeCleanStdDevDxy);
+      eleConeCleanStdDevDz/=eleConeCleanDz.size();
+      eleConeCleanStdDevDz = sqrt(eleConeCleanStdDevDz);
+    }
     
     if(verbose)
     {
@@ -828,8 +954,10 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->eleIDIV2Cat) = eleIDIV2Cat;
   (tWriter->eleIDHZZV1Cat) = eleIDHZZV1Cat;
   
-  (tWriter->eleDxy) = dSignEle(iBestEle, pConeClean.Px(), pConeClean.Py())*abs(eleGsfDxy->at(iBestEle));
-  (tWriter->eleDz) = dZ(iBestEle, iBestPV);
+  (tWriter->eleDx) = dXEle(iBestEle, iBestPV);
+  (tWriter->eleDy) = dYEle(iBestEle, iBestPV);
+  (tWriter->eleDxy) = dSignEle(iBestEle, pConeClean.Px(), pConeClean.Py())*dXYEle(iBestEle, iBestPV);
+  (tWriter->eleDz) = dZEle(iBestEle, iBestPV);
   (tWriter->eleExy) = eleGsfExy->at(iBestEle);
   (tWriter->eleEz) = eleGsfEz->at(iBestEle);
   
@@ -846,6 +974,15 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->eleConeCF) = eleConeCF;
   (tWriter->eleConeNCH) = eleConeNCH;
   
+  (tWriter->eleConeAvgDx) = eleConeAvgDx;
+  (tWriter->eleConeStdDevDx) = eleConeStdDevDx;
+  (tWriter->eleConeAvgDy) = eleConeAvgDy;
+  (tWriter->eleConeStdDevDy) = eleConeStdDevDy;
+  (tWriter->eleConeAvgDxy) = eleConeAvgDxy;
+  (tWriter->eleConeStdDevDxy) = eleConeStdDevDxy;
+  (tWriter->eleConeAvgDz) = eleConeAvgDz;
+  (tWriter->eleConeStdDevDz) = eleConeStdDevDz;
+
   (tWriter->eleConeCleanPt) = eleConeCleanPt;
   (tWriter->eleConeCleanPtRel) = eleConeCleanPtRel;
   (tWriter->eleConeCleanDR) = eleConeCleanDR;
@@ -856,6 +993,15 @@ bool EleMVASecondNtupleProducer::analyze(int entry, int event_file, int event_to
   (tWriter->eleConeCleanCF) = eleConeCleanCF;
   (tWriter->eleConeCleanNCH) = eleConeCleanNCH;
   
+  (tWriter->eleConeCleanAvgDx) = eleConeCleanAvgDx;
+  (tWriter->eleConeCleanStdDevDx) = eleConeCleanStdDevDx;
+  (tWriter->eleConeCleanAvgDy) = eleConeCleanAvgDy;
+  (tWriter->eleConeCleanStdDevDy) = eleConeCleanStdDevDy;
+  (tWriter->eleConeCleanAvgDxy) = eleConeCleanAvgDxy;
+  (tWriter->eleConeCleanStdDevDxy) = eleConeCleanStdDevDxy;
+  (tWriter->eleConeCleanAvgDz) = eleConeCleanAvgDz;
+  (tWriter->eleConeCleanStdDevDz) = eleConeCleanStdDevDz;
+
   // Tagging truth
   (tWriter->tagTruth) = tagTruth;
   (tWriter->chargeCorr) = chargeCorr;
