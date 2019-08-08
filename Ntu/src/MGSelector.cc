@@ -261,7 +261,7 @@ int MGSelector::SelectOSElectron(const std::string selection, const int iPV, con
         continue;
       phi = elePhi->at(iElectron);
       if(deltaR(tB.Eta(), tB.Phi(), eta, phi) < 0.4) continue;
-      dZWrtPV = dZ(iElectron, iPV);
+      dZWrtPV = dZEle(iElectron, iPV);
       if(fabs(dZWrtPV) > 1)
         continue;
       // Make sure that the electron is not any of the tracks used to build the B

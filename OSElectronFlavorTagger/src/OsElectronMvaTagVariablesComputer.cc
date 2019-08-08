@@ -48,7 +48,7 @@ void OsElectronMvaTagVariablesComputer::computeOsElectronMvaTagVariables()
   eleTagVars.eleEta = eleEta->at(iEle_);
   eleTagVars.elePhi = elePhi->at(iEle_);
   eleTagVars.eleExy = eleGsfExy->at(iEle_);
-  eleTagVars.eleDz = dZ(iEle_, iPV_);
+  eleTagVars.eleDz = dZEle(iEle_, iPV_);
   eleTagVars.eleEz = eleGsfEz->at(iEle_);
   
   // Get eleID Mva values

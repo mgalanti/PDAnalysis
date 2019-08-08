@@ -1057,7 +1057,7 @@ bool ElectronEfficiencyAnalyzer::analyze( int entry, int event_file, int event_t
     gsfPVtxEle = eleGsfPVtx->at(iElectron) - nPVertices; 
 //     std::cout << "gsfPVtxEle = " << gsfPVtxEle << std::endl;
     
-    double eleDzWrtBestPV = dZ(iElectron, iBestPV);
+    double eleDzWrtBestPV = dZEle(iElectron, iBestPV);
 //     std::cout << "eleDzWrtBestPV = " << eleDzWrtBestPV << std::endl;
     
     
