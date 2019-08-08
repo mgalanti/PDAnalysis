@@ -52,6 +52,8 @@ void EleMVACalibrationProducer::beginJob()
   getUserParameter("systematics2018", systematics2018);
   getUserParameter("mvaInputPath", mvaInputPath);
   getUserParameter("eleIdWP", eleIdWP);
+  getUserParameter("elePtWP", elePtWP);
+  getUserParameter("eleDzWP", eleDzWP);
   
   sampleName = inputFileName;
   
@@ -259,6 +261,17 @@ bool EleMVACalibrationProducer::analyze(int entry, int event_file, int event_tot
   }
   if(eleIDNIV2Val <= eleIdWP)
   {
+    hMassNoTag->Fill(BMass, evtWeight);
+    return false;
+  }
+  if(elePt <= elePtWP)
+  {
+    hMassNoTag->Fill(BMass, evtWeight);
+    return false;
+  }
+  if(fabs(eleDz) >= eleDzWP)
+  {
+    hMassNoTag->Fill(BMass, evtWeight);
     return false;
   }
   

@@ -75,6 +75,8 @@ class EleMVACalibrationProducer:
   double systematics2018 = 0.;
   double systematics = 0.;
   double eleIdWP;
+  double elePtWP;
+  double eleDzWP;
   
   TMVA::Reader* reader;
   
