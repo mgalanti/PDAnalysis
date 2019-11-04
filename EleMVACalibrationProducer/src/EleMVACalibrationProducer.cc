@@ -33,8 +33,6 @@ void EleMVACalibrationProducer::beginJob()
 //   treeName="EleMVAsecondTree";
   initTree();
   
-  
-  
   gErrorIgnoreLevel = kWarning;
   gStyle->SetOptStat(10); //ksiourmen
   gStyle->SetOptFit(1); //pcev
@@ -42,7 +40,8 @@ void EleMVACalibrationProducer::beginJob()
   
   getUserParameter( "verbose", verbose );
   getUserParameter("writeOutput", writeOutput);
-  getUserParameter("inputFileName", inputFileName);
+  getUserParameter("treeListName", treeListName);
+//   getUserParameter("sampleName", sampleName);
   getUserParameter("inputTreeName", inputTreeName);
   getUserParameter("mvaMethod", mvaMethod);
   getUserParameter("useTightSelection", useTightSelection);
@@ -54,26 +53,31 @@ void EleMVACalibrationProducer::beginJob()
   getUserParameter("eleIdWP", eleIdWP);
   getUserParameter("elePtWP", elePtWP);
   getUserParameter("eleDzWP", eleDzWP);
+  getUserParameter("eleDxyWP", eleDxyWP);
+  getUserParameter("eleDRBWP", eleDRBWP);
+  getUserParameter("mvaValueMinCutOff", mvaValueMinCutOff);
+  getUserParameter("mvaValueMaxCutOff", mvaValueMaxCutOff);
   
-  sampleName = inputFileName;
+//   sampleName = inputFileName;
   
-  do
-  {
-    sampleName = sampleName.substr(sampleName.find("/") + 1);
-  } 
-  while(sampleName.find("/") != std::string::npos);
-  
-  sampleName = sampleName.substr(0, sampleName.find("."));
+//   do
+//   {
+//     sampleName = sampleName.substr(sampleName.find("/") + 1);
+//   } 
+//   while(sampleName.find("/") != std::string::npos);
+//   
+//   sampleName = sampleName.substr(0, sampleName.find("."));
 
-  
   std::cout << "I N F O : EleMVACalibrationProducer::beginJob() - Parameters:" << std::endl;
-  std::cout << "          inputFileName = " << inputFileName << std::endl;
-  std::cout << "          sampleName = " << sampleName << std::endl;
+  std::cout << "          treeListName = " << treeListName << std::endl;
+  std::cout << "          inputTreeName = " << inputTreeName << std::endl;
+//   std::cout << "          sampleName = " << sampleName << std::endl;
   std::cout << "          mvaMethod = " << mvaMethod << std::endl;
   std::cout << "          mvaInputPath = " << mvaInputPath << std::endl;
   std::cout << "          useTightSelection = " << useTightSelection << std::endl;
   std::cout << "          nBinsCal = " << nBinsCal << std::endl;
-  
+  std::cout << "          mvaValueMinCutOff = " << mvaValueMinCutOff << std::endl;
+  std::cout << "          mvaValueMaxCutOff = " << mvaValueMaxCutOff << std::endl;
   
 //   auto *inputFile = new TFile(inputFileName.c_str());
 //   auto *inputTree = (TTree*)inputFile->Get(inputTreeName.c_str());
@@ -82,19 +86,18 @@ void EleMVACalibrationProducer::beginJob()
 //     return;
 //   }
 
-  
-  if(inputFileName.find("Bs") != std::string::npos)
+  if(treeListName.find("Bs") != std::string::npos)
   {
     process = "BsJPsiPhi";
     minMass = 5.20;
     maxMass = 5.65;
     dirPath = "./Bs";
-    if(inputFileName.find("DG0") != std::string::npos)
+    if(treeListName.find("DG0") != std::string::npos)
     {
       process += "DG0";
     }
   }
-  if(inputFileName.find("Bu") != std::string::npos)
+  if(treeListName.find("Bu") != std::string::npos)
   {
     process = "BuJPsiK";
     minMass = 5.10;
@@ -104,19 +107,19 @@ void EleMVACalibrationProducer::beginJob()
     dirPath = "./Bu";
   }
   
-  if(inputFileName.find("MC") != std::string::npos)
+  if(treeListName.find("MC") != std::string::npos)
   {
     process = process + "MC";
     dirPath += "MC";
   }
-  if(inputFileName.find("Data") != std::string::npos)
+  if(treeListName.find("Data") != std::string::npos)
   {
     process = process + "Data";
     dirPath += "Data";
     isData = true;
   }
   
-  if(inputFileName.find("2017") != std::string::npos)
+  if(treeListName.find("2017") != std::string::npos)
   {
     process = process + "2017";
     dirPath += "2017";
@@ -126,7 +129,7 @@ void EleMVACalibrationProducer::beginJob()
     }
   }
   
-  if(inputFileName.find("2018") != std::string::npos)
+  if(treeListName.find("2018") != std::string::npos)
   {
     process = process + "2018";
     dirPath += "2018";
@@ -153,12 +156,15 @@ void EleMVACalibrationProducer::beginJob()
   TMVA::PyMethodBase::PyInitialize();
   reader = new TMVA::Reader("!Color:Silent");
   double mvaValue = -1.;
+  float eleDxyDiff;
+  float eleDzDiff;
   reader->AddVariable("elePt", &elePt);
   reader->AddVariable("eleEta", &eleEta);
   reader->AddVariable("eleDxy", &eleDxy);
   reader->AddVariable("eleExy", &eleExy);
   reader->AddVariable("eleDz", &eleDz);
   reader->AddVariable("eleEz", &eleEz);
+//   reader->AddVariable("eleIDNIV2RawVal", &eleIDNIV2RawVal);
   reader->AddVariable("eleIDNIV2Val", &eleIDNIV2Val);
   reader->AddVariable("eleDRB", &eleDRB);
   reader->AddVariable("elePFIsoScaled", &elePFIsoScaled);
@@ -167,7 +173,18 @@ void EleMVACalibrationProducer::beginJob()
   reader->AddVariable("eleConeCleanDR", &eleConeCleanDR);
   reader->AddVariable("eleConeCleanEnergyRatio", &eleConeCleanEnergyRatio);
   reader->AddVariable("eleConeCleanQ", &eleConeCleanQ);
+//   reader->AddVariable("eleConeCleanAvgDxy", &eleConeCleanAvgDxy);
+//   reader->AddVariable("eleDxy-eleConeCleanAvgDxy", &eleDxyDiff);
+//   reader->AddVariable("eleDz-eleConeCleanAvgDz", &eleDzDiff);
+//   reader->AddVariable("eleConeCleanStdDevDxy", &eleConeCleanStdDevDxy);
+//   reader->AddVariable("eleConeCleanStdDevDz", &eleConeCleanStdDevDz);
+  
+//   eleDxyDiff = eleDxy-eleConeCleanAvgDxy;
+//   eleDzDiff = eleDz-eleConeCleanAvgDz;
+  
   reader->BookMVA(mvaMethod, mvaInputPath + "TMVAClassification_" + mvaMethod + ".weights.xml");
+  
+  vEleIdcuts = {-1., -0.9999, -0.9995, -0.999, -0.995, -0.99, -0.95, -0.9, -0.8, -0.7, -0.6, -0.4, -0.2, 0., 0.2, 0.4, 0.6, 0.8, 0.85, 0.9, 0.95, 0.99};
 }
 
 
@@ -202,6 +219,7 @@ void EleMVACalibrationProducer::book()
   vhMassCalWrongTag = CreateVectorOf1DHistograms<TH1D>("hMassCalWrongTag", "Mass calibration - wrong tag", nMassBins, minMass, maxMass, "M [GeV]", "N. events", "mvaScore", vMvaScoreBinEdges);
   autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(vhMassCalWrongTag);
   
+  
 //   TH1F *hMassCalRT[nBinsCal];
 //   TH1F *hMassCalWT[nBinsCal];
 //   double *wCalc = new double[nBinsCal]; // measured mistag rate
@@ -224,6 +242,22 @@ void EleMVACalibrationProducer::book()
   autoSavedObject = hMassRightTag = Create1DHistogram<TH1D>("hMassRightTag", "B mass - right tag events", nMassBins, minMass, maxMass, "M [GeV]", "N. events");
   autoSavedObject = hMassWrongTag = Create1DHistogram<TH1D>("hMassWrongTag", "B mass - wrong tag events", nMassBins, minMass, maxMass, "M [GeV]", "N. events");
   autoSavedObject = hMassNoTag    = Create1DHistogram<TH1D>("hMassNoTag",    "B mass - no tag events", nMassBins, minMass, maxMass, "M [GeV]", "N. events");
+
+  for(unsigned int i = 0; i < vEleIdcuts.size(); i++)
+  {
+    std::ostringstream os;
+    float value = vEleIdcuts.at(i);
+    os << value;
+    std::string sValue = os.str();
+    std::string hName = "hMassRightTag_eleIDNIV2Val_gt_" + sValue;
+    std::string hTitle = "B mass - right tag events - eleIDNIV2Val > " + sValue;
+    TH1D* hTemp = Create1DHistogram<TH1D>(hName.c_str(), hTitle.c_str(), nMassBins, minMass, maxMass, "M [GeV]", "N. events");
+    vhMassRightTag.push_back(hTemp);
+    hName = "hMassWrongTag_eleIDNIV2Val_gt_" + sValue;
+    hTitle = "B mass - wrong tag events - eleIDNIV2Val > " + sValue;
+    hTemp = Create1DHistogram<TH1D>(hName.c_str(), hTitle.c_str(), nMassBins, minMass, maxMass, "M [GeV]", "N. events");
+    vhMassWrongTag.push_back(hTemp);
+  }
   
   if(verbose)
   {
@@ -246,7 +280,7 @@ bool EleMVACalibrationProducer::analyze(int entry, int event_file, int event_tot
   {
     return false;
   }
-  if(useTightSelection && !tightEvent)
+  if(useTightSelection && !tightB)
   {
     return false;
   }
@@ -274,9 +308,49 @@ bool EleMVACalibrationProducer::analyze(int entry, int event_file, int event_tot
     hMassNoTag->Fill(BMass, evtWeight);
     return false;
   }
+  if(fabs(eleDxy) >= eleDxyWP)
+  {
+    hMassNoTag->Fill(BMass, evtWeight);
+    return false;
+  }
+  if(eleDRB <= eleDRBWP)
+  {
+    hMassNoTag->Fill(BMass, evtWeight);
+    return false;
+  }
+
+  if(eleDxy<=-999. || eleDxy>=999.)
+  {
+    hMassNoTag->Fill(BMass, evtWeight);
+    return false;
+  }
   
+  if(eleConeCleanAvgDxy<=-999. || eleConeCleanAvgDxy>=999)
+  {
+    hMassNoTag->Fill(BMass, evtWeight);
+    return false;
+  }
+
+  if(eleConeCleanStdDevDxy<=0. || eleConeCleanStdDevDxy>=999)
+  {
+    hMassNoTag->Fill(BMass, evtWeight);
+    return false;
+  }
+
   //TAGGING
   double mvaValue = reader->EvaluateMVA(mvaMethod);
+  
+  if(mvaValue < mvaValueMinCutOff)
+  {
+    hMassNoTag->Fill(BMass, evtWeight);
+    return false;
+  }
+  if(mvaValue > mvaValueMaxCutOff)
+  {
+    hMassNoTag->Fill(BMass, evtWeight);
+    return false;
+  }
+
   hMva->Fill(mvaValue, evtWeight);
   evtW[0] = 1 - mvaValue;
   totalP += pow(1. - 2. * evtW[0], 2) * evtWeight;
@@ -309,15 +383,39 @@ bool EleMVACalibrationProducer::analyze(int entry, int event_file, int event_tot
     }
   }
   
+//   int iEleIdCut = -999.;
+//   for(int i = vEleIdcuts.size() - 1; i > -1; i--)
+//   {
+//     if(eleIDNIV2Val >vEleIdcuts.at(i))
+//     {
+//       iEleIdCut = i;
+//       break;
+//     }
+//   }
+  
   if(isTagRight)
   {
     hMvaRightTag->Fill(mvaValue, evtWeight);
     hMassRightTag->Fill(BMass, evtWeight);
+    for(unsigned int i = 0; i < vEleIdcuts.size(); i++)
+    {
+      if(eleIDNIV2Val >vEleIdcuts.at(i))
+      {
+        vhMassRightTag[i]->Fill(BMass, evtWeight);
+      }
+    }
   }
   else
   {
     hMvaWrongTag->Fill(mvaValue, evtWeight);
     hMassWrongTag->Fill(BMass, evtWeight);
+    for(unsigned int i = 0; i < vEleIdcuts.size(); i++)
+    {
+      if(eleIDNIV2Val >= vEleIdcuts.at(i))
+      {
+        vhMassWrongTag[i]->Fill(BMass, evtWeight);
+      }
+    }
   }
   
   hNGenB->Fill(nGenB);
@@ -351,6 +449,16 @@ void EleMVACalibrationProducer::endJob()
   std::cout << "nRightTag = " << nRightTag << std::endl;
   std::cout << "nWrongTag = " << nWrongTag << std::endl;
   std::cout << "nNoTag = " << nNoTag << std::endl;
+  
+  std::cout << "Cutting on eleId value:\n";
+  
+  for(unsigned int i = 0; i < vEleIdcuts.size(); i++)
+  {
+    double cutValue = vEleIdcuts[i];
+    double rightTagIntegral = vhMassRightTag[i]->Integral();
+    double wrongTagIntegral = vhMassWrongTag[i]->Integral();
+    std::cout << "Ele Id cut value = " << cutValue << " - nRightTag = " << rightTagIntegral << " - nWrongTag = " << wrongTagIntegral << std::endl;
+  }
   
   std::cout << std::endl;
   std::cout << "Base efficiency = " << 100 * effBase << "%\n";
@@ -559,7 +667,7 @@ void EleMVACalibrationProducer::endJob()
   
   if(writeOutput)
   {
-    c1->Print(("calibration" + process + ".pdf").c_str());
+    c1->Print(("calibration_" + process + ".pdf").c_str());
   }
   
   auto *c2 = new TCanvas();
@@ -580,7 +688,7 @@ void EleMVACalibrationProducer::endJob()
   //FUNCTIONS
   if(writeOutput)
   {
-    auto *fo = new TFile(("OSMuonTaggerCalibration" + process + ".root").c_str(), "RECREATE");
+    auto *fo = new TFile(("OSElectronTaggerCalibration" + process + ".root").c_str(), "RECREATE");
     fo->cd();
     fCal->Write();
     fitresultCal->Write();

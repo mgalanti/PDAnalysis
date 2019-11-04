@@ -54,9 +54,13 @@ class EleMVACalibrationProducer:
   TH1D* hMassRightTag;
   TH1D* hMassWrongTag;
   TH1D* hMassNoTag;
+
+  std::vector<double> vEleIdcuts;
   
+  std::vector<TH1D*> vhMassRightTag;
+  std::vector<TH1D*> vhMassWrongTag;
   
-  std::string inputFileName;
+  std::string treeListName;
   std::string inputTreeName;
   std::string mvaInputPath;
   std::string mvaMethod;
@@ -77,6 +81,10 @@ class EleMVACalibrationProducer:
   double eleIdWP;
   double elePtWP;
   double eleDzWP;
+  double eleDxyWP;
+  double eleDRBWP;
+  double mvaValueMinCutOff;
+  double mvaValueMaxCutOff;
   
   TMVA::Reader* reader;
   
