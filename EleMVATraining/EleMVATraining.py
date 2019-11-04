@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from ROOT import TMVA, TFile, TTree, TCut
 from subprocess import call
 from os.path import isfile
 import sys
@@ -16,6 +15,9 @@ from keras.layers import Dense, Activation, Conv2D, MaxPooling2D, Flatten, Dropo
 from keras.regularizers import l2
 from keras.optimizers import SGD, Adam
 from keras.callbacks import ModelCheckpoint, TensorBoard
+
+from ROOT import TMVA, TFile, TTree, TCut, TChain
+
 
 ##### FUNCTIONS
 
@@ -47,11 +49,27 @@ TMVA.Tools.Instance()
 TMVA.PyMethodBase.PyInitialize()
 
 # Load data
-file = '../../../../datasets/EleMVASecondNtuple__BsToJpsiPhiDG0_2018_DCAP__BsToJPsiPhi_eleTagLooseV1__20190703_190644__11M_Missing.root'
+filenames = [
+  '../../../../datasets/EleMVASecondNtuple__BsToJpsiPhiDG0_2018_DCAP__BsToJPsiPhi_eleTagLooseV1__20190808_141613__1.root'
+  #, "../../../../datasets/EleMVASecondNtuple__BsToJpsiPhi_2018_DCAP__BsToJPsiPhi_eleTagLooseV1__20190808_140620__1.root"
+  #, "../../../../datasets/EleMVASecondNtuple__BsToJpsiPhi_2017_DCAP__BsToJPsiPhi_eleTagLooseV1__20190808_141410__1.root"
+  ]
 
-data = TFile.Open(file)
+#data = TFile.Open(file)
 
-tree = data.Get('EleMVAsecondTree')
+tree = TChain("EleMVAsecondTree")
+for filename in filenames:
+  print("Adding file")
+  print filename
+  #file = TFile.Open(filename)
+  tree.Add(filename)
+  
+nentries = tree.GetEntries()
+
+print "Number of entries: "
+print nentries
+
+#tree = data.GetTree()
 
 # Prepare factory
 name = 'OsElectronHLTJpsiTrkTrk'
@@ -94,6 +112,7 @@ varListClean = [
     ,('eleExy', 'F')
     ,('eleDz', 'F')
     ,('eleEz', 'F')
+    #,('eleIDNIV2RawVal', 'F')
     ,('eleIDNIV2Val', 'F')
     #,('eleIDNIV2Cat', 'F')
     ,('eleDRB', 'F')
@@ -103,6 +122,13 @@ varListClean = [
     ,('eleConeCleanDR', 'F')
     ,('eleConeCleanEnergyRatio', 'F')
     ,('eleConeCleanQ', 'F')
+    #,('eleDxy/eleExy-eleConeCleanAvgDxy/eleConeCleanStdDevDxy', 'F')
+    #,('eleDz/eleEz-eleConeCleanAvgDz/eleConeCleanStdDevDz', 'F')
+    #,('sqrt(eleConeCleanAvgDxy*eleConeCleanAvgDxy+eleConeCleanAvgDz*eleConeCleanAvgDz)', 'F')
+    #,('eleConeCleanAvgDxy', 'F')
+    #,('eleConeCleanAvgDz', 'F')
+    #,('eleConeCleanStdDevDxy', 'F')
+    #,('eleConeCleanStdDevDz', 'F')
     ]
 
 varList = varListClean
@@ -116,7 +142,10 @@ for var in varList:
 # prepare dataloader
 # Event wise selection
 #cut = 'JPsiMuHltBit==0&&eleIDNIV2Val>-0.98'
-cut = 'JPsiMuHltBit==0 && JPsiTrkTrkHltBit==1 && eleSelected==1'
+#cut = 'JPsiMuHltBit==0 && JPsiTrkTrkHltBit==1 &&eleSelected==1&&eleDxy>-999&&eleDxy<999&&eleConeCleanAvgDxy>-999&&eleConeCleanAvgDxy<999&&eleConeCleanStdDevDxy>0&&eleConeCleanStdDevDxy<999&&eleIDNIV2Val>-0.999&&fabs(eleDz)<0.5&&elePt>2.5'
+
+cut = 'JPsiMuHltBit==0 && JPsiTrkTrkHltBit==1 &&eleSelected==1&&eleDxy>-999&&eleDxy<999&&eleConeCleanAvgDxy>-999&&eleConeCleanAvgDxy<999&&eleConeCleanStdDevDxy>0&&eleConeCleanStdDevDxy<999&&eleIDNIV2Val>-0.9999&&fabs(eleDz)<0.2&&fabs(eleDxy)<0.1&&elePt>2.5&&eleDRB>0.4'
+
 
 cutSgn = cut + '&&tagTruth==1' #Correcly tagged events selection i.e. sign(charge lepton) -> correct flavour 
 cutBkg = cut + '&&tagTruth==0' #Uncorrecly tagged events
@@ -136,11 +165,24 @@ dataloader.SetWeightExpression( 'evtWeight' );
 #nBkgTest = '42306'
 #nSgnTest = '98339'
 
-nBkg = '500000'
-nSgn = '600000'
-nBkgTest = '46000'
-nSgnTest = '82000'
+## 2018 + 2018DG0 + 2017
+#nSgnTot = 530065
+#nBkgTot = 366048
 
+# 2018DG0
+nSgnTot = 296739
+nBkgTot = 202240
+
+nSgn = nSgnTot // 1.25
+nSgnTest = nSgnTot - nSgn
+
+nBkg = nBkgTot // 1.25
+nBkgTest = nBkgTot - nBkg
+
+nBkg = str(nBkg)
+nSgn = str(nSgn)
+nBkgTest = str(nBkgTest)
+nSgnTest = str(nSgnTest)
 
 dataloaderOpt = 'nTrain_Signal=' + nSgn + ':nTrain_Background=' + nBkg + ':nTest_Signal=' + nSgnTest + ':nTest_Background=' + nBkgTest
 dataloaderOpt += ':SplitMode=Random:NormMode=NumEvents:V:'
@@ -150,15 +192,15 @@ dataloader.PrepareTrainingAndTestTree(TCut(cutSgn), TCut(cutBkg), dataloaderOpt)
 # Create Keras Model
 nLayers = 3
 layerSize = 200
-dropValue = 0.4
+dropValue = 0.5
 
 modelName = getKerasModel(nVars, 'model' + name + '.h5', nLayers, layerSize, dropValue)
 # modelName = 'TrainedModel_DNNOsMuonHLTJpsiMu.h5'
 # Book methods
-#dnnOptions = '!H:!V:NumEpochs=50:TriesEarlyStopping=10:BatchSize=1024:ValidationSize=33%:SaveBestOnly=True'
-#dnnOptions = dnnOptions + ':Tensorboard=./logs:FilenameModel=' + modelName
-dnnOptions = '!H:!V:NumEpochs=50:TriesEarlyStopping=10:BatchSize=1024:SaveBestOnly=True'
-dnnOptions = dnnOptions + ':FilenameModel=' + modelName
+dnnOptions = '!H:!V:NumEpochs=100:TriesEarlyStopping=10:BatchSize=1024:ValidationSize=20%:SaveBestOnly=True'
+dnnOptions = dnnOptions + ':Tensorboard=./logs:FilenameModel=' + modelName
+#dnnOptions = '!H:!V:NumEpochs=100:TriesEarlyStopping=10:BatchSize=1024:SaveBestOnly=True'
+#dnnOptions = dnnOptions + ':FilenameModel=' + modelName
 # 
 
 # Preprocessing string creator, loop was for selection of which variable to apply gaussianification
