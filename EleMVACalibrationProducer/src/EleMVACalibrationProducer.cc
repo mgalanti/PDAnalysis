@@ -45,6 +45,7 @@ void EleMVACalibrationProducer::beginJob()
   getUserParameter("inputTreeName", inputTreeName);
   getUserParameter("mvaMethod", mvaMethod);
   getUserParameter("useTightSelection", useTightSelection);
+  getUserParameter("weightControlPlots", weightControlPlots);
   getUserParameter("useSyst", useSyst);
   getUserParameter("nBinsCal", nBinsCal);
   getUserParameter("systematics2017", systematics2017);
@@ -184,7 +185,12 @@ void EleMVACalibrationProducer::beginJob()
   
   reader->BookMVA(mvaMethod, mvaInputPath + "TMVAClassification_" + mvaMethod + ".weights.xml");
   
-  vEleIdcuts = {-1., -0.9999, -0.9995, -0.999, -0.995, -0.99, -0.95, -0.9, -0.8, -0.7, -0.6, -0.4, -0.2, 0., 0.2, 0.4, 0.6, 0.8, 0.85, 0.9, 0.95, 0.99};
+  vEleIdcuts = {-1., -0.9999, -0.9995, -0.999, -0.995, -0.99, -0.95, -0.9, -0.8, -0.7, -0.6, -0.4, -0.2, 0., 0.2, 0.4, 0.6, 0.8, 0.85, 0.9, 0.95, 0.99, 1.};
+  
+  for(unsigned int iCut = 0; iCut < vEleIdcuts.size(); iCut++)
+  {
+    vEleIdcutsLog.push_back(TMath::Log(vEleIdcuts[iCut]+2));
+  }
 }
 
 
@@ -258,6 +264,44 @@ void EleMVACalibrationProducer::book()
     hTemp = Create1DHistogram<TH1D>(hName.c_str(), hTitle.c_str(), nMassBins, minMass, maxMass, "M [GeV]", "N. events");
     vhMassWrongTag.push_back(hTemp);
   }
+
+  autoSavedObject = hElePt                      = Create1DHistogram<TH1D>("hElePt",                   "electron p_{T}",                    100,   0. ,  50. , "p_{T} [GeV]",      "N. electrons");
+  autoSavedObject = hEleEta                     = Create1DHistogram<TH1D>("hEleEta",                  "electron #eta",                     100,  -3. ,   3. , "#eta",              "N. electrons");
+  autoSavedObject = hEleDxy                     = Create1DHistogram<TH1D>("hEleDxy",                  "electron d_{xy}",                   100,  -0.1,   0.1, "d_{xy} [cm]",       "N. electrons");
+  autoSavedObject = hEleExy                     = Create1DHistogram<TH1D>("hEleExy",                  "electron d_{xy} error",             100,   0. ,   0.1, "e_{xy} [cm]",       "N. electrons");
+  autoSavedObject = hEleDz                      = Create1DHistogram<TH1D>("hEleDz",                   "electron d_{z}",                    100,  -0.2,   0.2, "d_{z} [cm]",        "N. electrons");
+  autoSavedObject = hEleEz                      = Create1DHistogram<TH1D>("hEleEz",                   "electron d_{z} error",              100,   0. ,   0.1, "e_{z} [cm]",        "N. electrons");
+  autoSavedObject = hEleIDNIV2Val               = Create1DHistogram<TH1D>("hEleIDNIV2Val",            "electron ID non-isoV2 val.",        100,  -1. ,   1. , "EleIDNIV2Val",      "N. electrons");
+  autoSavedObject = hEleDRB                     = Create1DHistogram<TH1D>("hEleDRB",                  "electron #Delta(R) from B",         100,   0. ,   6. , "#Delta(R)",         "N. electrons");
+  autoSavedObject = hElePFIsoScaled             = Create1DHistogram<TH1D>("hElePFIsoScaled",          "electron PF isolation scaled",      100,   0. ,  10. , "PF Isolation",     "N. electrons");
+  autoSavedObject = hEleConeCleanPt             = Create1DHistogram<TH1D>("hEleConeCleanPt",          "p_{T} of clean electron cone",      100,   0. , 100. , "p_{T} [GeV]",     "N. electrons");
+  autoSavedObject = hEleConeCleanPtRel          = Create1DHistogram<TH1D>("hEleConeCleanPtRel",       "p_{T,rel} of clean electron cone",  100, -50. ,  50. , "p_{T,rel}  [GeV]", "N. electrons");
+  autoSavedObject = hEleConeCleanDR             = Create1DHistogram<TH1D>("hEleConeCleanDR",          "#Delta(R) of clean electron cone",  100,   0. ,   0.3, "#Delta(R)",         "N. electrons");
+  autoSavedObject = hEleConeCleanEnergyRatio    = Create1DHistogram<TH1D>("hEleConeCleanEnergyRatio", "E ratio of clean electron cone",    100,   0. ,   4. , "E(e)/E(cone)",      "N. electrons");
+  autoSavedObject = hEleConeCleanQ              = Create1DHistogram<TH1D>("hEleConeCleanQ",           "Weighted Q of clean electron cone", 100,  -1. ,   1. , "weighted Q(cone)",  "N. electrons");
+  
+  autoSavedObject = gNRightTagVsEleIdCut = CreateGraph<TGraph>("gNRightTagVsEleIdCut", "N. of right tags vs. eleId cut", "EleID cut", "N. of right tags", vEleIdcutsLog.size());
+  autoSavedObject = gNWrongTagVsEleIdCut = CreateGraph<TGraph>("gNWrongTagVsEleIdCut", "N. of wrong tags vs. eleId cut", "EleID cut", "N. of wrong tags", vEleIdcutsLog.size());
+  autoSavedObject = gNNoTagVsEleIdCut = CreateGraph<TGraph>("gNNoTagVsEleIdCut", "N. of no tags vs. eleId cut", "EleID cut", "N. of no tags", vEleIdcutsLog.size());
+  autoSavedObject = gBaseEffVsEleIdCut = CreateGraph<TGraph>("gBaseEffVsEleIdCut", "Base efficiency vs. eleId cut", "EleID cut", "Base eff.", vEleIdcutsLog.size());
+  autoSavedObject = gBaseRightTagEffVsEleIdCut = CreateGraph<TGraph>("gBaseRightTagEffVsEleIdCut", "Base right tag efficiency vs. eleId cut", "EleID cut", "Base right tag eff.", vEleIdcutsLog.size());
+  autoSavedObject = gBaseWrongTagEffVsEleIdCut = CreateGraph<TGraph>("gBaseWrongTagEffVsEleIdCut", "Base wrong tag efficiency vs. eleId cut", "EleID cut", "Base wrong tag eff.", vEleIdcutsLog.size());
+  autoSavedObject = gBaseMistagVsEleIdCut = CreateGraph<TGraph>("gBaseMistagVsEleIdCut", "Base mistag vs. eleId cut", "EleID cut", "Base mistag", vEleIdcutsLog.size());
+  autoSavedObject = gBaseDilutionVsEleIdCut = CreateGraph<TGraph>("gBaseDilutionVsEleIdCut", "Base dilution vs. eleId cut", "EleID cut", "Base dilution", vEleIdcutsLog.size());
+  autoSavedObject = gBasePowerVsEleIdCut = CreateGraph<TGraph>("gBasePowerVsEleIdCut", "Base power vs. eleId cut", "EleID cut", "Base power", vEleIdcutsLog.size());
+
+
+  autoSavedObject = gNRightTagVsBaseEff = CreateGraph<TGraph>("gNRightTagVsBaseEff", "N. of right tags vs. base eff.", "Base eff.", "N. of right tags", vEleIdcutsLog.size());
+  autoSavedObject = gNWrongTagVsBaseEff = CreateGraph<TGraph>("gNWrongTagVsBaseEff", "N. of wrong tags vs. base eff.", "Base eff.", "N. of wrong tags", vEleIdcutsLog.size());
+  autoSavedObject = gNNoTagVsBaseEff = CreateGraph<TGraph>("gNNoTagVsBaseEff", "N. of no tags vs. base eff.", "Base eff.", "N. of no tags", vEleIdcutsLog.size());
+  autoSavedObject = gBaseEffVsBaseEff = CreateGraph<TGraph>("gBaseEffVsBaseEff", "Base efficiency vs. base eff.", "Base eff.", "Base eff.", vEleIdcutsLog.size());
+  autoSavedObject = gBaseRightTagEffVsBaseEff = CreateGraph<TGraph>("gBaseRightTagEffVsBaseEff", "Base right tag efficiency vs. base eff.", "Base eff.", "Base right tag eff.", vEleIdcutsLog.size());
+  autoSavedObject = gBaseWrongTagEffVsBaseEff = CreateGraph<TGraph>("gBaseWrongTagEffVsBaseEff", "Base wrong tag efficiency vs. base eff.", "Base eff.", "Base wrong tag eff.", vEleIdcutsLog.size());
+  autoSavedObject = gBaseMistagVsBaseEff = CreateGraph<TGraph>("gBaseMistagVsBaseEff", "Base mistag vs. base eff.", "Base eff.", "Base mistag", vEleIdcutsLog.size());
+  autoSavedObject = gBaseDilutionVsBaseEff = CreateGraph<TGraph>("gBaseDilutionVsBaseEff", "Base dilution vs. base eff.", "Base eff.", "Base dilution", vEleIdcutsLog.size());
+  autoSavedObject = gBasePowerVsBaseEff = CreateGraph<TGraph>("gBasePowerVsBaseEff", "Base power vs. base eff.", "Base eff.", "Base power", vEleIdcutsLog.size());
+
+  autoSavedObject = gBaseWrongTagEffVsBaseRightTagEff = CreateGraph<TGraph>("gBaseWrongTagEffVsBaseRightTagEff", "Base wrong tag eff. vs. base right tag eff.", "Base right tag eff.", "Base wrong tag eff.", vEleIdcutsLog.size());
   
   if(verbose)
   {
@@ -355,16 +399,12 @@ bool EleMVACalibrationProducer::analyze(int entry, int event_file, int event_tot
   evtW[0] = 1 - mvaValue;
   totalP += pow(1. - 2. * evtW[0], 2) * evtWeight;
   
-  // FIXME: Uncomment these as soon as the electron charge is in the ntuples
-//   int evtTag = -1 * eleCharge;
-//   bool isTagRight = TMath::Sign(1, BidGen) == evtTag;
-//   if(isTagRight != tagTruth)
-//   {
-//     std::cout << "W A R N I N G! EleMVACalibrationProducer::analyze(): isTagRight != tagTruth!\n";
-//   }
-  
-  // FIXME: Temporary solution
-  bool isTagRight = tagTruth;
+  int evtTag = -1 * eleCharge;
+  bool isTagRight = TMath::Sign(1, BidGen) == evtTag;
+  if(isTagRight != tagTruth)
+  {
+    std::cout << "W A R N I N G! EleMVACalibrationProducer::analyze(): isTagRight != tagTruth!\n";
+  }
   
   for(int j = 0; j < nBinsCal; j++)
   {
@@ -419,6 +459,24 @@ bool EleMVACalibrationProducer::analyze(int entry, int event_file, int event_tot
   }
   
   hNGenB->Fill(nGenB);
+  
+  // Fill control histograms
+  double evtWeightCtrl = (weightControlPlots? evtWeight : 1);
+  hElePt->Fill(elePt, evtWeightCtrl);
+  hEleEta->Fill(eleEta, evtWeightCtrl);
+  hEleDxy->Fill(eleDxy, evtWeightCtrl);
+  hEleExy->Fill(eleExy, evtWeightCtrl);
+  hEleDz->Fill(eleDz, evtWeightCtrl);
+  hEleEz->Fill(eleEz, evtWeightCtrl);
+  hEleIDNIV2Val->Fill(eleIDNIV2Val, evtWeightCtrl);
+  hEleDRB->Fill(eleDRB, evtWeightCtrl);
+  hElePFIsoScaled->Fill(elePFIsoScaled, evtWeightCtrl);
+  hEleConeCleanPt->Fill(eleConeCleanPt, evtWeightCtrl);
+  hEleConeCleanPtRel->Fill(eleConeCleanPtRel, evtWeightCtrl);
+  hEleConeCleanDR->Fill(eleConeCleanDR, evtWeightCtrl);
+  hEleConeCleanEnergyRatio->Fill(eleConeCleanEnergyRatio, evtWeightCtrl);
+  hEleConeCleanQ->Fill(eleConeCleanQ, evtWeightCtrl);
+  
   return true;
 }
 
@@ -455,10 +513,68 @@ void EleMVACalibrationProducer::endJob()
   for(unsigned int i = 0; i < vEleIdcuts.size(); i++)
   {
     double cutValue = vEleIdcuts[i];
+    double cutValueLog = vEleIdcutsLog[i];
     double rightTagIntegral = vhMassRightTag[i]->Integral();
     double wrongTagIntegral = vhMassWrongTag[i]->Integral();
     std::cout << "Ele Id cut value = " << cutValue << " - nRightTag = " << rightTagIntegral << " - nWrongTag = " << wrongTagIntegral << std::endl;
+    
+    double nNoTagVsEleIdCut = nTot - rightTagIntegral - wrongTagIntegral;
+    double baseEffVsEleIdCut = (double)(rightTagIntegral + wrongTagIntegral) / nTot;
+    double baseRightTagEffVsEleIdCut = (double)(rightTagIntegral) / nTot;
+    double baseWrongTagEffVsEleIdCut = (double)(wrongTagIntegral) / nTot;
+    double baseMistagVsEleIdCut = (double)(wrongTagIntegral) / (rightTagIntegral + wrongTagIntegral);
+    double baseDilutionVsEleIdCut = (1. - 2. * baseMistagVsEleIdCut);
+    double basePowerVsEleIdCut = baseEffVsEleIdCut * pow(1. - 2. * baseMistagVsEleIdCut, 2);
+    if(baseEffVsEleIdCut == 0)
+    {
+      baseMistagVsEleIdCut = 0;
+      basePowerVsEleIdCut = 0;
+    }
+    
+    gNRightTagVsEleIdCut->SetPoint(i, cutValueLog, rightTagIntegral);
+    gNWrongTagVsEleIdCut->SetPoint(i, cutValueLog, wrongTagIntegral);
+    gNNoTagVsEleIdCut->SetPoint(i, cutValueLog, nNoTagVsEleIdCut);
+    gBaseEffVsEleIdCut->SetPoint(i, cutValueLog, baseEffVsEleIdCut);
+    gBaseRightTagEffVsEleIdCut->SetPoint(i, cutValueLog, baseRightTagEffVsEleIdCut);
+    gBaseWrongTagEffVsEleIdCut->SetPoint(i, cutValueLog, baseWrongTagEffVsEleIdCut);
+    gBaseMistagVsEleIdCut->SetPoint(i, cutValueLog, baseMistagVsEleIdCut);
+    gBaseDilutionVsEleIdCut->SetPoint(i, cutValueLog, baseDilutionVsEleIdCut);
+    gBasePowerVsEleIdCut->SetPoint(i, cutValueLog, basePowerVsEleIdCut);
+    
+    gNRightTagVsBaseEff->SetPoint(i, baseEffVsEleIdCut, rightTagIntegral);
+    gNWrongTagVsBaseEff->SetPoint(i, baseEffVsEleIdCut, wrongTagIntegral);
+    gNNoTagVsBaseEff->SetPoint(i, baseEffVsEleIdCut, nNoTagVsEleIdCut);
+    gBaseEffVsBaseEff->SetPoint(i, baseEffVsEleIdCut, baseEffVsEleIdCut);
+    gBaseRightTagEffVsBaseEff->SetPoint(i, baseEffVsEleIdCut, baseRightTagEffVsEleIdCut);
+    gBaseWrongTagEffVsBaseEff->SetPoint(i, baseEffVsEleIdCut, baseWrongTagEffVsEleIdCut);
+    gBaseMistagVsBaseEff->SetPoint(i, baseEffVsEleIdCut, baseMistagVsEleIdCut);
+    gBaseDilutionVsBaseEff->SetPoint(i, baseEffVsEleIdCut, baseDilutionVsEleIdCut);
+    gBasePowerVsBaseEff->SetPoint(i, baseEffVsEleIdCut, basePowerVsEleIdCut);
+    
+    gBaseWrongTagEffVsBaseRightTagEff->SetPoint(i, baseRightTagEffVsEleIdCut, baseWrongTagEffVsEleIdCut);
   }
+  
+  autoSavedObject = CreateCanvas("cNRightTagVsEleIdCut", 21, 1, false, false, gNRightTagVsEleIdCut);
+  autoSavedObject = CreateCanvas("cNWrongTagVsEleIdCut", 21, 1, false, false,  gNWrongTagVsEleIdCut);
+  autoSavedObject = CreateCanvas("cNNoTagVsEleIdCut", 21, 1, false, false,  gNNoTagVsEleIdCut);
+  autoSavedObject = CreateCanvas("cBaseEffVsEleIdCut", 21, 1, false, false,  gBaseEffVsEleIdCut);
+  autoSavedObject = CreateCanvas("cBaseRightTagEffVsEleIdCut", 21, 1, false, false,  gBaseRightTagEffVsEleIdCut);
+  autoSavedObject = CreateCanvas("cBaseWrongTagEffVsEleIdCut", 21, 1, false, false,  gBaseWrongTagEffVsEleIdCut);
+  autoSavedObject = CreateCanvas("cBaseMistagVsEleIdCut", 21, 1, false, false,  gBaseMistagVsEleIdCut);
+  autoSavedObject = CreateCanvas("cBaseDilutionVsEleIdCut", 21, 1, false, false,  gBaseDilutionVsEleIdCut);
+  autoSavedObject = CreateCanvas("cBasePowerVsEleIdCut", 21, 1, false, false,  gBasePowerVsEleIdCut);
+  
+  autoSavedObject = CreateCanvas("cNRightTagVsBaseEff", 21, 1, false, false,  gNRightTagVsBaseEff);
+  autoSavedObject = CreateCanvas("cNWrongTagVsBaseEff", 21, 1, false, false,  gNWrongTagVsBaseEff);
+  autoSavedObject = CreateCanvas("cNNoTagVsBaseEff", 21, 1, false, false,  gNNoTagVsBaseEff);
+  autoSavedObject = CreateCanvas("cBaseEffVsBaseEff", 21, 1, false, false,  gBaseEffVsBaseEff);
+  autoSavedObject = CreateCanvas("cBaseRightTagEffVsBaseEff", 21, 1, false, false,  gBaseRightTagEffVsBaseEff);
+  autoSavedObject = CreateCanvas("cBaseWrongTagEffVsBaseEff", 21, 1, false, false,  gBaseWrongTagEffVsBaseEff);
+  autoSavedObject = CreateCanvas("cBaseMistagVsBaseEff", 21, 1, false, false,  gBaseMistagVsBaseEff);
+  autoSavedObject = CreateCanvas("cBaseDilutionVsBaseEff", 21, 1, false, false,  gBaseDilutionVsBaseEff);
+  autoSavedObject = CreateCanvas("cBasePowerVsBaseEff", 21, 1, false, false,  gBasePowerVsBaseEff);
+
+  autoSavedObject = CreateCanvas("cBaseWrongTagEffVsBaseRightTagEff", 21, 1, false, false,  gBaseWrongTagEffVsBaseRightTagEff);
   
   std::cout << std::endl;
   std::cout << "Base efficiency = " << 100 * effBase << "%\n";

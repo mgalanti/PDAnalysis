@@ -54,11 +54,67 @@ class EleMVACalibrationProducer:
   TH1D* hMassRightTag;
   TH1D* hMassWrongTag;
   TH1D* hMassNoTag;
+  
+  TGraph* gNRightTagVsEleIdCut;
+  TGraph* gNWrongTagVsEleIdCut;
+  TGraph* gNNoTagVsEleIdCut;
+  TGraph* gBaseEffVsEleIdCut;
+  TGraph* gBaseRightTagEffVsEleIdCut;
+  TGraph* gBaseWrongTagEffVsEleIdCut;
+  TGraph* gBaseMistagVsEleIdCut;
+  TGraph* gBaseDilutionVsEleIdCut;
+  TGraph* gBasePowerVsEleIdCut;
+  
+  TGraph* gNRightTagVsBaseEff;
+  TGraph* gNWrongTagVsBaseEff;
+  TGraph* gNNoTagVsBaseEff;
+  TGraph* gBaseEffVsBaseEff;
+  TGraph* gBaseRightTagEffVsBaseEff;
+  TGraph* gBaseWrongTagEffVsBaseEff;
+  TGraph* gBaseMistagVsBaseEff;
+  TGraph* gBaseDilutionVsBaseEff;
+  TGraph* gBasePowerVsBaseEff;
+
+  TGraph* gBaseWrongTagEffVsBaseRightTagEff;
 
   std::vector<double> vEleIdcuts;
+  std::vector<double> vEleIdcutsLog;
   
   std::vector<TH1D*> vhMassRightTag;
   std::vector<TH1D*> vhMassWrongTag;
+
+  // These are for the baseline cuts used in the calibration job
+  TH1D* hElePt;
+  TH1D* hEleEta;
+  TH1D* hEleDxy;
+  TH1D* hEleExy;
+  TH1D* hEleDz;
+  TH1D* hEleEz;
+  TH1D* hEleIDNIV2Val;
+  TH1D* hEleDRB;
+  TH1D* hElePFIsoScaled;
+  TH1D* hEleConeCleanPt;
+  TH1D* hEleConeCleanPtRel;
+  TH1D* hEleConeCleanDR;
+  TH1D* hEleConeCleanEnergyRatio;
+  TH1D* hEleConeCleanQ;
+// FIXME: These are not implemented yet
+//   // These are for all the EleId cuts defined in vEleIdcuts;
+//   std::vector<TH1D*> vhElePtVsEleIdCut;
+//   std::vector<TH1D*> vhEleEtaVsEleIdCut;
+//   std::vector<TH1D*> vhEleDxyVsEleIdCut;
+//   std::vector<TH1D*> vhEleExyVsEleIdCut;
+//   std::vector<TH1D*> vhEleDzVsEleIdCut;
+//   std::vector<TH1D*> vhEleEzVsEleIdCut;
+//   std::vector<TH1D*> vhEleIDNIV2ValVsEleIdCut;
+//   std::vector<TH1D*> vhEleDRBVsEleIdCut;
+//   std::vector<TH1D*> vhElePFIsoScaledVsEleIdCut;
+//   std::vector<TH1D*> vhEleConeCleanPtVsEleIdCut;
+//   std::vector<TH1D*> vhEleConeCleanPtRelVsEleIdCut;
+//   std::vector<TH1D*> vhEleConeCleanDRVsEleIdCut;
+//   std::vector<TH1D*> vhEleConeCleanEnergyRatioVsEleIdCut;
+//   std::vector<TH1D*> vhEleConeCleanQVsEleIdCut;
+  
   
   std::string treeListName;
   std::string inputTreeName;
@@ -67,6 +123,7 @@ class EleMVACalibrationProducer:
   std::string process;
   std::string dirPath;
   bool useTightSelection;
+  bool weightControlPlots;
   bool isData = false;
   bool useSyst;
   int nBinsCal;
