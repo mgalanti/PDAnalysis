@@ -286,7 +286,7 @@ const int MGGenTools::GetGenLepBuChargeCorrelation(const int iGenLep, int iGenBu
     }
     idBu = genId->at(iGenBu);
   }
-//   std::cout << "iGenBu = " << iGenBu << ", idBu = " << idBu << std::endl;
+//   std::cout << "iGenBu = " << iGenBu << ", idBu = " << idBu << ", chargeBu = " << genCharge->at(iGenBu) << std::endl;
 //   PrintMotherChain(iGenBu);
 //   RecursivePrintMothers(iGenBu);
 //   int iBQuark = RecursiveLookForMotherIds(iGenBu, {5}, false);
