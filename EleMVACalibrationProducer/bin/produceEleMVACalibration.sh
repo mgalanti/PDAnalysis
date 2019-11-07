@@ -237,7 +237,7 @@ fi
 processName=""
 if [[ "$treeListFileWithDir" == *"Bs"* ]]
 then
-  process="BsJpsiPhi"
+  process="BsJPsiPhi"
   if [[ "$treeListFileWithDir" == *"DG0"* ]]
   then
     process+="DG0"
