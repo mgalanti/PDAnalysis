@@ -389,7 +389,7 @@ bool ElectronVariablesPlotter::analyze( int entry, int event_file, int event_tot
   int chargeEle = eleCharge->at(iBestEle);
   
   // If we don't use generator information, then that's it
-  int chargeCorr = chargeEle * chargeB;
+  int chargeCorr = -chargeEle * chargeB;
   
   // Otherwise let's retrieve the charge correlation from gen
   if(use_gen)
@@ -419,9 +419,15 @@ bool ElectronVariablesPlotter::analyze( int entry, int event_file, int event_tot
     else if(processName.compare("BuToJPsiK") == 0)
     {
       int recoChargeCorr = chargeCorr;
-      chargeCorr = GetGenLepBuChargeCorrelation(iMatchedGenEle, iGenB);
+      chargeCorr = 0;
+      if(abs(idMatchedGenEle) == 11)
+      {
+        std::cout << "The electron is real. Calling GetGenLepBuChargeCorrelation\n";  
+        chargeCorr = GetGenLepBuChargeCorrelation(iMatchedGenEle, iGenB);
+      }
       if(!chargeCorr)
       {
+        std::cout << "The electron is not real. Calling GetBuChargeCorrelation\n";  
         chargeCorr = GetBuChargeCorrelation(chargeEle, iGenB);
         // In this case, correlation value goes to the +/-2 bins
         chargeCorr*=2;
@@ -429,6 +435,7 @@ bool ElectronVariablesPlotter::analyze( int entry, int event_file, int event_tot
       if(recoChargeCorr * chargeCorr < 0)
       {
         std::cout << "W A R N I N G ! Bu-ele charge correlation gives different sign if retrieved from gen or from reco!\n";
+        
       }
     }
   }
