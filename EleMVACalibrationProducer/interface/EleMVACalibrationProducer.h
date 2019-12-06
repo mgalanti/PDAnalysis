@@ -44,6 +44,9 @@ class EleMVACalibrationProducer:
   std::string sampleName;
   
   TH1D* hNGenB;
+  
+  TH2D* hIsTagRightVsTagTruth;
+  
   std::vector<TH1D*>* vhMassCalRightTag;
   std::vector<TH1D*>* vhMassCalWrongTag;
   
@@ -115,6 +118,12 @@ class EleMVACalibrationProducer:
 //   std::vector<TH1D*> vhEleConeCleanEnergyRatioVsEleIdCut;
 //   std::vector<TH1D*> vhEleConeCleanQVsEleIdCut;
   
+  std::vector<TH1D*> vhCalParsRightTagVsMvaScore;
+  std::vector<TH1D*> vhCalParsWrongTagVsMvaScore;  
+  TH1D* hCalFitStatusRightTagVsMvaScore;
+  TH1D* hCalFitStatusWrongTagVsMvaScore;
+  TH1D* hCalFitChi2NDOFRightTagVsMvaScore;
+  TH1D* hCalFitChi2NDOFWrongTagVsMvaScore;
   
   std::string treeListName;
   std::string inputTreeName;
@@ -129,7 +138,8 @@ class EleMVACalibrationProducer:
   int nBinsCal;
   int nBinsMva;
   double minMass, maxMass, x1MassSB, x2MassSB;
-  double meanTotMass, sigma1TotMass, sigma2TotMass;
+  double meanTotMass, sigma1TotMass, sigma2TotMass, fracTotMass;
+  double erfcWidthTotMass, erfcShiftTotMass;
   int nMassBins = 50;
   bool writeOutput = true;
   double systematics2017 = 0.;
@@ -154,6 +164,8 @@ class EleMVACalibrationProducer:
   std::vector<double> vWCalc;
   std::vector<double> vWCalcLowEdge;
   std::vector<double> vWCalcHighEdge;
+  
+  TFitResultPtr fitResult; // Stores the result of the last fit performed
   
   
   EleMVACalibrationProducer           ( const EleMVACalibrationProducer& a );

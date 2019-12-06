@@ -140,6 +140,8 @@ void EleMVACalibrationProducer::beginJob()
     }
   }
   
+  gSystem->mkdir(dirPath.c_str());
+  
   if(verbose)
   {
     std::cout << "EleMVACalibrationProducer::beginJob() - FILES OPENED.\n";
@@ -213,6 +215,7 @@ void EleMVACalibrationProducer::beginJob()
 void EleMVACalibrationProducer::book()
 {
   autoSavedObject = hNGenB = new TH1D( "hNGenB", "hNGenB", 10, -0.5, 9.5 );
+  autoSavedObject = hIsTagRightVsTagTruth = Create2DHistogram<TH2D>("hIsTagRightVsTagTruth", "IsTagRight vs. tag truth", 5, -2.5, 2.5, 5, -2.5, 2.5, "TagTruth", "IsTagRight");
   
   std::vector<double> vMvaScoreBinEdges;
   for(int i = 0; i <= nBinsCal; i++)
@@ -264,6 +267,8 @@ void EleMVACalibrationProducer::book()
     hTemp = Create1DHistogram<TH1D>(hName.c_str(), hTitle.c_str(), nMassBins, minMass, maxMass, "M [GeV]", "N. events");
     vhMassWrongTag.push_back(hTemp);
   }
+  autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(&vhMassRightTag);
+  autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(&vhMassWrongTag);
 
   autoSavedObject = hElePt                      = Create1DHistogram<TH1D>("hElePt",                   "electron p_{T}",                    100,   0. ,  50. , "p_{T} [GeV]",      "N. electrons");
   autoSavedObject = hEleEta                     = Create1DHistogram<TH1D>("hEleEta",                  "electron #eta",                     100,  -3. ,   3. , "#eta",              "N. electrons");
@@ -290,7 +295,12 @@ void EleMVACalibrationProducer::book()
   autoSavedObject = gBaseDilutionVsEleIdCut = CreateGraph<TGraph>("gBaseDilutionVsEleIdCut", "Base dilution vs. eleId cut", "EleID cut", "Base dilution", vEleIdcutsLog.size());
   autoSavedObject = gBasePowerVsEleIdCut = CreateGraph<TGraph>("gBasePowerVsEleIdCut", "Base power vs. eleId cut", "EleID cut", "Base power", vEleIdcutsLog.size());
 
-
+  autoSavedObject = hCalFitStatusRightTagVsMvaScore = Create1DHistogram<TH1D>("hCalFitStatusRightTagVsMvaScore", "Status of right tag calibration fits", nBinsCal, 0., 1., "mistag calc.", "Fit status");
+  autoSavedObject = hCalFitStatusWrongTagVsMvaScore = Create1DHistogram<TH1D>("hCalFitStatusWrongTagVsMvaScore", "Status of wrong tag calibration fits", nBinsCal, 0., 1., "mistag calc.", "Fit status");
+  
+  autoSavedObject = hCalFitChi2NDOFRightTagVsMvaScore = Create1DHistogram<TH1D>("hCalFitChi2NDOFRightTagVsMvaScore", "#chi^2/NDOF of right tag calibration fits", nBinsCal, 0., 1., "mistag calc.", "#chi^2/NDOF");
+  autoSavedObject = hCalFitChi2NDOFWrongTagVsMvaScore = Create1DHistogram<TH1D>("hCalFitChi2NDOFWrongTagVsMvaScore", "#chi^2/NDOF of wrong tag calibration fits", nBinsCal, 0., 1., "mistag calc.", "#chi^2/NDOF");
+    
   autoSavedObject = gNRightTagVsBaseEff = CreateGraph<TGraph>("gNRightTagVsBaseEff", "N. of right tags vs. base eff.", "Base eff.", "N. of right tags", vEleIdcutsLog.size());
   autoSavedObject = gNWrongTagVsBaseEff = CreateGraph<TGraph>("gNWrongTagVsBaseEff", "N. of wrong tags vs. base eff.", "Base eff.", "N. of wrong tags", vEleIdcutsLog.size());
   autoSavedObject = gNNoTagVsBaseEff = CreateGraph<TGraph>("gNNoTagVsBaseEff", "N. of no tags vs. base eff.", "Base eff.", "N. of no tags", vEleIdcutsLog.size());
@@ -401,9 +411,16 @@ bool EleMVACalibrationProducer::analyze(int entry, int event_file, int event_tot
   
   int evtTag = -1 * eleCharge;
   bool isTagRight = TMath::Sign(1, BidGen) == evtTag;
+  if(tagTruth)
+    tagTruth = 0;
+  else
+    tagTruth = 1;
+
+  hIsTagRightVsTagTruth->Fill(tagTruth, isTagRight);
   if(isTagRight != tagTruth)
   {
-    std::cout << "W A R N I N G! EleMVACalibrationProducer::analyze(): isTagRight != tagTruth!\n";
+    std::cout << "E R R O R! EleMVACalibrationProducer::analyze(): isTagRight != tagTruth!\n";
+//     exit(1);
   }
   
   for(int j = 0; j < nBinsCal; j++)
@@ -492,6 +509,7 @@ void EleMVACalibrationProducer::endJob()
   
   if(isData)
   { 
+    std::cout << "Real data: count events with fit...\n";
     //for data fit mass
     nTot = CountEventsWithFit(hMassTot).first; //Fit of the total histogram need to be called first
     nRightTag = CountEventsWithFit(hMassRightTag).first;
@@ -553,6 +571,8 @@ void EleMVACalibrationProducer::endJob()
     
     gBaseWrongTagEffVsBaseRightTagEff->SetPoint(i, baseRightTagEffVsEleIdCut, baseWrongTagEffVsEleIdCut);
   }
+  
+  autoSavedObject = CreateCanvas("cIsTagRightVsTagTruth", "colz", false, false, false, hIsTagRightVsTagTruth);
   
   autoSavedObject = CreateCanvas("cNRightTagVsEleIdCut", 21, 1, false, false, gNRightTagVsEleIdCut);
   autoSavedObject = CreateCanvas("cNWrongTagVsEleIdCut", 21, 1, false, false,  gNWrongTagVsEleIdCut);
@@ -638,10 +658,40 @@ void EleMVACalibrationProducer::endJob()
       if(calRightTag.first >= minEntries)
       {
         calRightTag = CountEventsWithFit(vhMassCalRightTag->at(j));
+        hCalFitStatusRightTagVsMvaScore->SetBinContent(j, fitResult->Status());
+        hCalFitChi2NDOFRightTagVsMvaScore->SetBinContent(j, fitResult->Chi2() / fitResult->Ndf());
+        int nPars = fitResult->NTotalParameters();
+        for(auto iPar = 0; iPar < nPars; iPar++)
+        {
+          std::string parName = fitResult->ParName(iPar);
+          for(unsigned int iHisto = 0; iHisto < vhCalParsRightTagVsMvaScore.size(); iHisto++)
+          {
+            if(strstr(vhCalParsRightTagVsMvaScore[iHisto]->GetName(), parName.c_str()) != 0)
+            {
+              vhCalParsRightTagVsMvaScore[iHisto]->SetBinContent(j, fitResult->GetParams()[iPar]);
+              vhCalParsRightTagVsMvaScore[iHisto]->SetBinError(j, fitResult->GetErrors()[iPar]);
+            }
+          }
+        }
       }
       if(calWrongTag.first >= minEntries)
       {
         calWrongTag = CountEventsWithFit(vhMassCalWrongTag->at(j));
+        hCalFitStatusWrongTagVsMvaScore->SetBinContent(j, fitResult->Status());
+        hCalFitChi2NDOFWrongTagVsMvaScore->SetBinContent(j, fitResult->Chi2() / fitResult->Ndf());
+        int nPars = fitResult->NTotalParameters();
+        for(auto iPar = 0; iPar < nPars; iPar++)
+        {
+          std::string parName = fitResult->ParName(iPar);
+          for(unsigned int iHisto = 0; iHisto < vhCalParsWrongTagVsMvaScore.size(); iHisto++)
+          {
+            if(strstr(vhCalParsWrongTagVsMvaScore[iHisto]->GetName(), parName.c_str()) != 0)
+            {
+              vhCalParsWrongTagVsMvaScore[iHisto]->SetBinContent(j, fitResult->GetParams()[iPar]);
+              vhCalParsWrongTagVsMvaScore[iHisto]->SetBinError(j, fitResult->GetErrors()[iPar]);
+            }
+          }
+        }
       }
       if(calRightTag.second < 1)
       {
@@ -690,6 +740,10 @@ void EleMVACalibrationProducer::endJob()
     std::cout << " -- nRightTag " << (int)calRightTag.first << " +- " << (int)calRightTag.second << " -- nWrongTag " << (int)calWrongTag.first << " +- " << (int)calWrongTag.second;
     std::cout << " -- wMeas " << wMeas <<" +- " << wMeasErr << std::endl << std::endl;
   }
+  
+  autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(&vhCalParsRightTagVsMvaScore);
+  autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(&vhCalParsWrongTagVsMvaScore);
+
   
   totalPBinned /= (double)nTot;
   
@@ -817,12 +871,20 @@ void EleMVACalibrationProducer::endJob()
 
 std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *hist)
 {
+  std::string name = hist->GetName();
   std::string title = hist->GetTitle();
   // cout<<" ---  now fitting "<<title<<endl;
+  std::cout << "EleMVACalibrationProducer::CountEventsWithFit(\"" << name << "\")...\n";
   
-  bool isTot = title == "hMassTot" ? true : false;
-  bool lowStat = hist->GetEntries() <= 250 ? true : false;
-  bool highStat = hist->GetEntries() > 1500 ? true : false;
+  double nEntries = hist->GetEntries();
+  
+  bool isTot = name == "hMassTot" ? true : false;
+  bool lowStat = nEntries <= 0 ? true : false;
+  bool highStat = nEntries > 0 ? true : false;
+  
+  std::cout << "isTot: " << (isTot?"true":"false") << std::endl;
+  std::cout << "lowStat: " << (lowStat?"true":"false") << std::endl;
+  std::cout << "highStat: " << (highStat?"true":"false") << std::endl;
   
   TRandom3 *r3 = new TRandom3();
   double mean = 5.3663;
@@ -830,47 +892,131 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   if(process.find("BsJPsiPhi") != std::string::npos)
   {
     mean = 5.3663;
+    std::cout << "Process is BsJPsiPhi. mean = " << mean << std::endl;
   }
   if(process.find("BuJPsiK") != std::string::npos)
   {
     mean = 5.2793;
+    std::cout << "Process is BuJPsiK. mean = " << mean << std::endl;
   }
   if(process.find("BdJPsiKx") != std::string::npos)
   {
     mean = 5.2796;
+    std::cout << "Process is BdJPsiKx. mean = " << mean << std::endl;
   }
   
   TString sgnDef = "[1]*TMath::Gaus(x, [0], [2], true)";
-  sgnDef +=       "+[3]*TMath::Gaus(x, [0], [4], true)";
+  sgnDef +=       "+[3]*[1]*TMath::Gaus(x, [0], [4], true)";
   
   TString bkgDef = "[5]";
   if(!lowStat)  bkgDef += "+[6]*x";
   if(highStat) bkgDef += "+[7]*TMath::Erfc([8]*(x-[9]))";
   
   bkgDef = "(" + bkgDef + ">= 0 ? " + bkgDef + " : 0 )";
+  bkgDef = "(" + bkgDef + ">= 0 ? " + bkgDef + " : 0 )";
   
   TString funcDef = sgnDef + "+" + bkgDef;
   
+  std::cout << "Function used for fit: \"" << funcDef << "\"\n";
+  
+  
+  std::cout << "Fit limits: minMass = " << minMass << ", maxMass = " << maxMass << std::endl;
+  
   TF1 *func = new TF1("func", funcDef, minMass, maxMass);
+  TF1 *sgn = new TF1("sgn", sgnDef, minMass, maxMass);
+  TF1 *bkg = new TF1("bkg", bkgDef, minMass, maxMass);
   
   func->SetParName(0, "mean");
-  func->SetParName(1, "A1");
+  func->SetParName(1, "norm1");
   func->SetParName(2, "sigma1");
-  func->SetParName(3, "A2");
+  func->SetParName(3, "frac");
   func->SetParName(4, "sigma2");
+  
+  sgn->SetParName(0, "mean");
+  sgn->SetParName(1, "norm1");
+  sgn->SetParName(2, "sigma1");
+  sgn->SetParName(3, "frac");
+  sgn->SetParName(4, "sigma2");
+  
+  func->SetParName(5, "bkgConst");
+  bkg->SetParName(5, "bkgConst");
+  
+  if(!lowStat)
+  {
+    func->SetParName(6, "bkgLinSlope");
+    bkg->SetParName(6, "bkgLinSlope");
+  }
+
+  if(highStat)
+  {
+    func->SetParName(7, "erfcNorm");
+    func->SetParName(8, "erfcWidth");
+    func->SetParName(9, "erfcShift");
+    
+    bkg->SetParName(7, "erfcNorm");
+    bkg->SetParName(8, "erfcWidth");
+    bkg->SetParName(9, "erfcShift");
+  }
+  
+  
+  // Book fit stability histograms on-the-fly
+  int nPars = func->GetNpar();
+  
+  for(auto iPar = 0; iPar < nPars; iPar++)
+  {
+    std::string parName = func->GetParName(iPar);
+    bool found = false;
+    for(unsigned int iHisto = 0; iHisto < vhCalParsRightTagVsMvaScore.size(); iHisto++)
+    {
+      if(strstr(vhCalParsRightTagVsMvaScore[iHisto]->GetName(), parName.c_str()) != 0)
+      {
+        found = true;
+        break;
+      }
+    }
+    if(!found)
+    {
+//       if(verbose)
+        std::cout << "I N F O : Histogram for parameter " << parName << " not found. Creating it...\n";
+      std::string histoName = "h" + parName + "RightTagVsMvaScore";
+      std::string histoTitle = parName + " right tag vs. Mva score";
+      TH1D* hTemp = Create1DHistogram<TH1D>(histoName.c_str(), histoTitle.c_str(), nBinsCal, 0., 1., "mistag calc.", parName.c_str());
+      vhCalParsRightTagVsMvaScore.push_back(hTemp);
+      
+      histoName = "h" + parName + "WrongTagVsMvaScore";
+      histoTitle = parName + " wrong tag vs. Mva score";
+      hTemp = Create1DHistogram<TH1D>(histoName.c_str(), histoTitle.c_str(), nBinsCal, 0., 1., "mistag calc.", parName.c_str());
+      vhCalParsWrongTagVsMvaScore.push_back(hTemp);
+    }
+  }
   
   //SIGNAL
   double limit = hist->GetEntries() * hist->GetBinWidth(1);
+
+  double rnd1 = r3->Gaus(1.,0.01);
+  double rnd3 = r3->Gaus(1.,0.01);
+  double rnd2 = r3->Gaus(1.,0.0001);
+  double rnd4 = r3->Gaus(1.,0.001);
   
   func->SetParameter(0, mean);
-  func->SetParameter(1, limit / 2 * r3->Gaus(1.,0.01));
-  func->SetParameter(3, limit / 2 * r3->Gaus(1.,0.01));
-  func->SetParameter(2, sigma * r3->Gaus(1.,0.01));
-  func->SetParameter(4, sigma * r3->Gaus(1.,0.01));
-  func->SetParLimits(1, 0, 2 * limit);
-  func->SetParLimits(3, 0, 2 * limit);
-  func->SetParLimits(2, 0.001, 0.1);
-  func->SetParLimits(4, 0.001, 0.1);
+  func->SetParameter(1, limit * rnd1);
+  func->SetParameter(3, 1 * rnd3);
+  func->SetParameter(2, sigma * rnd2);
+  func->SetParameter(4, sigma * rnd4);
+  func->SetParLimits(1, 0, 4 * limit);
+  func->SetParLimits(3, 0, 5);
+  func->SetParLimits(2, 0.0001, 0.5);
+  func->SetParLimits(4, 0.0001, 0.5);
+
+  sgn->SetParameter(0, mean);
+  sgn->SetParameter(1, limit * rnd1);
+  sgn->SetParameter(3, 1 * rnd3);
+  sgn->SetParameter(2, sigma * rnd2);
+  sgn->SetParameter(4, sigma * rnd4);
+  sgn->SetParLimits(1, 0, 4 * limit);
+  sgn->SetParLimits(3, 0, 5);
+  sgn->SetParLimits(2, 0.0001, 0.5);
+  sgn->SetParLimits(4, 0.0001, 0.5);
   
   //BKG    
   TAxis *xaxis = hist->GetXaxis();
@@ -880,68 +1026,140 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   double y1 = hist->GetBinContent(binx1);
   double x2 = hist->GetBinCenter(binx2);
   double x1 = hist->GetBinCenter(binx1);
+  std::cout << "x1 = " << x1 << ", y1 = " << y1 << std::endl;
+  std::cout << "x2 = " << x2 << ", y2 = " << y2 << std::endl;
   double m = (y2 - y1) / (x2 - x1);
+  std::cout << "Starting value for m = " << m << std::endl;
   if(m > 0)
   {
+    std::cout << "Starting value for m is positive. Setting m = -1. \n";
+    m = -1;
+  }
+  if(nEntries < 100)
+  {
+    std::cout << "Histogram has < 100 entries. Setting m = -1. \n";
     m = -1;
   }
   
-  func->SetParameter(5, 10);
-  func->SetParameter(6, m);
+  func->SetParameter(6, m);  
+  bkg->SetParameter(6, m);
   
   if(lowStat)
   {
-    func->SetParameter(5, 1);
+    func->SetParameter(5, nEntries / 50.);
+    bkg->SetParameter(5, nEntries / 50.);
+  }
+  else
+  {
+    func->SetParameter(5, nEntries / 50. - m * x2);
+    bkg->SetParameter(5, nEntries / 50. - m * x2);  
+  }
+
+  if(lowStat)
+  {
+//     func->SetParameter(5, 1);
     func->SetParLimits(5, 0, 1e3);
+    
+    bkg->SetParLimits(5, 0, 1e3);    
+  }
+  if(!lowStat)
+  {
+    func->SetParLimits(6, -1e5, 0);
+    
+    bkg->SetParLimits(6, -1e5, 0);
   }
   
   if(highStat)
   {
-    func->SetParameter(7, hist->GetBinContent(2) / 2);
+    func->SetParameter(7, hist->GetBinContent(2) / 2.);
     func->SetParameter(8, 10);
     func->SetParameter(9, 5);
-    func->SetParLimits(7, 0, hist->GetBinContent(2) * 1.5);
+    func->SetParLimits(7, 0, hist->GetBinContent(2) * 2.);
+
+    bkg->SetParameter(7, hist->GetBinContent(2) / 2.);
+    bkg->SetParameter(8, 10);
+    bkg->SetParameter(9, 5);
+    bkg->SetParLimits(7, 0, hist->GetBinContent(2) * 2.);
   }
   
   //FIXING PARAMETERS
   if(!isTot)
   {
+    std::cout << "Fixing parameters to fit to tot statistics.\n";
     func->FixParameter(0, meanTotMass);
     func->FixParameter(2, sigma1TotMass);
     func->FixParameter(4, sigma2TotMass);
+    func->FixParameter(3, fracTotMass);
+    
+    func->FixParameter(8, erfcWidthTotMass);
+    func->FixParameter(9, erfcShiftTotMass);
+    
+    sgn->FixParameter(0, meanTotMass);
+    sgn->FixParameter(2, sigma1TotMass);
+    sgn->FixParameter(4, sigma2TotMass);
+    sgn->FixParameter(3, fracTotMass);
+    
+    bkg->FixParameter(8, erfcWidthTotMass);
+    bkg->FixParameter(9, erfcShiftTotMass);    
   }
   
   if(process.find("MC") != std::string::npos)
   {
+    std::cout << "MC: Fixing more parameters...\n";
     func->FixParameter(5, 0);
     func->FixParameter(6, 0);
     func->FixParameter(7, 0);
     func->FixParameter(8, 0);
     func->FixParameter(9, 0);
+    
+    bkg->FixParameter(5, 0);
+    bkg->FixParameter(6, 0);
+    bkg->FixParameter(7, 0);
+    bkg->FixParameter(8, 0);
+    bkg->FixParameter(9, 0);
   }
   
   func->SetNpx(2000);
+  sgn->SetNpx(2000);
+  bkg->SetNpx(2000);
+  
+  std::cout << "Before fit, background values:\n";
+  for(auto x = minMass; x < maxMass; x+=hist->GetBinWidth(1))
+  {
+    std::cout << "(" << x << ", " << (*bkg)(x) << ")" << " ";
+  }
+  std::cout << std::endl;
   
   auto c5 = new TCanvas();
   hist->SetMarkerStyle(20);
   hist->SetMarkerSize(.75);
-  TFitResultPtr r = hist->Fit("func", "LRSQ");
-  int fitstatus = r;
-  int covstatus = r->CovMatrixStatus();
+  fitResult = hist->Fit("func", "LRS");
+  int fitstatus = fitResult;
+  int covstatus = fitResult->CovMatrixStatus();
   if(fitstatus != 0)
   {
-    std::cout << "STATUS of " << title << " --> " << fitstatus << std::endl;
+    std::cout << "STATUS of " << name << " --> " << fitstatus << std::endl;
   }
   if(covstatus != 3)
   {
-    std::cout << "COV STATUS of " << title << " --> " << covstatus << std::endl;
+    std::cout << "COV STATUS of " << name << " --> " << covstatus << std::endl;
   }
   TF1 *fit = hist->GetFunction("func");
   if(isTot)
   {
+    std::cout << "Tot fit. Saving parameters...\n";
     meanTotMass = fit->GetParameter("mean");
     sigma1TotMass = fit->GetParameter("sigma1");
     sigma2TotMass = fit->GetParameter("sigma2");
+    fracTotMass = fit->GetParameter("frac");
+    erfcWidthTotMass = fit->GetParameter("erfcWidth");
+    erfcShiftTotMass = fit->GetParameter("erfcShift");
+    
+    std::cout << "meanTotMass = " << meanTotMass << std::endl;
+    std::cout << "sigma1TotMass = " << sigma1TotMass << std::endl;
+    std::cout << "sigma2TotMass = " << sigma2TotMass << std::endl;
+    std::cout << "erfcWidthTotMass = " << erfcWidthTotMass << std::endl;
+    std::cout << "erfcShiftTotMass = " << erfcShiftTotMass << std::endl;
   }
   
   hist->Draw("PE");
@@ -953,8 +1171,8 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   TF1 *f4;
   TF1 *f5 = new TF1("f5", "[0]+[1]*x", minMass, maxMass);
   
-  f1->SetParameters(fit->GetParameter("A1"), fit->GetParameter("mean"), fit->GetParameter("sigma1"));
-  f2->SetParameters(fit->GetParameter("A2"), fit->GetParameter("mean"), fit->GetParameter("sigma2"));
+  f1->SetParameters(fit->GetParameter("norm1"), fit->GetParameter("mean"), fit->GetParameter("sigma1"));
+  f2->SetParameters(fit->GetParameter("norm1")*fit->GetParameter("frac"), fit->GetParameter("mean"), fit->GetParameter("sigma2"));
   
   if(lowStat)
   {
@@ -1002,15 +1220,23 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   
   if(writeOutput)
   {
-    c5->Print((dirPath + "/" + title + ".pdf").c_str());
+    c5->Print((dirPath + "/" + name + ".pdf").c_str());
   }
   
   double nEvt = fit->GetParameter(1);
-  nEvt += fit->GetParameter(3);
+  nEvt += fit->GetParameter(3)*fit->GetParameter(1);
+  std::cout << "nEvt = " << fit->GetParameter(1) << " + (" << fit->GetParameter(3) << " * " << fit->GetParameter(1) << ") = " << nEvt << std::endl;
   nEvt /= hist->GetBinWidth(1);
+  std::cout << "After division by bin width: nEvt = " << nEvt << std::endl;
   
-  TMatrixDSym cov = r->GetCovarianceMatrix();
-  double errN = sqrt(cov(1,1) + cov(3,3) + 2 * cov(1,3)) / hist->GetBinWidth(1);
-  
+  TMatrixDSym cov = fitResult->GetCovarianceMatrix();
+//   // This is for N = P1 + P3
+//   double errN = sqrt(cov(1,1) + cov(3,3) + 2 * cov(1,3)) / hist->GetBinWidth(1);
+  // This is for N = P1 + P1*P3
+  double errN = sqrt( (1+fit->GetParameter(3)) * (1+fit->GetParameter(3)) * cov(1,1) +        // |d(N)/d(P1)|^2 * cov(11)
+                      fit->GetParameter(1) * fit->GetParameter(1) * cov(3,3) +                // |d(N)/d(P3)|^2 * cov(33)
+                      2 * fabs((1+fit->GetParameter(3)) * fit->GetParameter(1)) * cov(1,3) )  // 2*|d(N)/d(P1)*d(N)/d(P3)| * cov(33)
+                / hist->GetBinWidth(1);
+  std::cout << "errN = " << errN << std::endl;  
   return std::make_pair(nEvt, errN);  
 }
