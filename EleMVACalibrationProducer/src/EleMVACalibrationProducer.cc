@@ -58,6 +58,21 @@ void EleMVACalibrationProducer::beginJob()
   getUserParameter("eleDRBWP", eleDRBWP);
   getUserParameter("mvaValueMinCutOff", mvaValueMinCutOff);
   getUserParameter("mvaValueMaxCutOff", mvaValueMaxCutOff);
+  getUserParameter("fixToTot", fixToTot);
+  getUserParameter("fixToAllTag", fixToAllTag);
+  
+  if(fixToTot && fixToAllTag)
+  {
+    std::cout << "E R R O R ! Both \"fixToTot\" and \"fixToAllTag\" parameters are set to true!\n";
+    std::cout << "            Please fix the configuration so that one and only one of the two is true.\n";
+    exit(1);
+  }
+  if(!fixToTot && !fixToAllTag)
+  {
+    std::cout << "E R R O R ! Both \"fixToTot\" and \"fixToAllTag\" parameters are set to false!\n";
+    std::cout << "            Please fix the configuration so that one and only one of the two is true.\n";
+    exit(1);
+  }
   
 //   sampleName = inputFileName;
   
@@ -248,6 +263,7 @@ void EleMVACalibrationProducer::book()
   autoSavedObject = hMvaRightTag  = Create1DHistogram<TH1D>("hMvaRightTag",  "mva value - right tag events", nBinsMva, 0.0, 1.0, "MVA output", "N. events");
   autoSavedObject = hMvaWrongTag  = Create1DHistogram<TH1D>("hMvaWrongTag",  "mva value - wrong tag events", nBinsMva, 0.0, 1.0, "MVA output", "N. events");
   autoSavedObject = hMassTot      = Create1DHistogram<TH1D>("hMassTot",      "B mass - all events", nMassBins, minMass, maxMass, "M [GeV]", "N. events");
+  autoSavedObject = hMassAllTag   = Create1DHistogram<TH1D>("hMassAllTag",   "B mass - all tagged events", nMassBins, minMass, maxMass, "M [GeV]", "N. events");
   autoSavedObject = hMassRightTag = Create1DHistogram<TH1D>("hMassRightTag", "B mass - right tag events", nMassBins, minMass, maxMass, "M [GeV]", "N. events");
   autoSavedObject = hMassWrongTag = Create1DHistogram<TH1D>("hMassWrongTag", "B mass - wrong tag events", nMassBins, minMass, maxMass, "M [GeV]", "N. events");
   autoSavedObject = hMassNoTag    = Create1DHistogram<TH1D>("hMassNoTag",    "B mass - no tag events", nMassBins, minMass, maxMass, "M [GeV]", "N. events");
@@ -449,6 +465,8 @@ bool EleMVACalibrationProducer::analyze(int entry, int event_file, int event_tot
 //       break;
 //     }
 //   }
+
+  hMassAllTag->Fill(BMass, evtWeight);
   
   if(isTagRight)
   {
@@ -502,7 +520,8 @@ bool EleMVACalibrationProducer::analyze(int entry, int event_file, int event_tot
 void EleMVACalibrationProducer::endJob()
 {
   // PERFORMANCE OUTPUT
-  double nRightTag = hMassRightTag->Integral(); //Integral() takes in consideration event weights
+  double nAllTag = hMassAllTag->Integral(); //Integral() takes in consideration event weights
+  double nRightTag = hMassRightTag->Integral();
   double nWrongTag = hMassWrongTag->Integral();
   double nNoTag = hMassNoTag->Integral();
   double nTot = hMassTot->Integral();
@@ -512,6 +531,7 @@ void EleMVACalibrationProducer::endJob()
     std::cout << "Real data: count events with fit...\n";
     //for data fit mass
     nTot = CountEventsWithFit(hMassTot).first; //Fit of the total histogram need to be called first
+    nAllTag = CountEventsWithFit(hMassAllTag).first; //Fit of the all tag histogram need to be called second
     nRightTag = CountEventsWithFit(hMassRightTag).first;
     nWrongTag = CountEventsWithFit(hMassWrongTag).first;
     nNoTag = CountEventsWithFit(hMassNoTag).first;
@@ -522,6 +542,7 @@ void EleMVACalibrationProducer::endJob()
   double pBase = effBase * pow(1. - 2. * wBase, 2);
   
   std::cout << "nTot = " << nTot << std::endl;
+  std::cout << "nAllTag = " << nAllTag << std::endl;
   std::cout << "nRightTag = " << nRightTag << std::endl;
   std::cout << "nWrongTag = " << nWrongTag << std::endl;
   std::cout << "nNoTag = " << nNoTag << std::endl;
@@ -572,7 +593,45 @@ void EleMVACalibrationProducer::endJob()
     gBaseWrongTagEffVsBaseRightTagEff->SetPoint(i, baseRightTagEffVsEleIdCut, baseWrongTagEffVsEleIdCut);
   }
   
+  autoSavedObject = CreateCanvas("cNGenB", 0, 21, 1, false, false, hNGenB);
+
   autoSavedObject = CreateCanvas("cIsTagRightVsTagTruth", "colz", false, false, false, hIsTagRightVsTagTruth);
+  
+  std::vector<TCanvas*>* vcMassCalRightTag = CreateCanvases(0, 21, 1, false, false, *vhMassCalRightTag);
+  autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(vcMassCalRightTag);
+  
+  std::vector<TCanvas*>* vcMassCalWrongTag = CreateCanvases(0, 21, 1, false, false, *vhMassCalWrongTag);
+  autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(vcMassCalWrongTag);
+  
+  autoSavedObject = CreateCanvas("cMva", 0, 21, 1, false, false, hMva);
+  autoSavedObject = CreateCanvas("cMvaRightTag", 0, 21, 1, false, false, hMvaRightTag);
+  autoSavedObject = CreateCanvas("cMvaWrongTag", 0, 21, 1, false, false, hMvaWrongTag);
+  autoSavedObject = CreateCanvas("cMassTot", 0, 21, 1, false, false, hMassTot);
+  autoSavedObject = CreateCanvas("cMassAllTag", 0, 21, 1, false, false, hMassAllTag);
+  autoSavedObject = CreateCanvas("cMassRightTag", 0, 21, 1, false, false, hMassRightTag);
+  autoSavedObject = CreateCanvas("cMassWrongTag", 0, 21, 1, false, false, hMassWrongTag);
+  autoSavedObject = CreateCanvas("cMassNoTag", 0, 21, 1, false, false, hMassNoTag);
+  
+  std::vector<TCanvas*>* vcMassRightTag = CreateCanvases(0, 21, 1, false, false, vhMassRightTag);
+  autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(vcMassRightTag);
+  
+  std::vector<TCanvas*>* vcMassWrongTag = CreateCanvases(0, 21, 1, false, false, vhMassWrongTag);
+  autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(vcMassWrongTag);
+  
+  autoSavedObject = CreateCanvas("cElePt", 0, 21, 1, false, true, hElePt);
+  autoSavedObject = CreateCanvas("cEleEta", 0, 21, 1, false, false, hEleEta);
+  autoSavedObject = CreateCanvas("cEleDxy", 0, 21, 1, false, true, hEleDxy);
+  autoSavedObject = CreateCanvas("cEleExy", 0, 21, 1, false, true, hEleExy);
+  autoSavedObject = CreateCanvas("cEleDz", 0, 21, 1, false, true, hEleDz);
+  autoSavedObject = CreateCanvas("cEleEz", 0, 21, 1, false, true, hEleEz);
+  autoSavedObject = CreateCanvas("cEleIDNIV2Val", 0, 21, 1, false, true, hEleIDNIV2Val);
+  autoSavedObject = CreateCanvas("cEleDRB", 0, 21, 1, false, false, hEleDRB);
+  autoSavedObject = CreateCanvas("cElePFIsoScaled", 0, 21, 1, false, true, hElePFIsoScaled);
+  autoSavedObject = CreateCanvas("cEleConeCleanPt", 0, 21, 1, false, true, hEleConeCleanPt);
+  autoSavedObject = CreateCanvas("cEleConeCleanPtRel", 0, 21, 1, false, true, hEleConeCleanPtRel);
+  autoSavedObject = CreateCanvas("cEleConeCleanDR", 0, 21, 1, false, false, hEleConeCleanDR);
+  autoSavedObject = CreateCanvas("cEleConeCleanEnergyRatio", 0, 21, 1, false, false, hEleConeCleanEnergyRatio);
+  autoSavedObject = CreateCanvas("cEleConeCleanQ", 0, 21, 1, false, false, hEleConeCleanQ);
   
   autoSavedObject = CreateCanvas("cNRightTagVsEleIdCut", 21, 1, false, false, gNRightTagVsEleIdCut);
   autoSavedObject = CreateCanvas("cNWrongTagVsEleIdCut", 21, 1, false, false,  gNWrongTagVsEleIdCut);
@@ -583,6 +642,12 @@ void EleMVACalibrationProducer::endJob()
   autoSavedObject = CreateCanvas("cBaseMistagVsEleIdCut", 21, 1, false, false,  gBaseMistagVsEleIdCut);
   autoSavedObject = CreateCanvas("cBaseDilutionVsEleIdCut", 21, 1, false, false,  gBaseDilutionVsEleIdCut);
   autoSavedObject = CreateCanvas("cBasePowerVsEleIdCut", 21, 1, false, false,  gBasePowerVsEleIdCut);
+  
+  autoSavedObject = CreateCanvas("cCalFitStatusRightTagVsMvaScore", 0, 21, 1, false, false, hCalFitStatusRightTagVsMvaScore);
+  autoSavedObject = CreateCanvas("cCalFitStatusWrongTagVsMvaScore", 0, 21, 1, false, false, hCalFitStatusWrongTagVsMvaScore);
+  
+  autoSavedObject = CreateCanvas("cCalFitChi2NDOFRightTagVsMvaScore", 0, 21, 1, false, false, hCalFitChi2NDOFRightTagVsMvaScore);
+  autoSavedObject = CreateCanvas("cCalFitChi2NDOFWrongTagVsMvaScore", 0, 21, 1, false, false, hCalFitChi2NDOFWrongTagVsMvaScore);
   
   autoSavedObject = CreateCanvas("cNRightTagVsBaseEff", 21, 1, false, false,  gNRightTagVsBaseEff);
   autoSavedObject = CreateCanvas("cNWrongTagVsBaseEff", 21, 1, false, false,  gNWrongTagVsBaseEff);
@@ -865,6 +930,12 @@ void EleMVACalibrationProducer::endJob()
     fo->Close();
     delete fo;
   }
+  
+  std::vector<TCanvas*>* vcCalParsRightTagVsMvaScore = CreateCanvases(0, 21, 1, false, false, vhCalParsRightTagVsMvaScore);
+  autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(vcCalParsRightTagVsMvaScore);
+
+  std::vector<TCanvas*>* vcCalParsWrongTagVsMvaScore = CreateCanvases(0, 21, 1, false, false, vhCalParsWrongTagVsMvaScore);
+  autoSavedObject = reinterpret_cast<std::vector<TObject*>* >(vcCalParsWrongTagVsMvaScore);
 }
 
 
@@ -879,10 +950,12 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   double nEntries = hist->GetEntries();
   
   bool isTot = name == "hMassTot" ? true : false;
+  bool isAllTag = name == "hMassAllTag" ? true : false;
   bool lowStat = nEntries <= 0 ? true : false;
   bool highStat = nEntries > 0 ? true : false;
   
   std::cout << "isTot: " << (isTot?"true":"false") << std::endl;
+  std::cout << "isAllTag: " << (isAllTag?"true":"false") << std::endl;
   std::cout << "lowStat: " << (lowStat?"true":"false") << std::endl;
   std::cout << "highStat: " << (highStat?"true":"false") << std::endl;
   
@@ -1083,24 +1156,46 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   }
   
   //FIXING PARAMETERS
-  if(!isTot)
+  if(!isTot && !isAllTag)
   {
-    std::cout << "Fixing parameters to fit to tot statistics.\n";
-    func->FixParameter(0, meanTotMass);
-    func->FixParameter(2, sigma1TotMass);
-    func->FixParameter(4, sigma2TotMass);
-    func->FixParameter(3, fracTotMass);
-    
-    func->FixParameter(8, erfcWidthTotMass);
-    func->FixParameter(9, erfcShiftTotMass);
-    
-    sgn->FixParameter(0, meanTotMass);
-    sgn->FixParameter(2, sigma1TotMass);
-    sgn->FixParameter(4, sigma2TotMass);
-    sgn->FixParameter(3, fracTotMass);
-    
-    bkg->FixParameter(8, erfcWidthTotMass);
-    bkg->FixParameter(9, erfcShiftTotMass);    
+    if(fixToTot)
+    {
+      std::cout << "Fixing parameters to fit to tot statistics.\n";
+      func->FixParameter(0, meanTotMass);
+      func->FixParameter(2, sigma1TotMass);
+      func->FixParameter(4, sigma2TotMass);
+//       func->FixParameter(3, fracTotMass);
+      
+      func->FixParameter(8, erfcWidthTotMass);
+      func->FixParameter(9, erfcShiftTotMass);
+      
+      sgn->FixParameter(0, meanTotMass);
+      sgn->FixParameter(2, sigma1TotMass);
+      sgn->FixParameter(4, sigma2TotMass);
+//       sgn->FixParameter(3, fracTotMass);
+      
+      bkg->FixParameter(8, erfcWidthTotMass);
+      bkg->FixParameter(9, erfcShiftTotMass);    
+    }
+    else if(fixToAllTag)
+    {
+      std::cout << "Fixing parameters to fit to all tagged statistics.\n";
+      func->FixParameter(0, meanAllTagMass);
+      func->FixParameter(2, sigma1AllTagMass);
+      func->FixParameter(4, sigma2AllTagMass);
+//       func->FixParameter(3, fracAllTagMass);
+      
+      func->FixParameter(8, erfcWidthAllTagMass);
+      func->FixParameter(9, erfcShiftAllTagMass);
+      
+      sgn->FixParameter(0, meanAllTagMass);
+      sgn->FixParameter(2, sigma1AllTagMass);
+      sgn->FixParameter(4, sigma2AllTagMass);
+//       sgn->FixParameter(3, fracAllTagMass);
+      
+      bkg->FixParameter(8, erfcWidthAllTagMass);
+      bkg->FixParameter(9, erfcShiftAllTagMass);    
+    }
   }
   
   if(process.find("MC") != std::string::npos)
@@ -1160,6 +1255,22 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
     std::cout << "sigma2TotMass = " << sigma2TotMass << std::endl;
     std::cout << "erfcWidthTotMass = " << erfcWidthTotMass << std::endl;
     std::cout << "erfcShiftTotMass = " << erfcShiftTotMass << std::endl;
+  }
+  if(isAllTag)
+  {
+    std::cout << "AllTag fit. Saving parameters...\n";
+    meanAllTagMass = fit->GetParameter("mean");
+    sigma1AllTagMass = fit->GetParameter("sigma1");
+    sigma2AllTagMass = fit->GetParameter("sigma2");
+    fracAllTagMass = fit->GetParameter("frac");
+    erfcWidthAllTagMass = fit->GetParameter("erfcWidth");
+    erfcShiftAllTagMass = fit->GetParameter("erfcShift");
+    
+    std::cout << "meanAllTagMass = " << meanAllTagMass << std::endl;
+    std::cout << "sigma1AllTagMass = " << sigma1AllTagMass << std::endl;
+    std::cout << "sigma2AllTagMass = " << sigma2AllTagMass << std::endl;
+    std::cout << "erfcWidthAllTagMass = " << erfcWidthAllTagMass << std::endl;
+    std::cout << "erfcShiftAllTagMass = " << erfcShiftAllTagMass << std::endl;
   }
   
   hist->Draw("PE");

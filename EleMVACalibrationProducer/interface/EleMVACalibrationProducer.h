@@ -54,6 +54,7 @@ class EleMVACalibrationProducer:
   TH1D* hMvaRightTag;
   TH1D* hMvaWrongTag;
   TH1D* hMassTot;
+  TH1D* hMassAllTag;
   TH1D* hMassRightTag;
   TH1D* hMassWrongTag;
   TH1D* hMassNoTag;
@@ -135,11 +136,15 @@ class EleMVACalibrationProducer:
   bool weightControlPlots;
   bool isData = false;
   bool useSyst;
+  bool fixToTot;
+  bool fixToAllTag;
   int nBinsCal;
   int nBinsMva;
   double minMass, maxMass, x1MassSB, x2MassSB;
   double meanTotMass, sigma1TotMass, sigma2TotMass, fracTotMass;
   double erfcWidthTotMass, erfcShiftTotMass;
+  double meanAllTagMass, sigma1AllTagMass, sigma2AllTagMass, fracAllTagMass;
+  double erfcWidthAllTagMass, erfcShiftAllTagMass;
   int nMassBins = 50;
   bool writeOutput = true;
   double systematics2017 = 0.;
