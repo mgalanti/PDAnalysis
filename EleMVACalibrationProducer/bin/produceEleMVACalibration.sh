@@ -234,10 +234,12 @@ then
   echo Retrieving process name from job configuration...
 fi
 
-processName=""
+process=""
+dirPath=""
 if [[ "$treeListFileWithDir" == *"Bs"* ]]
 then
   process="BsJPsiPhi"
+  dirPath="./Bs"
   if [[ "$treeListFileWithDir" == *"DG0"* ]]
   then
     process+="DG0"
@@ -245,22 +247,27 @@ then
 elif [[ "$treeListFileWithDir" == *"Bu"* ]]
 then
   process="BuJPsiK"
+  dirPath="./Bu"
 fi
 
 if [[ "$treeListFileWithDir" == *"MC"* ]]
 then
   process+="MC"
+  dirPath+="MC"
 elif [[ "$treeListFileWithDir" == *"Data"* ]]
 then
   process+="Data"
+  dirPath+="Data"
 fi
 
 if [[ "$treeListFileWithDir" == *"2017"* ]]
 then
   process+="2017"
+  dirPath+="2017"
 elif [[ "$treeListFileWithDir" == *"2018"* ]]
 then
   process+="2018"
+  dirPath+="2018"
 fi
 
 if [[ ${verbose} == 1 ]]
@@ -272,6 +279,13 @@ calPlotFileName="calibration_${process}.pdf"
 dnnPlotFileName="dnnDistribution_${process}.pdf"
 calRootFileName="OSElectronTaggerCalibration${process}.root"
 hisRootFileName="his_produceEleMVACalibration__${sampleName}_${timeNow}.root"
+
+if [[ ${verbose} == 1 ]]
+then
+  echo Moving calibration fits directory to output directory...
+  echo "     "mv \"${dirPath}\" \"${outDir}\"
+fi
+mv "${dirPath}" "${outDir}"
 
 if [[ ${verbose} == 1 ]]
 then
