@@ -79,6 +79,9 @@ treeListFileWithDir=""
 sampleName=""
 mvaMethod=""
 mvaInputPath=""
+computeLinearitySyst=""
+linearitySystSecOrd=""
+linearitySystThirdOrd=""
 
 while IFS= read -r inputLine
 do
@@ -99,7 +102,22 @@ do
     firstItem=`echo ${inputLine} | awk '{print $1}'`
     secondItem=`echo ${inputLine} | awk '{print $2}'`
     mvaInputPath=${secondItem}
-  fi 
+  elif [[ ${inputLine} == computeLinearitySyst* ]]
+  then
+    firstItem=`echo ${inputLine} | awk '{print $1}'`
+    secondItem=`echo ${inputLine} | awk '{print $2}'`
+    computeLinearitySyst=${secondItem}
+  elif [[ ${inputLine} == linearitySystSecOrd* ]]
+  then
+    firstItem=`echo ${inputLine} | awk '{print $1}'`
+    secondItem=`echo ${inputLine} | awk '{print $2}'`
+    linearitySystSecOrd=${secondItem}
+  elif [[ ${inputLine} == linearitySystThirdOrd* ]]
+  then
+    firstItem=`echo ${inputLine} | awk '{print $1}'`
+    secondItem=`echo ${inputLine} | awk '{print $2}'`
+    linearitySystThirdOrd=${secondItem}
+  fi
 done < $cfgFile
 
 if [[ ${verbose} == 1 ]]
@@ -276,6 +294,8 @@ then
 fi
 
 calPlotFileName="calibration_${process}.pdf"
+calPlotSecOrdFileName="calibration_second_order_${process}.pdf"
+calPlotThirdOrdFileName="calibration_third_order_${process}.pdf"
 dnnPlotFileName="dnnDistribution_${process}.pdf"
 calRootFileName="OSElectronTaggerCalibration${process}.root"
 hisRootFileName="his_produceEleMVACalibration__${sampleName}_${timeNow}.root"
@@ -293,6 +313,31 @@ then
   echo "     "mv \"${calPlotFileName}\" \"${outDir}\"
 fi
 mv "${calPlotFileName}" "${outDir}"
+
+if [[ $computeLinearitySyst == 1 ]]
+then
+
+  if [[ $linearitySystSecOrd == 1 ]]
+  then
+    if [[ ${verbose} == 1 ]]
+    then
+      echo Moving second-order calibration plot file to output directory...
+      echo "     "mv \"${calPlotSecOrdFileName}\" \"${outDir}\"
+    fi
+    mv "${calPlotSecOrdFileName}" "${outDir}"
+  fi
+  
+  if [[ $linearitySystThirdOrd == 1 ]]
+  then
+    if [[ ${verbose} == 1 ]]
+    then
+      echo Moving third-order calibration plot file to output directory...
+      echo "     "mv \"${calPlotThirdOrdFileName}\" \"${outDir}\"
+    fi
+    mv "${calPlotThirdOrdFileName}" "${outDir}"
+  fi
+
+fi
 
 if [[ ${verbose} == 1 ]]
 then

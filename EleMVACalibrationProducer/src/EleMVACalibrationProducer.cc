@@ -60,6 +60,9 @@ void EleMVACalibrationProducer::beginJob()
   getUserParameter("mvaValueMaxCutOff", mvaValueMaxCutOff);
   getUserParameter("fixToTot", fixToTot);
   getUserParameter("fixToAllTag", fixToAllTag);
+  getUserParameter("computeLinearitySyst", computeLinearitySyst);
+  getUserParameter("linearitySystSecOrd", linearitySystSecOrd);
+  getUserParameter("linearitySystThirdOrd", linearitySystThirdOrd);
   
   if(fixToTot && fixToAllTag)
   {
@@ -828,14 +831,24 @@ void EleMVACalibrationProducer::endJob()
   auto *fCal = new TF1("osElectronCal", "[0]+[1]*x", 0., 1.);
   
   TFitResultPtr fitresultCal = gCal->Fit("osElectronCal","S");
-  fCal = gCal->GetFunction("osElectronCal");
+  fCal = gCal->GetFunction("osElectronCal");  
   
   double q = fCal->GetParameter(0);
   double m = fCal->GetParameter(1);
+  double qLinFit = q;
+  double mLinFit = m;
+  double chi2LinFit = fitresultCal->Chi2();
+  unsigned int nParsLinFit = fitresultCal->NTotalParameters();
+  unsigned int ndfLinFit = fitresultCal->Ndf();
+  unsigned int nPointsLinFit = nParsLinFit + ndfLinFit;
   
   std::cout << std::endl;
   std::cout << "q = " << q << " +- " << fCal->GetParError(0) << " [" << abs(q) / fCal->GetParError(0) << " s.d.]\n";
   std::cout << "m = " << m << " +- " << fCal->GetParError(1) << " [" << abs(m - 1) / fCal->GetParError(1) << " s.d.]\n";
+  std::cout << "chi2 = " << chi2LinFit << std::endl;
+  std::cout << "nPars = " << nParsLinFit << std::endl;
+  std::cout << "ndf = " << ndfLinFit << std::endl;
+  std::cout << "nPoints = " << nPointsLinFit << std::endl;
   
   std::vector<double> wResY;
   std::vector<double> wResEY;
@@ -904,6 +917,262 @@ void EleMVACalibrationProducer::endJob()
   {
     c1->Print(("calibration_" + process + ".pdf").c_str());
   }
+
+  
+  double qSecOrdFit = -9999;
+  double mSecOrdFit = -9999;
+  double nSecOrdFit = -9999;
+  double chi2SecOrdFit = 9999;
+  unsigned int nParsSecOrdFit = 0;
+  unsigned int ndfSecOrdFit = 0;
+  unsigned int nPointsSecOrdFit = 0;
+        
+  double qThirdOrdFit = -9999;
+  double mThirdOrdFit = -9999;
+  double nThirdOrdFit = -9999;
+  double pThirdOrdFit = -9999;
+  double chi2ThirdOrdFit = 9999;
+  unsigned int nParsThirdOrdFit = 0;
+  unsigned int ndfThirdOrdFit = 0;
+  unsigned int nPointsThirdOrdFit = 0;
+        
+  if(computeLinearitySyst)
+  {
+    if(linearitySystSecOrd)
+    {
+      auto *c3 = new TCanvas("c3", "c3", 1000, 1600);
+      TPad *pad1 = new TPad("pad1", "", 0.0, 0.3, 1.0, 1.0);
+      TPad *pad2 = new TPad("pad2", "", 0.0, 0.0, 1.0, 0.3);
+      pad1->Draw();
+      pad2->Draw();
+      pad1->cd();
+      gPad->SetGrid();
+
+      auto *gCalSecOrd = new TGraphAsymmErrors(vX.size(), &vX[0], &vY[0], 0, 0, &vEYL[0], &vEYH[0]);
+      auto *gCalSecOrdErr = new TGraphAsymmErrors(vX.size(), &vX[0], &vY[0], &vEXL[0], &vEXH[0], &vEYL[0], &vEYH[0]);
+      auto *fCalSecOrd = new TF1("osElectronCalSecOrd", "[0]+[1]*x+[2]*x*x", 0., 1.);
+      
+      TFitResultPtr fitresultCalSecOrd = gCalSecOrd->Fit("osElectronCalSecOrd","S");
+      fCalSecOrd = gCalSecOrd->GetFunction("osElectronCalSecOrd");  
+      
+      double q = fCalSecOrd->GetParameter(0);
+      double m = fCalSecOrd->GetParameter(1);
+      double n = fCalSecOrd->GetParameter(2);
+      qSecOrdFit = q;
+      mSecOrdFit = m;
+      nSecOrdFit = n;
+      chi2SecOrdFit = fitresultCalSecOrd->Chi2();
+      nParsSecOrdFit = fitresultCalSecOrd->NTotalParameters();
+      ndfSecOrdFit = fitresultCalSecOrd->Ndf();
+      nPointsSecOrdFit = nParsSecOrdFit + ndfSecOrdFit;
+      
+      std::cout << std::endl;
+      std::cout << "Second-order fit:\n";
+      std::cout << "q = " << qSecOrdFit << " +- " << fCalSecOrd->GetParError(0) << " [" << abs(q) / fCalSecOrd->GetParError(0) << " s.d.]\n";
+      std::cout << "m = " << mSecOrdFit << " +- " << fCalSecOrd->GetParError(1) << " [" << abs(m - 1) / fCalSecOrd->GetParError(1) << " s.d.]\n";
+      std::cout << "n = " << nSecOrdFit << " +- " << fCalSecOrd->GetParError(2) << " [" << abs(n) / fCalSecOrd->GetParError(2) << " s.d.]\n";
+      std::cout << "chi2 = " << chi2SecOrdFit << std::endl;
+      std::cout << "nPars = " << nParsSecOrdFit << std::endl;
+      std::cout << "ndf = " << ndfSecOrdFit << std::endl;
+      std::cout << "nPoints = " << nPointsSecOrdFit << std::endl;
+     
+      std::vector<double> wResSecOrdY;
+      std::vector<double> wResSecOrdEY;
+      std::vector<double> wResSecOrdEYH;
+      std::vector<double> wResSecOrdEYL;
+      std::vector<double> wRatioSecOrdY;
+      std::vector<double> wRatioSecOrdEY;
+      std::vector<double> wRatioSecOrdEYH;
+      std::vector<double> wRatioSecOrdEYL;
+      
+      for(unsigned int j = 0; j < vX.size(); j++)
+      {
+        double dev = vY[j] - fCalSecOrd->Eval(vX[j]);
+        double sigma;
+        if(dev >= 0) 
+        {
+          sigma = vEYL[j];
+        }
+        else
+        {
+          sigma = vEYH[j];
+        }
+        
+        wResSecOrdEYH.push_back(vEYH[j] / sigma);
+        wResSecOrdEYL.push_back(vEYL[j] / sigma);
+        wResSecOrdY.push_back(dev / sigma);
+        wResSecOrdEY.push_back(1.);
+      }
+      
+      auto *gCalSecOrdRes = new TGraphAsymmErrors(vX.size(), &vX[0], &wResSecOrdY[0], &vEXL[0], &vEXH[0], &wResSecOrdEYL[0], &wResSecOrdEYH[0]);
+      
+      gCalSecOrd->SetMarkerStyle(20);
+      gCalSecOrd->SetMarkerSize(1);
+      gCalSecOrd->SetMaximum(1.);
+      gCalSecOrd->SetMinimum(0.);
+      gCalSecOrd->GetXaxis()->SetLimits(0., 1.);
+      gCalSecOrd->SetTitle(("calibration " + process).c_str());
+      gCalSecOrd->GetXaxis()->SetTitle("mistag calc.");
+      gCalSecOrd->GetYaxis()->SetTitle("mistag meas.");
+      gCalSecOrd->Draw("AP");
+      gCalSecOrdErr->Draw("EZ same");
+      fCalSecOrd->Draw("same");
+      gPad->Modified(); 
+      gPad->Update();
+      TPaveStats *st = (TPaveStats*)gCalSecOrd->FindObject("stats");
+      st->SetX1NDC(0.65);
+      st->SetX2NDC(0.95);
+      st->SetY1NDC(0.15);
+      st->SetY2NDC(0.30);
+      gPad->Modified(); 
+      gPad->Update();
+      
+      pad2->cd();
+      gPad->SetGrid();
+      gCalSecOrdRes->SetMarkerStyle(20);
+      gCalSecOrdRes->SetMarkerSize(1);
+      gCalSecOrdRes->GetXaxis()->SetLimits(0.0, 1.02);
+      gCalSecOrdRes->Draw("APZ");
+      gCalSecOrdRes->SetTitle("");
+      gCalSecOrdRes->GetYaxis()->SetTitle("# s.d.");
+      auto *y0_ = new TF1("", "0.", 0., 1.02);
+      y0_->SetLineColor(kBlack);
+      y0_->Draw("SAME");
+      
+      if(writeOutput)
+      {
+        c3->Print(("calibration_second_order_" + process + ".pdf").c_str());
+      }
+    }
+    
+    if(linearitySystThirdOrd)
+    {
+      auto *c4 = new TCanvas("c4", "c4", 1000, 1600);
+      TPad *pad1 = new TPad("pad1", "", 0.0, 0.3, 1.0, 1.0);
+      TPad *pad2 = new TPad("pad2", "", 0.0, 0.0, 1.0, 0.3);
+      pad1->Draw();
+      pad2->Draw();
+      pad1->cd();
+      gPad->SetGrid();
+
+      auto *gCalThirdOrd = new TGraphAsymmErrors(vX.size(), &vX[0], &vY[0], 0, 0, &vEYL[0], &vEYH[0]);
+      auto *gCalThirdOrdErr = new TGraphAsymmErrors(vX.size(), &vX[0], &vY[0], &vEXL[0], &vEXH[0], &vEYL[0], &vEYH[0]);
+      auto *fCalThirdOrd = new TF1("osElectronCalThirdOrd", "[0]+[1]*x+[2]*x*x+[3]*x*x*x", 0., 1.);
+      
+      TFitResultPtr fitresultCalThirdOrd = gCalThirdOrd->Fit("osElectronCalThirdOrd","S");
+      fCalThirdOrd = gCalThirdOrd->GetFunction("osElectronCalThirdOrd");  
+      
+      double q = fCalThirdOrd->GetParameter(0);
+      double m = fCalThirdOrd->GetParameter(1);
+      double n = fCalThirdOrd->GetParameter(2);
+      double p = fCalThirdOrd->GetParameter(3);
+      qThirdOrdFit = q;
+      mThirdOrdFit = m;
+      nThirdOrdFit = n;
+      pThirdOrdFit = p;
+      chi2ThirdOrdFit = fitresultCalThirdOrd->Chi2();
+      nParsThirdOrdFit = fitresultCalThirdOrd->NTotalParameters();
+      ndfThirdOrdFit = fitresultCalThirdOrd->Ndf();
+      nPointsThirdOrdFit = nParsThirdOrdFit + ndfThirdOrdFit;
+      
+      std::cout << std::endl;
+      std::cout << "Third-order fit:\n";
+      std::cout << "q = " << qThirdOrdFit << " +- " << fCalThirdOrd->GetParError(0) << " [" << abs(q) / fCalThirdOrd->GetParError(0) << " s.d.]\n";
+      std::cout << "m = " << mThirdOrdFit << " +- " << fCalThirdOrd->GetParError(1) << " [" << abs(m - 1) / fCalThirdOrd->GetParError(1) << " s.d.]\n";
+      std::cout << "n = " << nThirdOrdFit << " +- " << fCalThirdOrd->GetParError(2) << " [" << abs(n) / fCalThirdOrd->GetParError(2) << " s.d.]\n";
+      std::cout << "p = " << pThirdOrdFit << " +- " << fCalThirdOrd->GetParError(3) << " [" << abs(p) / fCalThirdOrd->GetParError(3) << " s.d.]\n";
+      std::cout << "chi2 = " << chi2ThirdOrdFit << std::endl;
+      std::cout << "nPars = " << nParsThirdOrdFit << std::endl;
+      std::cout << "ndf = " << ndfThirdOrdFit << std::endl;
+      std::cout << "nPoints = " << nPointsThirdOrdFit << std::endl;
+     
+      std::vector<double> wResThirdOrdY;
+      std::vector<double> wResThirdOrdEY;
+      std::vector<double> wResThirdOrdEYH;
+      std::vector<double> wResThirdOrdEYL;
+      std::vector<double> wRatioThirdOrdY;
+      std::vector<double> wRatioThirdOrdEY;
+      std::vector<double> wRatioThirdOrdEYH;
+      std::vector<double> wRatioThirdOrdEYL;
+      
+      for(unsigned int j = 0; j < vX.size(); j++)
+      {
+        double dev = vY[j] - fCalThirdOrd->Eval(vX[j]);
+        double sigma;
+        if(dev >= 0) 
+        {
+          sigma = vEYL[j];
+        }
+        else
+        {
+          sigma = vEYH[j];
+        }
+        
+        wResThirdOrdEYH.push_back(vEYH[j] / sigma);
+        wResThirdOrdEYL.push_back(vEYL[j] / sigma);
+        wResThirdOrdY.push_back(dev / sigma);
+        wResThirdOrdEY.push_back(1.);
+      }
+      
+      auto *gCalThirdOrdRes = new TGraphAsymmErrors(vX.size(), &vX[0], &wResThirdOrdY[0], &vEXL[0], &vEXH[0], &wResThirdOrdEYL[0], &wResThirdOrdEYH[0]);
+      
+      gCalThirdOrd->SetMarkerStyle(20);
+      gCalThirdOrd->SetMarkerSize(1);
+      gCalThirdOrd->SetMaximum(1.);
+      gCalThirdOrd->SetMinimum(0.);
+      gCalThirdOrd->GetXaxis()->SetLimits(0., 1.);
+      gCalThirdOrd->SetTitle(("calibration " + process).c_str());
+      gCalThirdOrd->GetXaxis()->SetTitle("mistag calc.");
+      gCalThirdOrd->GetYaxis()->SetTitle("mistag meas.");
+      gCalThirdOrd->Draw("AP");
+      gCalThirdOrdErr->Draw("EZ same");
+      fCalThirdOrd->Draw("same");
+      gPad->Modified(); 
+      gPad->Update();
+      TPaveStats *st = (TPaveStats*)gCalThirdOrd->FindObject("stats");
+      st->SetX1NDC(0.65);
+      st->SetX2NDC(0.95);
+      st->SetY1NDC(0.15);
+      st->SetY2NDC(0.30);
+      gPad->Modified(); 
+      gPad->Update();
+      
+      pad2->cd();
+      gPad->SetGrid();
+      gCalThirdOrdRes->SetMarkerStyle(20);
+      gCalThirdOrdRes->SetMarkerSize(1);
+      gCalThirdOrdRes->GetXaxis()->SetLimits(0.0, 1.02);
+      gCalThirdOrdRes->Draw("APZ");
+      gCalThirdOrdRes->SetTitle("");
+      gCalThirdOrdRes->GetYaxis()->SetTitle("# s.d.");
+      auto *y0_ = new TF1("", "0.", 0., 1.02);
+      y0_->SetLineColor(kBlack);
+      y0_->Draw("SAME");
+      
+      if(writeOutput)
+      {
+        c4->Print(("calibration_third_order_" + process + ".pdf").c_str());
+      }
+    }
+  }
+  
+  std::cout << "F-test for second-order vs. linear fit:\n";
+  double fSecLin = ((chi2LinFit - chi2SecOrdFit)/(nParsSecOrdFit - nParsLinFit)) / (chi2SecOrdFit / (nPointsLinFit - nParsSecOrdFit));
+  double fProbSecLin = TMath::FDistI(fSecLin, nParsSecOrdFit - nParsLinFit, nPointsLinFit - nParsSecOrdFit);
+  std::cout << "F = " << fSecLin << std::endl;
+  std::cout << "F prob = " << fProbSecLin << std::endl;
+  
+  std::cout << "F-test for third-order vs. linear fit:\n";
+  double fThirdLin = ((chi2LinFit - chi2ThirdOrdFit)/(nParsThirdOrdFit - nParsLinFit)) / (chi2ThirdOrdFit / (nPointsLinFit - nParsThirdOrdFit));
+  double fProbThirdLin = TMath::FDistI(fThirdLin, nParsThirdOrdFit - nParsLinFit, nPointsLinFit - nParsThirdOrdFit);
+  std::cout << "F = " << fThirdLin << std::endl;
+  std::cout << "F prob = " << fProbThirdLin << std::endl;
+  
+  std::cout << "F-test for third-order vs. second-order fit:\n";
+  double fThirdSec = ((chi2SecOrdFit - chi2ThirdOrdFit)/(nParsThirdOrdFit - nParsSecOrdFit)) / (chi2ThirdOrdFit / (nPointsLinFit - nParsThirdOrdFit));
+  double fProbThirdSec = TMath::FDistI(fThirdSec, nParsThirdOrdFit - nParsSecOrdFit, nPointsLinFit - nParsThirdOrdFit);
+  std::cout << "F = " << fThirdSec << std::endl;
+  std::cout << "F prob = " << fProbThirdSec << std::endl;
   
   auto *c2 = new TCanvas();
   gPad->SetGrid();

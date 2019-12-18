@@ -138,6 +138,9 @@ class EleMVACalibrationProducer:
   bool useSyst;
   bool fixToTot;
   bool fixToAllTag;
+  bool computeLinearitySyst;
+  bool linearitySystSecOrd;
+  bool linearitySystThirdOrd;
   int nBinsCal;
   int nBinsMva;
   double minMass, maxMass, x1MassSB, x2MassSB;
