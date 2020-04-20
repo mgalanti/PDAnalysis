@@ -430,10 +430,10 @@ bool EleMVACalibrationProducer::analyze(int entry, int event_file, int event_tot
   
   int evtTag = -1 * eleCharge;
   bool isTagRight = TMath::Sign(1, BidGen) == evtTag;
-  if(tagTruth)
-    tagTruth = 0;
-  else
-    tagTruth = 1;
+//   if(tagTruth)
+//     tagTruth = 0;
+//   else
+//     tagTruth = 1;
 
   hIsTagRightVsTagTruth->Fill(tagTruth, isTagRight);
   if(isTagRight != tagTruth)
@@ -444,10 +444,11 @@ bool EleMVACalibrationProducer::analyze(int entry, int event_file, int event_tot
   
   for(int j = 0; j < nBinsCal; j++)
   {
-    if((evtW[0] >= (double)j * binSizeCal) && (evtW[0] < ((double)j * binSizeCal + binSizeCal)))
+    if((evtW[0] >= (double)j * binSizeCal - binSizeCal) && (evtW[0] < ((double)j * binSizeCal)))
     {
       if(isTagRight)
       {
+//         std::cout << "evtW[0] = " << evtW[0] << ", vhMassCalRightTag->at(j)->GetTitle() = " << vhMassCalRightTag->at(j)->GetTitle() << std::endl;
         vhMassCalRightTag->at(j)->Fill(BMass, evtWeight);
       }
       else
@@ -690,7 +691,7 @@ void EleMVACalibrationProducer::endJob()
   int minEntries = 0;
   if(isData)
   {
-    minEntries = 20;
+    minEntries = 30;
   }
   int rebinThreshold = 1500;
   
@@ -708,7 +709,7 @@ void EleMVACalibrationProducer::endJob()
     calRightTag.second = sqrt(calRightTag.first);
     calWrongTag.second = sqrt(calWrongTag.first);
     
-    if(calRightTag.first <= minEntries && calWrongTag.first <= minEntries )
+    if(calRightTag.first <= minEntries || calWrongTag.first <= minEntries )
     {
       continue;
     }
@@ -796,8 +797,8 @@ void EleMVACalibrationProducer::endJob()
     }
     
     vX.push_back(vWCalc[j]);
-    vEXL.push_back(vWCalc[j] - ((double)j * binSizeCal));
-    vEXH.push_back(((double)j * binSizeCal + binSizeCal) - vWCalc[j]);
+    vEXL.push_back(vWCalc[j] - ((double)j * binSizeCal - binSizeCal));
+    vEXH.push_back(((double)j * binSizeCal) - vWCalc[j]);
     vY.push_back(wMeas); // measured mistag
     vEYL.push_back(wMeasErrLow);
     vEYH.push_back(wMeasErrHigh);
@@ -1220,9 +1221,11 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   
   bool isTot = name == "hMassTot" ? true : false;
   bool isAllTag = name == "hMassAllTag" ? true : false;
-  bool lowStat = nEntries <= 0 ? true : false;
-  bool highStat = nEntries > 0 ? true : false;
-  
+  bool lowStat = nEntries <= 100 ? true : false;
+  bool highStat = nEntries > 400 ? true : false;
+
+  std::cout  << "Distribution has " << nEntries << " entries.\n";
+    
   std::cout << "isTot: " << (isTot?"true":"false") << std::endl;
   std::cout << "isAllTag: " << (isAllTag?"true":"false") << std::endl;
   std::cout << "lowStat: " << (lowStat?"true":"false") << std::endl;
@@ -1346,7 +1349,7 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   func->SetParameter(2, sigma * rnd2);
   func->SetParameter(4, sigma * rnd4);
   func->SetParLimits(1, 0, 4 * limit);
-  func->SetParLimits(3, 0, 5);
+  func->SetParLimits(3, 0, 10);
   func->SetParLimits(2, 0.0001, 0.5);
   func->SetParLimits(4, 0.0001, 0.5);
 
@@ -1356,7 +1359,7 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   sgn->SetParameter(2, sigma * rnd2);
   sgn->SetParameter(4, sigma * rnd4);
   sgn->SetParLimits(1, 0, 4 * limit);
-  sgn->SetParLimits(3, 0, 5);
+  sgn->SetParLimits(3, 0, 10);
   sgn->SetParLimits(2, 0.0001, 0.5);
   sgn->SetParLimits(4, 0.0001, 0.5);
   
