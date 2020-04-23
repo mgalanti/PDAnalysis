@@ -12,6 +12,8 @@
 #include "TTree.h"
 #include "TMVA/Reader.h"
 
+// double JohnsonPDF(double *x, double *par);
+
 class EleMVACalibrationProducer: 
   public EleMVASecondNtupleData, 
   public TreeReader,
@@ -144,9 +146,13 @@ class EleMVACalibrationProducer:
   int nBinsCal;
   int nBinsMva;
   double minMass, maxMass, x1MassSB, x2MassSB;
-  double meanTotMass, sigma1TotMass, sigma2TotMass, fracTotMass;
+//   double meanTotMass, sigma1TotMass, sigma2TotMass, fracTotMass;
+//   double erfcWidthTotMass, erfcShiftTotMass;
+//   double meanAllTagMass, sigma1AllTagMass, sigma2AllTagMass, fracAllTagMass;
+//   double erfcWidthAllTagMass, erfcShiftAllTagMass;
+  double muTotMass, lambdaTotMass, gammaTotMass, deltaTotMass;
   double erfcWidthTotMass, erfcShiftTotMass;
-  double meanAllTagMass, sigma1AllTagMass, sigma2AllTagMass, fracAllTagMass;
+  double muAllTagMass, lambdaAllTagMass, gammaAllTagMass, deltaAllTagMass;
   double erfcWidthAllTagMass, erfcShiftAllTagMass;
   int nMassBins = 50;
   bool writeOutput = true;

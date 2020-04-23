@@ -176,9 +176,9 @@ void EleMVACalibrationProducer::beginJob()
   //COMPUTE MVA
   TMVA::PyMethodBase::PyInitialize();
   reader = new TMVA::Reader("!Color:Silent");
-  double mvaValue = -1.;
-  float eleDxyDiff;
-  float eleDzDiff;
+//   double mvaValue = -1.;
+//   float eleDxyDiff;
+//   float eleDzDiff;
   reader->AddVariable("elePt", &elePt);
   reader->AddVariable("eleEta", &eleEta);
   reader->AddVariable("eleDxy", &eleDxy);
@@ -836,8 +836,8 @@ void EleMVACalibrationProducer::endJob()
   
   double q = fCal->GetParameter(0);
   double m = fCal->GetParameter(1);
-  double qLinFit = q;
-  double mLinFit = m;
+//   double qLinFit = q;
+//   double mLinFit = m;
   double chi2LinFit = fitresultCal->Chi2();
   unsigned int nParsLinFit = fitresultCal->NTotalParameters();
   unsigned int ndfLinFit = fitresultCal->Ndf();
@@ -1231,9 +1231,9 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   std::cout << "lowStat: " << (lowStat?"true":"false") << std::endl;
   std::cout << "highStat: " << (highStat?"true":"false") << std::endl;
   
-  TRandom3 *r3 = new TRandom3();
+//   TRandom3 *r3 = new TRandom3();
   double mean = 5.3663;
-  double sigma = 0.015;
+  double sigma = 0.02;
   if(process.find("BsJPsiPhi") != std::string::npos)
   {
     mean = 5.3663;
@@ -1250,38 +1250,42 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
     std::cout << "Process is BdJPsiKx. mean = " << mean << std::endl;
   }
   
-  TString sgnDef = "[1]*TMath::Gaus(x, [0], [2], true)";
-  sgnDef +=       "+[3]*[1]*TMath::Gaus(x, [0], [4], true)";
+  // This is a Johnson PDF function. Translated into string form from RooJohnson::evaluate().
+  // Parameter _massThreshold was removed because not needed.
+  // par[0] is the general normalization of the signal PDF.
+  TString sgnDef = "[0] * [4] / sqrt(TMath::TwoPi()) / ([2] * sqrt(1. + (x - [1] / [2]) * (x - [1] / [2]))) * exp(-0.5 * ([3] + [4] * asinh(x - [1] / [2])) * ([3] + [4] * asinh(x - [1] / [2])))";
+
+//   TString sgnDef = "[1]*TMath::Gaus(x, [0], [2], true)";
+//   sgnDef +=       "+[3]*[1]*TMath::Gaus(x, [0], [4], true)";
   
   TString bkgDef = "[5]";
   if(!lowStat)  bkgDef += "+[6]*x";
   if(highStat) bkgDef += "+[7]*TMath::Erfc([8]*(x-[9]))";
   
   bkgDef = "(" + bkgDef + ">= 0 ? " + bkgDef + " : 0 )";
-  bkgDef = "(" + bkgDef + ">= 0 ? " + bkgDef + " : 0 )";
+//  bkgDef = "(" + bkgDef + ">= 0 ? " + bkgDef + " : 0 )";
   
   TString funcDef = sgnDef + "+" + bkgDef;
   
   std::cout << "Function used for fit: \"" << funcDef << "\"\n";
   
-  
   std::cout << "Fit limits: minMass = " << minMass << ", maxMass = " << maxMass << std::endl;
   
   TF1 *func = new TF1("func", funcDef, minMass, maxMass);
   TF1 *sgn = new TF1("sgn", sgnDef, minMass, maxMass);
-  TF1 *bkg = new TF1("bkg", bkgDef, minMass, maxMass);
+  TF1 *bkg = new TF1("bkg", bkgDef, minMass, maxMass);  
+
+  func->SetParName(0, "sigNorm");
+  func->SetParName(1, "mu");
+  func->SetParName(2, "lambda");
+  func->SetParName(3, "gamma");
+  func->SetParName(4, "delta");
   
-  func->SetParName(0, "mean");
-  func->SetParName(1, "norm1");
-  func->SetParName(2, "sigma1");
-  func->SetParName(3, "frac");
-  func->SetParName(4, "sigma2");
-  
-  sgn->SetParName(0, "mean");
-  sgn->SetParName(1, "norm1");
-  sgn->SetParName(2, "sigma1");
-  sgn->SetParName(3, "frac");
-  sgn->SetParName(4, "sigma2");
+  sgn->SetParName(0, "sigNorm");
+  sgn->SetParName(1, "mu");
+  sgn->SetParName(2, "lambda");
+  sgn->SetParName(3, "gamma");
+  sgn->SetParName(4, "delta");
   
   func->SetParName(5, "bkgConst");
   bkg->SetParName(5, "bkgConst");
@@ -1338,31 +1342,31 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   //SIGNAL
   double limit = hist->GetEntries() * hist->GetBinWidth(1);
 
-  double rnd1 = r3->Gaus(1.,0.01);
-  double rnd3 = r3->Gaus(1.,0.01);
-  double rnd2 = r3->Gaus(1.,0.0001);
-  double rnd4 = r3->Gaus(1.,0.001);
-  
-  func->SetParameter(0, mean);
-  func->SetParameter(1, limit * rnd1);
-  func->SetParameter(3, 1 * rnd3);
-  func->SetParameter(2, sigma * rnd2);
-  func->SetParameter(4, sigma * rnd4);
-  func->SetParLimits(1, 0, 4 * limit);
-  func->SetParLimits(3, 0, 10);
-  func->SetParLimits(2, 0.0001, 0.5);
-  func->SetParLimits(4, 0.0001, 0.5);
+//   double rnd1 = r3->Gaus(1.,0.01);
+//   double rnd2 = r3->Gaus(1.,0.0001);
+//   double rnd3 = r3->Gaus(1.,0.01);
+//   double rnd4 = r3->Gaus(1.,0.001);
 
-  sgn->SetParameter(0, mean);
-  sgn->SetParameter(1, limit * rnd1);
-  sgn->SetParameter(3, 1 * rnd3);
-  sgn->SetParameter(2, sigma * rnd2);
-  sgn->SetParameter(4, sigma * rnd4);
-  sgn->SetParLimits(1, 0, 4 * limit);
-  sgn->SetParLimits(3, 0, 10);
-  sgn->SetParLimits(2, 0.0001, 0.5);
-  sgn->SetParLimits(4, 0.0001, 0.5);
-  
+  func->SetParameter(0, limit * 0.01); // sigNorm
+  func->SetParameter(1, mean); // mu
+  func->SetParLimits(1, mean - 0.02, mean + 0.02); // mu
+  func->SetParameter(2, sigma); // lambda
+  func->SetParLimits(2, 0.0, 0.1); // lambda
+  func->SetParameter(3, 0.); // gamma
+  func->SetParLimits(3, -0.5, 0.5); // gamma
+  func->SetParameter(4, 1.); // delta
+  func->SetParLimits(4, 0., 2.); // delta
+
+  sgn->SetParameter(0, limit * 0.01); // sigNorm
+  sgn->SetParameter(1, mean); // mu
+  sgn->SetParLimits(1, mean - 0.02, mean + 0.02); // mu
+  sgn->SetParameter(2, 0.02); // lambda
+  sgn->SetParLimits(2, 0.0, 0.1); // lambda
+  sgn->SetParameter(3, 0.); // gamma
+  sgn->SetParLimits(3, -0.5, 0.5); // gamma
+  sgn->SetParameter(4, 1.); // delta
+  sgn->SetParLimits(4, 0., 2.); // delta
+
   //BKG    
   TAxis *xaxis = hist->GetXaxis();
   int binx1 = xaxis->FindBin(x1MassSB);
@@ -1427,24 +1431,26 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
     bkg->SetParLimits(7, 0, hist->GetBinContent(2) * 2.);
   }
   
+  
+  // FIXME: Restart from here. Start by NOT fixing parameters and add constraints one by one.
   //FIXING PARAMETERS
   if(!isTot && !isAllTag)
   {
     if(fixToTot)
     {
       std::cout << "Fixing parameters to fit to tot statistics.\n";
-      func->FixParameter(0, meanTotMass);
-      func->FixParameter(2, sigma1TotMass);
-      func->FixParameter(4, sigma2TotMass);
-//       func->FixParameter(3, fracTotMass);
+      func->FixParameter(1, muTotMass);
+      func->FixParameter(2, lambdaTotMass);
+//       func->FixParameter(3, gammaTotMass);
+      func->FixParameter(4, deltaTotMass);
       
       func->FixParameter(8, erfcWidthTotMass);
       func->FixParameter(9, erfcShiftTotMass);
       
-      sgn->FixParameter(0, meanTotMass);
-      sgn->FixParameter(2, sigma1TotMass);
-      sgn->FixParameter(4, sigma2TotMass);
-//       sgn->FixParameter(3, fracTotMass);
+      sgn->FixParameter(1, muTotMass);
+      sgn->FixParameter(2, lambdaTotMass);
+//       sgn->FixParameter(3, gammaTotMass);
+      sgn->FixParameter(4, deltaTotMass);
       
       bkg->FixParameter(8, erfcWidthTotMass);
       bkg->FixParameter(9, erfcShiftTotMass);    
@@ -1452,18 +1458,18 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
     else if(fixToAllTag)
     {
       std::cout << "Fixing parameters to fit to all tagged statistics.\n";
-      func->FixParameter(0, meanAllTagMass);
-      func->FixParameter(2, sigma1AllTagMass);
-      func->FixParameter(4, sigma2AllTagMass);
-//       func->FixParameter(3, fracAllTagMass);
+      func->FixParameter(1, muAllTagMass);
+      func->FixParameter(2, lambdaAllTagMass);
+//       func->FixParameter(3, gammaAllTagMass);
+      func->FixParameter(4, deltaAllTagMass);
       
       func->FixParameter(8, erfcWidthAllTagMass);
       func->FixParameter(9, erfcShiftAllTagMass);
       
-      sgn->FixParameter(0, meanAllTagMass);
-      sgn->FixParameter(2, sigma1AllTagMass);
-      sgn->FixParameter(4, sigma2AllTagMass);
-//       sgn->FixParameter(3, fracAllTagMass);
+      sgn->FixParameter(1, muAllTagMass);
+      sgn->FixParameter(2, lambdaAllTagMass);
+//       sgn->FixParameter(3, gammaAllTagMass);
+      sgn->FixParameter(4, deltaAllTagMass);
       
       bkg->FixParameter(8, erfcWidthAllTagMass);
       bkg->FixParameter(9, erfcShiftAllTagMass);    
@@ -1515,32 +1521,35 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   if(isTot)
   {
     std::cout << "Tot fit. Saving parameters...\n";
-    meanTotMass = fit->GetParameter("mean");
-    sigma1TotMass = fit->GetParameter("sigma1");
-    sigma2TotMass = fit->GetParameter("sigma2");
-    fracTotMass = fit->GetParameter("frac");
+    muTotMass = fit->GetParameter("mu");
+    lambdaTotMass = fit->GetParameter("lambda");
+    gammaTotMass = fit->GetParameter("gamma");
+    deltaTotMass = fit->GetParameter("delta");
     erfcWidthTotMass = fit->GetParameter("erfcWidth");
     erfcShiftTotMass = fit->GetParameter("erfcShift");
     
-    std::cout << "meanTotMass = " << meanTotMass << std::endl;
-    std::cout << "sigma1TotMass = " << sigma1TotMass << std::endl;
-    std::cout << "sigma2TotMass = " << sigma2TotMass << std::endl;
+    std::cout << "muTotMass = " << muTotMass << std::endl;
+    std::cout << "lambdaTotMass = " << lambdaTotMass << std::endl;
+    std::cout << "gammaTotMass = " << gammaTotMass << std::endl;
+    std::cout << "deltaTotMass = " << deltaTotMass << std::endl;
     std::cout << "erfcWidthTotMass = " << erfcWidthTotMass << std::endl;
     std::cout << "erfcShiftTotMass = " << erfcShiftTotMass << std::endl;
   }
+
   if(isAllTag)
   {
     std::cout << "AllTag fit. Saving parameters...\n";
-    meanAllTagMass = fit->GetParameter("mean");
-    sigma1AllTagMass = fit->GetParameter("sigma1");
-    sigma2AllTagMass = fit->GetParameter("sigma2");
-    fracAllTagMass = fit->GetParameter("frac");
+    muAllTagMass = fit->GetParameter("mu");
+    lambdaAllTagMass = fit->GetParameter("lambda");
+    gammaAllTagMass = fit->GetParameter("gamma");
+    deltaAllTagMass = fit->GetParameter("delta");
     erfcWidthAllTagMass = fit->GetParameter("erfcWidth");
     erfcShiftAllTagMass = fit->GetParameter("erfcShift");
     
-    std::cout << "meanAllTagMass = " << meanAllTagMass << std::endl;
-    std::cout << "sigma1AllTagMass = " << sigma1AllTagMass << std::endl;
-    std::cout << "sigma2AllTagMass = " << sigma2AllTagMass << std::endl;
+    std::cout << "muAllTagMass = " << muAllTagMass << std::endl;
+    std::cout << "lambdaAllTagMass = " << lambdaAllTagMass << std::endl;
+    std::cout << "gammaAllTagMass = " << gammaAllTagMass << std::endl;
+    std::cout << "deltaAllTagMass = " << deltaAllTagMass << std::endl;
     std::cout << "erfcWidthAllTagMass = " << erfcWidthAllTagMass << std::endl;
     std::cout << "erfcShiftAllTagMass = " << erfcShiftAllTagMass << std::endl;
   }
@@ -1549,13 +1558,15 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   hist->SetMinimum(0);
   
   // PLOTTING
-  TF1 *f1 = new TF1("f1", "[0]*TMath::Gaus(x, [1], [2], true)", minMass, maxMass);
-  TF1 *f2 = new TF1("f2", "[0]*TMath::Gaus(x, [1], [2], true)", minMass, maxMass);
+//   TF1 *f1 = new TF1("f1", "[0]*TMath::Gaus(x, [1], [2], true)", minMass, maxMass);
+//   TF1 *f2 = new TF1("f2", "[0]*TMath::Gaus(x, [1], [2], true)", minMass, maxMass);
+  TF1 *f1 = new TF1("f1","[0] * [4] / sqrt(TMath::TwoPi()) / ([2] * sqrt(1. + (x - [1] / [2]) * (x - [1] / [2]))) * exp(-0.5 * ([3] + [4] * asinh(x - [1] / [2])) * ([3] + [4] * asinh(x - [1] / [2])))", minMass, maxMass);
   TF1 *f4;
   TF1 *f5 = new TF1("f5", "[0]+[1]*x", minMass, maxMass);
   
-  f1->SetParameters(fit->GetParameter("norm1"), fit->GetParameter("mean"), fit->GetParameter("sigma1"));
-  f2->SetParameters(fit->GetParameter("norm1")*fit->GetParameter("frac"), fit->GetParameter("mean"), fit->GetParameter("sigma2"));
+//   f1->SetParameters(fit->GetParameter("norm1"), fit->GetParameter("mean"), fit->GetParameter("sigma1"));
+//   f2->SetParameters(fit->GetParameter("norm1")*fit->GetParameter("frac"), fit->GetParameter("mean"), fit->GetParameter("sigma2"));
+  f1->SetParameters(fit->GetParameter("sigNorm"), fit->GetParameter("mu"), fit->GetParameter("lambda"), fit->GetParameter("gamma"), fit->GetParameter("delta"));
   
   if(lowStat)
   {
@@ -1579,14 +1590,14 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   }
   
   f1->SetLineColor(kBlue);
-  f2->SetLineColor(kViolet);
+//   f2->SetLineColor(kViolet);
   f4->SetLineColor(kGreen);
   if(highStat)
   {
     f5->SetLineColor(kOrange);
   }
   f1->SetLineStyle(2);
-  f2->SetLineStyle(2);
+//   f2->SetLineStyle(2);
   f4->SetLineStyle(2);
   if(highStat)
   {
@@ -1594,7 +1605,7 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
   }
   
   f1->Draw("same");
-  f2->Draw("same");
+//   f2->Draw("same");
   f4->Draw("same");
   if(highStat)
   {
@@ -1606,20 +1617,55 @@ std::pair<double, double> EleMVACalibrationProducer::CountEventsWithFit(TH1 *his
     c5->Print((dirPath + "/" + name + ".pdf").c_str());
   }
   
-  double nEvt = fit->GetParameter(1);
-  nEvt += fit->GetParameter(3)*fit->GetParameter(1);
-  std::cout << "nEvt = " << fit->GetParameter(1) << " + (" << fit->GetParameter(3) << " * " << fit->GetParameter(1) << ") = " << nEvt << std::endl;
+//   double nEvt = fit->GetParameter(1);
+//   nEvt += fit->GetParameter(3)*fit->GetParameter(1);
+//   std::cout << "nEvt = " << fit->GetParameter(1) << " + (" << fit->GetParameter(3) << " * " << fit->GetParameter(1) << ") = " << nEvt << std::endl;
+//   nEvt /= hist->GetBinWidth(1);
+//   std::cout << "After division by bin width: nEvt = " << nEvt << std::endl;
+
+  double nEvt = fit->GetParameter(0);
+  std::cout << "nEvt = " << nEvt << std::endl;
   nEvt /= hist->GetBinWidth(1);
   std::cout << "After division by bin width: nEvt = " << nEvt << std::endl;
-  
+
   TMatrixDSym cov = fitResult->GetCovarianceMatrix();
-//   // This is for N = P1 + P3
+
+  // This is for two Gaussians and N = P1 + P3
 //   double errN = sqrt(cov(1,1) + cov(3,3) + 2 * cov(1,3)) / hist->GetBinWidth(1);
-  // This is for N = P1 + P1*P3
-  double errN = sqrt( (1+fit->GetParameter(3)) * (1+fit->GetParameter(3)) * cov(1,1) +        // |d(N)/d(P1)|^2 * cov(11)
-                      fit->GetParameter(1) * fit->GetParameter(1) * cov(3,3) +                // |d(N)/d(P3)|^2 * cov(33)
-                      2 * fabs((1+fit->GetParameter(3)) * fit->GetParameter(1)) * cov(1,3) )  // 2*|d(N)/d(P1)*d(N)/d(P3)| * cov(33)
-                / hist->GetBinWidth(1);
+  // This is for two Gaussians and N = P1 + P1*P3
+//   double errN = sqrt( (1+fit->GetParameter(3)) * (1+fit->GetParameter(3)) * cov(1,1) +        // |d(N)/d(P1)|^2 * cov(11)
+//                       fit->GetParameter(1) * fit->GetParameter(1) * cov(3,3) +                // |d(N)/d(P3)|^2 * cov(33)
+//                       2 * fabs((1+fit->GetParameter(3)) * fit->GetParameter(1)) * cov(1,3) )  // 2*|d(N)/d(P1)*d(N)/d(P3)| * cov(33)
+//                 / hist->GetBinWidth(1);
+  // This is for one Johnson
+  double errN = sqrt(cov(1,1)) / hist->GetBinWidth(1);
+  
   std::cout << "errN = " << errN << std::endl;  
   return std::make_pair(nEvt, errN);  
 }
+
+// double JohnsonPDF(double *x, double *par)
+// {
+//   // Taken from  RooJohnson::evaluate()
+//   // The free parameters correspond to the following parameters in the original function:
+//   // par[0] = _massThreshold;
+//   // par[1] = _mu;
+//   // par[2] = _lambda;
+//   // par[3] = _gamma;
+//   // par[4] = _delta;
+//   
+//   double xx = x[0];
+//   
+//   if (xx < par[0])
+//     return 0.;
+//   
+//   const double arg = (xx - par[1])/par[2];
+//   const double expo = (par[3] + par[4] * asinh(xx - par[1])/par[2]));
+//   
+//   const double result = par[4]
+//                         / sqrt(TMath::TwoPi())
+//                         / (par[2] * sqrt(1. + arg*arg))
+//                         * exp(-0.5 * expo * expo);
+//   
+//   return result;
+// }
